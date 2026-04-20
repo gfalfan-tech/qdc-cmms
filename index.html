@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -5,7 +6,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>QDC CMMS Pro — Ingresar</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet"/>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{--navy:#08223D;--mid:#0B2545;--deep:#061C2E;--accent:#2196F3;--white:#EEF4FF;--ok:#97C459;--warn:#EF9F27;--crit:#E24B4A;--font:'Barlow',sans-serif;--head:'Barlow Condensed',sans-serif;}
@@ -38,11 +38,8 @@ body{font-family:var(--font);background:var(--deep);min-height:100vh;display:fle
 .lf-input:focus{border-color:var(--accent);background:#0A233A;box-shadow:0 0 0 3px rgba(33,150,243,0.1);}
 .lf-pw-wrap{position:relative;}
 .lf-eye{position:absolute;right:13px;top:50%;transform:translateY(-50%);color:rgba(83,110,130,0.5);cursor:pointer;font-size:15px;user-select:none;}
-.lf-btn{width:100%;padding:13px;background:var(--accent);border:none;border-radius:7px;font-family:var(--head);font-size:15px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#fff;cursor:pointer;transition:all .2s;position:relative;}
-.lf-btn:hover:not(:disabled){background:#1976D2;transform:translateY(-1px);}
-.lf-btn:disabled{opacity:0.6;cursor:not-allowed;transform:none;}
-.lf-spinner{display:none;width:18px;height:18px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto;}
-@keyframes spin{to{transform:rotate(360deg)}}
+.lf-btn{width:100%;padding:13px;background:var(--accent);border:none;border-radius:7px;font-family:var(--head);font-size:15px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#fff;cursor:pointer;transition:all .2s;}
+.lf-btn:hover{background:#1976D2;}
 .lf-msg{margin-top:12px;padding:10px 14px;border-radius:6px;font-size:12px;display:none;line-height:1.5;}
 .lf-msg.err{background:rgba(239,83,80,0.1);border:1px solid rgba(239,83,80,0.3);color:#EF9A9A;display:block;}
 .lf-msg.ok{background:rgba(76,175,80,0.1);border:1px solid rgba(76,175,80,0.3);color:#A5D6A7;display:block;}
@@ -50,11 +47,9 @@ body{font-family:var(--font);background:var(--deep);min-height:100vh;display:fle
 .lf-div::before,.lf-div::after{content:'';flex:1;height:1px;background:rgba(33,150,243,0.12);}
 .lf-info{text-align:center;font-size:11px;color:rgba(83,110,130,0.5);}
 .lf-footer{position:absolute;bottom:18px;font-size:10px;color:rgba(83,110,130,0.35);}
-.lf-version{display:inline-flex;align-items:center;gap:5px;background:rgba(33,150,243,0.08);border:1px solid rgba(33,150,243,0.15);border-radius:5px;padding:3px 9px;font-size:11px;color:#85B7EB;margin-bottom:20px;}
 </style>
 </head>
 <body>
-
 <div class="login-left">
   <div class="ll-top">
     <div class="ll-logo-text">QDC</div>
@@ -78,160 +73,92 @@ body{font-family:var(--font);background:var(--deep);min-height:100vh;display:fle
     </div>
   </div>
 </div>
-
 <div class="login-right">
   <div class="lf-card">
-    <div class="lf-version">✓ v2.0 — Sistema activo</div>
     <div class="lf-title">Ingresar al sistema</div>
     <div class="lf-sub">Usa las credenciales asignadas por Gerencia</div>
-
     <div class="lf-field">
       <label>Correo corporativo</label>
-      <input type="email" class="lf-input" id="l-email" placeholder="usuario@qdc.cl" autocomplete="email"/>
+      <input type="email" class="lf-input" id="l-email" placeholder="usuario@qdc.cl"/>
     </div>
-
     <div class="lf-field">
       <label>Contraseña</label>
       <div class="lf-pw-wrap">
-        <input type="password" class="lf-input" id="l-pass" placeholder="••••••••" style="padding-right:44px" autocomplete="current-password"/>
+        <input type="password" class="lf-input" id="l-pass" placeholder="••••••••" style="padding-right:44px"/>
         <span class="lf-eye" id="eye-btn">👁</span>
       </div>
     </div>
-
-    <button class="lf-btn" id="login-btn" onclick="doLogin()">
-      <span id="btn-text">Ingresar</span>
-      <div class="lf-spinner" id="btn-spinner"></div>
-    </button>
-
+    <button class="lf-btn" id="login-btn">Ingresar</button>
     <div class="lf-msg" id="l-msg"></div>
-
     <div class="lf-div">Solo personal interno QDC</div>
     <div class="lf-info">¿Problemas para ingresar? Contacta a Gerencia</div>
   </div>
   <div class="lf-footer">© 2025 QDC · CMMS Pro v2.0 · Germán Falfán O.</div>
 </div>
-
 <script>
-// ═══════════════════════════════════════
-// SUPABASE CONFIG — QDC CMMS Pro v2.0
-// ═══════════════════════════════════════
-const SUPABASE_URL = 'https://aaugeuydymhwlcpklbmt.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhdWdldXlkeW1od2xjcGtsYm10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2NTg5MzksImV4cCI6MjA5MjIzNDkzOX0.Q2GeJKuf7l51Hsv3hUEeaO0NHaFeWXLIBrRUPgkQ0gw';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const _url = 'https://aaugeuydymhwlcpklbmt.supabase.co';
+const _key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhdWdldXlkeW1od2xjcGtsYm10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2NTg5MzksImV4cCI6MjA5MjIzNDkzOX0.Q2GeJKuf7l51Hsv3hUEeaO0NHaFeWXLIBrRUPgkQ0gw';
 
-// ROL MAP — se define en user_metadata al crear el usuario en Supabase
-// Cada usuario tiene un campo "rol" en su metadata: 't', 's' o 'g'
-// Los módulos a los que redirige según el rol
-const ROL_REDIRECT = {
-  t: 'qdc_dashboard.html',
-  s: 'qdc_dashboard.html',
-  g: 'qdc_dashboard.html',
-};
+// Cargar Supabase dinámicamente para evitar conflictos
+const s = document.createElement('script');
+s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+s.onload = function(){
+  const db = window.supabase.createClient(_url, _key);
 
-// Toggle password visibility
-document.getElementById('eye-btn').addEventListener('click', function(){
-  const input = document.getElementById('l-pass');
-  input.type = input.type === 'password' ? 'text' : 'password';
-  this.textContent = input.type === 'password' ? '👁' : '🙈';
-});
+  document.getElementById('eye-btn').onclick = function(){
+    const p = document.getElementById('l-pass');
+    p.type = p.type === 'password' ? 'text' : 'password';
+    this.textContent = p.type === 'password' ? '👁' : '🙈';
+  };
 
-// Enter key support
-document.addEventListener('keydown', e => {
-  if(e.key === 'Enter') doLogin();
-});
+  document.getElementById('login-btn').onclick = async function(){
+    const email = document.getElementById('l-email').value.trim();
+    const pass  = document.getElementById('l-pass').value;
+    const msg   = document.getElementById('l-msg');
+    const btn   = document.getElementById('login-btn');
+    msg.className = 'lf-msg';
 
-async function doLogin(){
-  const email = document.getElementById('l-email').value.trim();
-  const pass  = document.getElementById('l-pass').value;
-  const msg   = document.getElementById('l-msg');
-  const btn   = document.getElementById('login-btn');
-  const btnTxt = document.getElementById('btn-text');
-  const spinner = document.getElementById('btn-spinner');
+    if(!email || !pass){
+      msg.className = 'lf-msg err';
+      msg.textContent = '✕  Completa tu correo y contraseña.';
+      return;
+    }
 
-  // Validación básica
-  msg.className = 'lf-msg';
-  if(!email || !pass){
-    msg.className = 'lf-msg err';
-    msg.textContent = '✕  Completa tu correo y contraseña.';
-    return;
-  }
-  if(!email.includes('@')){
-    msg.className = 'lf-msg err';
-    msg.textContent = '✕  Ingresa un correo válido.';
-    return;
-  }
+    btn.textContent = 'Verificando…';
+    btn.disabled = true;
 
-  // Mostrar spinner
-  btn.disabled = true;
-  btnTxt.style.display = 'none';
-  spinner.style.display = 'block';
-
-  try {
-    // Login real con Supabase Auth
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
+    const { data, error } = await db.auth.signInWithPassword({ email, password: pass });
 
     if(error){
+      btn.textContent = 'Ingresar';
       btn.disabled = false;
-      btnTxt.style.display = 'block';
-      spinner.style.display = 'none';
-
-      // Mensajes de error en español
-      if(error.message.includes('Invalid login')){
-        msg.className = 'lf-msg err';
+      msg.className = 'lf-msg err';
+      if(error.message.includes('Invalid login credentials')){
         msg.textContent = '✕  Correo o contraseña incorrectos.';
-      } else if(error.message.includes('Email not confirmed')){
-        msg.className = 'lf-msg err';
-        msg.textContent = '✕  Cuenta no verificada. Contacta a Gerencia.';
-      } else if(error.message.includes('User not found')){
-        msg.className = 'lf-msg err';
-        msg.textContent = '✕  Usuario no encontrado en el sistema QDC.';
       } else {
-        msg.className = 'lf-msg err';
-        msg.textContent = '✕  Error al ingresar: ' + error.message;
+        msg.textContent = '✕  ' + error.message;
       }
       return;
     }
 
-    // Login exitoso — obtener rol del usuario
-    const user = data.user;
-    const rol  = user.user_metadata?.rol || 't'; // default técnico si no tiene rol
-    const nombre = user.user_metadata?.nombre || email.split('@')[0];
+    const rol    = data.user.user_metadata?.rol || 't';
+    const nombre = data.user.user_metadata?.nombre || email.split('@')[0];
 
-    // Guardar sesión en localStorage para uso en los módulos
     localStorage.setItem('qdc_user', JSON.stringify({
-      id:     user.id,
-      email:  user.email,
-      rol:    rol,
-      nombre: nombre,
+      id: data.user.id, email, rol, nombre
     }));
 
-    // Registrar acceso en log de auditoría
-    await supabase.from('auditoria').insert({
-      usuario_id:     user.id,
-      usuario_nombre: nombre,
-      tipo:           'login',
-      accion:         'Inicio de sesión',
-      detalle:        'Email: ' + email,
-    });
-
-    // Mostrar mensaje de éxito
     msg.className = 'lf-msg ok';
     msg.textContent = '✔  Acceso verificado. Ingresando…';
 
-    // Redirigir al dashboard según rol
-    setTimeout(() => {
-      window.location.href = ROL_REDIRECT[rol] || 'qdc_dashboard.html';
-    }, 800);
+    setTimeout(() => { window.location.href = 'qdc_dashboard.html'; }, 900);
+  };
 
-  } catch(err) {
-    btn.disabled = false;
-    btnTxt.style.display = 'block';
-    spinner.style.display = 'none';
-    msg.className = 'lf-msg err';
-    msg.textContent = '✕  Error de conexión. Verifica tu internet.';
-    console.error(err);
-  }
-}
+  document.addEventListener('keydown', e => {
+    if(e.key === 'Enter') document.getElementById('login-btn').click();
+  });
+};
+document.head.appendChild(s);
 </script>
 </body>
 </html>
