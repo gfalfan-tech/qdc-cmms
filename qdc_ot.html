@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>QDC CMMS — Órdenes de Trabajo</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --navy:#08223D;--mid:#0B2545;--deep:#061C2E;
+  --accent:#2196F3;--white:#EEF4FF;
+  --ok:#97C459;--warn:#EF9F27;--crit:#E24B4A;--ext:#5DCAA5;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.10);
+  --font:'Barlow',sans-serif;--head:'Barlow Condensed',sans-serif;
+}
+body{font-family:var(--font);background:#050F1C;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;}
+.shell{display:flex;width:100%;max-width:1100px;height:900px;background:var(--mid);border-radius:12px;overflow:hidden;border:1px solid var(--border2);}
+
+/* SIDEBAR */
+.sidebar{width:210px;flex-shrink:0;background:var(--navy);display:flex;flex-direction:column;border-right:1px solid var(--border);}
+.sb-logo{padding:16px 14px 12px;border-bottom:1px solid var(--border);}
+.sb-logo-mark{font-family:var(--head);font-size:15px;font-weight:700;color:var(--white);letter-spacing:1px;}
+.sb-logo-sub{font-size:9px;color:rgba(131,131,139,0.6);margin-top:2px;}
+.sb-logo-line{width:20px;height:2px;background:var(--accent);margin-top:5px;}
+.sb-nav{flex:1;overflow-y:auto;padding:6px 0;}
+.sb-nav::-webkit-scrollbar{width:2px;}
+.sb-nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);}
+.nav-sec{padding:10px 14px 3px;font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(131,131,139,0.4);}
+.nav-item{display:flex;align-items:center;gap:8px;padding:8px 14px;cursor:pointer;transition:background .1s;border-left:2px solid transparent;text-decoration:none;}
+.nav-item:hover{background:rgba(255,255,255,0.04);}
+.nav-item.active{background:rgba(33,150,243,0.12);border-left-color:var(--accent);}
+.nav-icon{font-size:13px;width:16px;text-align:center;flex-shrink:0;}
+.nav-label{font-size:12px;color:rgba(200,210,225,0.7);flex:1;}
+.nav-item.active .nav-label{color:var(--white);font-weight:500;}
+.sb-user{padding:10px 12px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+.u-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;}
+.u-name{font-size:11px;color:var(--white);font-weight:500;}
+.u-role{font-size:9px;color:rgba(131,131,139,0.6);}
+.u-logout{margin-left:auto;background:none;border:none;color:rgba(131,131,139,0.4);cursor:pointer;font-size:11px;padding:3px 6px;border-radius:3px;}
+.u-logout:hover{color:var(--white);background:rgba(255,255,255,0.06);}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;}
+.topbar{height:50px;background:var(--mid);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0;}
+.page-title{font-family:var(--head);font-size:16px;font-weight:600;color:var(--white);flex:1;letter-spacing:0.5px;}
+
+/* STATS */
+.stats-bar{display:flex;gap:1px;background:rgba(255,255,255,0.04);border-bottom:1px solid var(--border);flex-shrink:0;}
+.stat{flex:1;padding:9px 12px;text-align:center;border-bottom:2px solid transparent;transition:all .1s;cursor:pointer;}
+.stat:hover{background:rgba(255,255,255,0.03);}
+.stat.on{border-bottom-color:var(--accent);}
+.stat-val{font-size:18px;font-weight:500;color:var(--white);}
+.stat-label{font-size:9px;color:rgba(131,131,139,0.5);margin-top:2px;text-transform:uppercase;}
+
+/* QUICK FORM */
+.quick-form{padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0;background:rgba(33,150,243,0.03);}
+.qf-title{font-family:var(--head);font-size:13px;font-weight:600;color:var(--white);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.qf-grid{display:grid;grid-template-columns:1fr 1fr 130px 110px;gap:8px;align-items:end;}
+.qf-label{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:4px;}
+.qf-input,.qf-select{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:5px;color:var(--white);font-size:12px;font-family:var(--font);padding:8px 10px;outline:none;width:100%;transition:border-color .15s;}
+.qf-input:focus,.qf-select:focus{border-color:var(--accent);}
+.qf-input::placeholder{color:rgba(131,131,139,0.4);}
+.qf-select option{background:#0D2D48;}
+.qf-btn{padding:9px 0;border-radius:5px;border:none;background:var(--accent);color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);width:100%;transition:background .15s;}
+.qf-btn:hover{background:#1976D2;}
+.qf-btn:disabled{opacity:0.6;cursor:not-allowed;}
+.opt-toggle{font-size:11px;color:rgba(33,150,243,0.7);cursor:pointer;margin-top:7px;display:inline-block;}
+.opt-fields{display:none;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.05);}
+.opt-fields.open{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+
+/* TOOLBAR */
+.toolbar{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.search-wrap{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:5px;padding:5px 10px;flex:1;}
+.search-wrap input{background:none;border:none;outline:none;color:var(--white);font-size:12px;font-family:var(--font);width:100%;}
+.search-wrap input::placeholder{color:rgba(131,131,139,0.5);}
+.filter-sel{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:5px;color:rgba(200,210,225,0.7);font-size:11px;font-family:var(--font);padding:6px 10px;outline:none;}
+.filter-sel option{background:#0D2D48;}
+
+/* TABLE */
+.table-wrap{flex:1;overflow-y:auto;padding:0 14px 12px;}
+.table-wrap::-webkit-scrollbar{width:3px;}
+.table-wrap::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);}
+.data-table{width:100%;border-collapse:collapse;margin-top:10px;}
+.data-table th{font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);padding:7px 10px;text-align:left;border-bottom:1px solid var(--border);}
+.data-table td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,0.03);vertical-align:middle;}
+.data-table tr:hover td{background:rgba(255,255,255,0.03);}
+tr.ext-row td{border-left:2px solid rgba(29,158,117,0.4);}
+.badge{font-size:10px;font-weight:500;padding:2px 8px;border-radius:10px;}
+.b-open{background:rgba(33,150,243,0.12);color:#85B7EB;}
+.b-prog{background:rgba(239,159,39,0.12);color:#FAC775;}
+.b-ext{background:rgba(29,158,117,0.12);color:#5DCAA5;}
+.b-done{background:rgba(99,153,34,0.12);color:#C0DD97;}
+.prio-dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:4px;}
+.ab{padding:4px 10px;border-radius:4px;border:0.5px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:rgba(200,210,225,0.7);cursor:pointer;font-size:10px;font-family:var(--font);}
+.ab:hover{background:rgba(255,255,255,0.1);color:var(--white);}
+
+/* LOADING */
+.loading{display:flex;align-items:center;justify-content:center;height:200px;flex-direction:column;gap:12px;color:rgba(131,131,139,0.5);}
+.spinner{width:24px;height:24px;border:2px solid rgba(255,255,255,0.1);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{display:flex;align-items:center;justify-content:center;height:200px;flex-direction:column;gap:10px;color:rgba(131,131,139,0.35);}
+
+/* TOAST */
+#toast{position:fixed;bottom:24px;right:24px;background:#0D2D48;border:1px solid rgba(33,150,243,0.3);border-radius:8px;padding:12px 16px;font-size:12px;color:var(--white);z-index:999;transform:translateY(60px);opacity:0;transition:all .3s;max-width:300px;pointer-events:none;}
+#toast.show{transform:translateY(0);opacity:1;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;z-index:500;}
+.modal-overlay.hidden{display:none;}
+.modal{background:#0D2D48;border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;width:480px;max-height:80vh;overflow-y:auto;padding:22px;}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.modal-title{font-family:var(--head);font-size:16px;font-weight:600;color:var(--white);}
+.modal-close{font-size:16px;color:rgba(131,131,139,0.6);cursor:pointer;background:none;border:none;}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.07);}
+.btn-cancel{padding:7px 14px;border-radius:5px;border:0.5px solid rgba(255,255,255,0.1);background:transparent;color:rgba(200,210,225,0.7);cursor:pointer;font-size:12px;font-family:var(--font);}
+.btn-save{padding:7px 18px;border-radius:5px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-size:12px;font-weight:600;font-family:var(--font);}
+.form-group{margin-bottom:12px;}
+.form-label{font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.6);margin-bottom:5px;display:block;}
+.form-input,.form-select,.form-textarea{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:var(--white);font-size:12px;font-family:var(--font);padding:8px 10px;outline:none;width:100%;transition:border-color .1s;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent);}
+.form-input::placeholder,.form-textarea::placeholder{color:rgba(131,131,139,0.4);}
+.form-select option{background:#0D2D48;}
+.form-textarea{resize:vertical;min-height:70px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-mark">QDC · CMMS Pro</div>
+      <div class="sb-logo-sub">Química del Campo S.p.A</div>
+      <div class="sb-logo-line"></div>
+    </div>
+    <div class="sb-nav">
+      <div class="nav-sec">Principal</div>
+      <a class="nav-item" href="qdc_dashboard.html"><span class="nav-icon">▦</span><span class="nav-label">Dashboard</span></a>
+      <a class="nav-item active" href="qdc_ot.html"><span class="nav-icon">📋</span><span class="nav-label">Órdenes de trabajo</span></a>
+      <div class="nav-sec">Mantenimiento</div>
+      <a class="nav-item" href="qdc_pm.html"><span class="nav-icon">🔄</span><span class="nav-label">Plan preventivo</span></a>
+      <a class="nav-item" href="qdc_contratistas.html"><span class="nav-icon">🏢</span><span class="nav-label">Contratistas</span></a>
+      <div class="nav-sec">Recursos</div>
+      <a class="nav-item" href="qdc_activos.html"><span class="nav-icon">🏭</span><span class="nav-label">Activos y equipos</span></a>
+      <a class="nav-item" href="qdc_inventario.html"><span class="nav-icon">📦</span><span class="nav-label">Inventario</span></a>
+      <div class="nav-sec">Operaciones</div>
+      <a class="nav-item" href="qdc_embalajes.html"><span class="nav-icon">📫</span><span class="nav-label">Embalajes</span></a>
+      <div class="nav-sec">Análisis</div>
+      <a class="nav-item" href="qdc_kpis.html"><span class="nav-icon">📊</span><span class="nav-label">KPIs y reportes</span></a>
+      <div class="nav-sec">Sistema</div>
+      <a class="nav-item" href="qdc_alertas.html"><span class="nav-icon">🔔</span><span class="nav-label">Alertas</span></a>
+      <a class="nav-item" id="nav-config" href="qdc_config.html" style="display:none"><span class="nav-icon">⚙️</span><span class="nav-label">Configuración</span></a>
+    </div>
+    <div class="sb-user" id="sb-user"></div>
+  </nav>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="page-title">Órdenes de Trabajo</div>
+      <span id="topbar-date" style="font-size:11px;color:rgba(131,131,139,0.5);font-family:monospace"></span>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-bar" id="stats-bar">
+      <div class="stat on"><div class="stat-val" id="st-todas">—</div><div class="stat-label">Todas</div></div>
+      <div class="stat"><div class="stat-val" style="color:var(--warn)" id="st-abiertas">—</div><div class="stat-label">Abiertas</div></div>
+      <div class="stat"><div class="stat-val" style="color:var(--crit)" id="st-proceso">—</div><div class="stat-label">En proceso</div></div>
+      <div class="stat"><div class="stat-val" style="color:var(--ext)" id="st-externas">—</div><div class="stat-label">Externas</div></div>
+      <div class="stat"><div class="stat-val" style="color:var(--ok)" id="st-completadas">—</div><div class="stat-label">Completadas</div></div>
+    </div>
+
+    <!-- QUICK FORM (solo técnico y supervisor) -->
+    <div class="quick-form" id="quick-form" style="display:none">
+      <div class="qf-title">
+        ⚡ Registrar OT rápido
+        <span style="font-size:10px;font-weight:400;color:rgba(131,131,139,0.5)">3 campos — menos de 1 minuto</span>
+      </div>
+      <div class="qf-grid">
+        <div>
+          <div class="qf-label">Descripción del problema <span style="color:var(--accent)">*</span></div>
+          <input type="text" class="qf-input" id="q-desc" placeholder="ej: Falla en compresor C-101…"/>
+        </div>
+        <div>
+          <div class="qf-label">Activo / Equipo <span style="color:var(--accent)">*</span></div>
+          <select class="qf-select" id="q-activo">
+            <option value="">Seleccionar…</option>
+            <option>Compresor C-101</option>
+            <option>Bomba P-205</option>
+            <option>Motor MO-18</option>
+            <option>Turbina T-01</option>
+            <option>Enfriadora CH-3</option>
+            <option>Tablero E-01</option>
+            <option>Banda B-44</option>
+            <option>Tanque T-03</option>
+            <option>Otro equipo</option>
+          </select>
+        </div>
+        <div>
+          <div class="qf-label">Prioridad <span style="color:var(--accent)">*</span></div>
+          <select class="qf-select" id="q-prio">
+            <option value="crit">🔴 Crítica</option>
+            <option value="alta">🟠 Alta</option>
+            <option value="med" selected>🟡 Media</option>
+            <option value="baja">⚪ Baja</option>
+          </select>
+        </div>
+        <button class="qf-btn" id="q-btn" onclick="registrarOT()">Registrar OT</button>
+      </div>
+      <span class="opt-toggle" id="opt-toggle" onclick="toggleOpts()">+ Agregar detalles opcionales</span>
+      <div class="opt-fields" id="opt-fields">
+        <div>
+          <div class="qf-label">Tipo</div>
+          <select class="qf-select" id="q-tipo">
+            <option>Correctivo</option>
+            <option>Preventivo</option>
+            <option>Predictivo</option>
+            <option>Externo</option>
+          </select>
+        </div>
+        <div>
+          <div class="qf-label">Asignar a</div>
+          <input type="text" class="qf-input" id="q-resp" placeholder="Nombre técnico…"/>
+        </div>
+        <div>
+          <div class="qf-label">Notas</div>
+          <input type="text" class="qf-input" id="q-notas" placeholder="Opcional…"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+      <div class="search-wrap">
+        <span style="font-size:11px;color:rgba(131,131,139,0.5)">🔍</span>
+        <input type="text" placeholder="Buscar OT, activo, descripción…" id="search-input" oninput="filterTable()"/>
+      </div>
+      <select class="filter-sel" id="filter-estado" onchange="filterTable()">
+        <option value="">Todos los estados</option>
+        <option value="open">Abiertas</option>
+        <option value="prog">En proceso</option>
+        <option value="ext">Externas</option>
+        <option value="done">Completadas</option>
+      </select>
+      <select class="filter-sel" id="filter-prio" onchange="filterTable()">
+        <option value="">Todas las prioridades</option>
+        <option value="crit">Crítica</option>
+        <option value="alta">Alta</option>
+        <option value="med">Media</option>
+        <option value="baja">Baja</option>
+      </select>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrap">
+      <div id="table-content">
+        <div class="loading"><div class="spinner"></div><span>Cargando órdenes de trabajo…</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- MODAL VER OT -->
+<div class="modal-overlay hidden" id="modal-ver">
+  <div class="modal" id="modal-ver-inner"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// QDC CMMS Pro — Módulo OT con Supabase
+// ═══════════════════════════════════════
+
+const SUPABASE_URL = 'https://aaugeuydymhwlcpklbmt.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhdWdldXlkeW1od2xjcGtsYm10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2NTg5MzksImV4cCI6MjA5MjIzNDkzOX0.Q2GeJKuf7l51Hsv3hUEeaO0NHaFeWXLIBrRUPgkQ0gw';
+
+// Cargar Supabase dinámicamente
+const _s = document.createElement('script');
+_s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+_s.onload = init;
+document.head.appendChild(_s);
+
+// Estado global
+let db, USER, OTS_DATA = [], OTS_FILTERED = [];
+
+function init(){
+  db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // Leer usuario del localStorage
+  USER = JSON.parse(localStorage.getItem('qdc_user') || '{}');
+  if(!USER.rol){
+    window.location.href = 'index.html';
+    return;
+  }
+
+  buildSidebar();
+  setDate();
+
+  // Mostrar formulario rápido solo a técnicos y supervisores
+  if(USER.rol === 't' || USER.rol === 's'){
+    document.getElementById('quick-form').style.display = 'block';
+  }
+
+  // Mostrar config solo a gerencia
+  if(USER.rol === 'g'){
+    document.getElementById('nav-config').style.display = 'flex';
+  }
+
+  loadOTs();
+}
+
+function buildSidebar(){
+  const colors = {t:'#185FA5',s:'#854F0B',g:'#27500A'};
+  const tcs    = {t:'#B5D4F4',s:'#FAC775',g:'#C0DD97'};
+  const roles  = {t:'Técnico de Mantenimiento',s:'Supervisor de Mantenimiento',g:'Gerente de Operaciones'};
+
+  function getInitials(email){
+    const p = (email||'').split('@')[0].split(/[._-]/);
+    return p.slice(0,2).map(x=>x[0]?.toUpperCase()||'').join('') || 'QD';
+  }
+
+  const ini = getInitials(USER.email || USER.nombre || '');
+  const color = colors[USER.rol] || '#185FA5';
+  const tc    = tcs[USER.rol]    || '#B5D4F4';
+
+  document.getElementById('sb-user').innerHTML = `
+    <div class="u-av" style="background:${color};color:${tc}">${ini}</div>
+    <div style="min-width:0;flex:1">
+      <div class="u-name">${USER.nombre || USER.email}</div>
+      <div class="u-role">${roles[USER.rol]||''}</div>
+    </div>
+    <button class="u-logout" onclick="doLogout()" title="Cerrar sesión">⏏</button>
+  `;
+}
+
+function setDate(){
+  const now = new Date();
+  const opts = {weekday:'short',day:'numeric',month:'short',year:'numeric'};
+  document.getElementById('topbar-date').textContent = now.toLocaleDateString('es-CL', opts);
+}
+
+function doLogout(){
+  localStorage.removeItem('qdc_user');
+  window.location.href = 'index.html';
+}
+
+// ═══════════════════════════════════════
+// CARGAR OTs DESDE SUPABASE
+// ═══════════════════════════════════════
+async function loadOTs(){
+  try {
+    let query = db.from('ots').select('*').order('creado_en', {ascending: false});
+
+    // Técnico solo ve sus OTs
+    if(USER.rol === 't'){
+      query = query.eq('asignado_id', USER.id);
+    }
+
+    const { data, error } = await query;
+
+    if(error) throw error;
+
+    OTS_DATA = data || [];
+    updateStats();
+    renderTable(OTS_DATA);
+
+  } catch(err){
+    console.error(err);
+    // Si la tabla no existe aún, mostrar datos demo
+    OTS_DATA = getDemoOTs();
+    updateStats();
+    renderTable(OTS_DATA);
+    showToast('⚠️ Mostrando datos demo — tabla OTs pendiente de datos');
+  }
+}
+
+// Datos demo como fallback
+function getDemoOTs(){
+  return [
+    {id:'demo-1',codigo:'OT-0001',descripcion:'Sobrecalentamiento compresor C-101',activo:'Compresor C-101',tipo:'Correctivo',prioridad:'crit',estado:'prog',asignado_id:null,asignado_nombre:USER.nombre,es_externo:false,contratista:null,pdf_url:null,creado_en:new Date().toISOString()},
+    {id:'demo-2',codigo:'OT-0002',descripcion:'Mantención tablero eléctrico principal',activo:'Tablero E-01',tipo:'Externo',prioridad:'alta',estado:'ext',asignado_id:null,asignado_nombre:'Eléctricas SpA',es_externo:true,contratista:'Eléctricas SpA',pdf_url:null,creado_en:new Date().toISOString()},
+    {id:'demo-3',codigo:'OT-0003',descripcion:'Cambio aceite y filtros bomba P-205',activo:'Bomba P-205',tipo:'Preventivo',prioridad:'med',estado:'open',asignado_id:null,asignado_nombre:USER.nombre,es_externo:false,contratista:null,pdf_url:null,creado_en:new Date().toISOString()},
+  ];
+}
+
+function updateStats(){
+  const t = OTS_DATA.length;
+  const a = OTS_DATA.filter(o=>o.estado==='open').length;
+  const p = OTS_DATA.filter(o=>o.estado==='prog').length;
+  const e = OTS_DATA.filter(o=>o.es_externo).length;
+  const d = OTS_DATA.filter(o=>o.estado==='done').length;
+  document.getElementById('st-todas').textContent      = t;
+  document.getElementById('st-abiertas').textContent   = a;
+  document.getElementById('st-proceso').textContent    = p;
+  document.getElementById('st-externas').textContent   = e;
+  document.getElementById('st-completadas').textContent= d;
+}
+
+const PRIO_COLOR = {crit:'var(--crit)',alta:'var(--warn)',med:'var(--accent)',baja:'rgba(131,131,139,0.5)'};
+const PRIO_LABEL = {crit:'Crítica',alta:'Alta',med:'Media',baja:'Baja'};
+const EST_BADGE  = {
+  open:`<span class="badge b-open">Abierta</span>`,
+  prog:`<span class="badge b-prog">En proceso</span>`,
+  ext: `<span class="badge b-ext">Externo</span>`,
+  done:`<span class="badge b-done">Completada</span>`,
+};
+
+function renderTable(list){
+  if(!list.length){
+    document.getElementById('table-content').innerHTML = `<div class="empty"><span style="font-size:32px;opacity:0.2">📋</span><span>Sin órdenes de trabajo</span></div>`;
+    return;
+  }
+
+  const canEdit = USER.rol === 't' || USER.rol === 's';
+
+  const rows = list.map(o => {
+    const fecha = new Date(o.creado_en).toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit'});
+    const pdfCell = o.es_externo ? (o.pdf_url ? '📄✓' : '<span style="color:var(--warn)">📄?</span>') : '—';
+    return `<tr class="${o.es_externo?'ext-row':''}">
+      <td style="font-family:monospace;font-size:11px;color:rgba(131,131,139,0.6)">${o.codigo||o.id.substring(0,8)}</td>
+      <td><div style="font-size:12px;font-weight:500;color:var(--white)">${o.descripcion}</div><div style="font-size:10px;color:rgba(131,131,139,0.5);margin-top:1px">${o.activo||'—'}</div></td>
+      <td style="font-size:11px;color:rgba(200,210,225,0.6)">${o.tipo||'Correctivo'}</td>
+      <td><span style="display:flex;align-items:center;gap:4px;font-size:11px"><span class="prio-dot" style="background:${PRIO_COLOR[o.prioridad]||'gray'}"></span>${PRIO_LABEL[o.prioridad]||o.prioridad}</span></td>
+      <td>${EST_BADGE[o.estado]||o.estado}</td>
+      <td style="font-size:11px;color:${o.es_externo?'var(--ext)':'rgba(200,210,225,0.6)'}">${o.asignado_nombre||o.contratista||'—'}</td>
+      <td style="font-size:13px">${pdfCell}</td>
+      <td style="font-size:11px;font-family:monospace;color:rgba(131,131,139,0.5)">${fecha}</td>
+      ${canEdit?`<td><button class="ab" onclick="verOT('${o.id}')">Ver</button></td>`:''}
+    </tr>`;
+  }).join('');
+
+  document.getElementById('table-content').innerHTML = `
+    <table class="data-table">
+      <thead><tr>
+        <th>OT #</th><th>Descripción / Activo</th><th>Tipo</th><th>Prioridad</th>
+        <th>Estado</th><th>Asignado a</th><th>PDF</th><th>Fecha</th>
+        ${canEdit?'<th></th>':''}
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+// ═══════════════════════════════════════
+// REGISTRAR OT RÁPIDO
+// ═══════════════════════════════════════
+let optOpen = false;
+function toggleOpts(){
+  optOpen = !optOpen;
+  document.getElementById('opt-fields').className = 'opt-fields' + (optOpen?' open':'');
+  document.getElementById('opt-toggle').textContent = optOpen ? '− Ocultar detalles' : '+ Agregar detalles opcionales';
+}
+
+async function registrarOT(){
+  const desc   = document.getElementById('q-desc').value.trim();
+  const activo = document.getElementById('q-activo').value;
+  const prio   = document.getElementById('q-prio').value;
+  const tipo   = document.getElementById('q-tipo')?.value || 'Correctivo';
+  const resp   = document.getElementById('q-resp')?.value.trim() || USER.nombre || USER.email;
+  const notas  = document.getElementById('q-notas')?.value.trim() || null;
+
+  if(!desc || !activo){
+    showToast('⚠️ Descripción y activo son obligatorios','rgba(226,75,74,0.4)');
+    return;
+  }
+
+  const btn = document.getElementById('q-btn');
+  btn.textContent = 'Guardando…';
+  btn.disabled = true;
+
+  // Generar código OT
+  const codigo = 'OT-' + Date.now().toString().slice(-6);
+  const esExterno = tipo === 'Externo';
+
+  const nuevaOT = {
+    codigo,
+    descripcion: desc,
+    activo,
+    tipo,
+    prioridad: prio,
+    estado: esExterno ? 'ext' : 'open',
+    asignado_id: USER.id,
+    asignado_nombre: resp,
+    es_externo: esExterno,
+    contratista: esExterno ? resp : null,
+    creado_por: USER.id,
+    notas,
+  };
+
+  try {
+    const { data, error } = await db.from('ots').insert(nuevaOT).select().single();
+    if(error) throw error;
+
+    // Registrar en auditoría
+    await db.from('auditoria').insert({
+      usuario_id: USER.id,
+      usuario_nombre: USER.nombre || USER.email,
+      tipo: 'ot',
+      accion: `Creó ${codigo}`,
+      detalle: `${desc} · ${activo} · Prioridad: ${prio}`,
+    });
+
+    showToast(`✓ ${codigo} registrada correctamente`, 'rgba(99,153,34,0.4)');
+
+    // Limpiar formulario
+    document.getElementById('q-desc').value = '';
+    document.getElementById('q-activo').value = '';
+    document.getElementById('q-prio').value = 'med';
+
+    // Recargar tabla
+    await loadOTs();
+
+  } catch(err){
+    console.error(err);
+    showToast('✕ Error al guardar: ' + err.message, 'rgba(226,75,74,0.4)');
+  } finally {
+    btn.textContent = 'Registrar OT';
+    btn.disabled = false;
+  }
+}
+
+// ═══════════════════════════════════════
+// VER Y ACTUALIZAR OT
+// ═══════════════════════════════════════
+function verOT(id){
+  const o = OTS_DATA.find(x => x.id === id);
+  if(!o) return;
+
+  const fecha = new Date(o.creado_en).toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit',year:'numeric'});
+  const canEdit = USER.rol === 's';
+
+  document.getElementById('modal-ver-inner').innerHTML = `
+    <div class="modal-header">
+      <div class="modal-title">${o.codigo || 'OT'} — ${o.activo||''}</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div style="margin-bottom:14px">
+      <div style="font-size:13px;color:var(--white);margin-bottom:8px">${o.descripcion}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+        ${EST_BADGE[o.estado]||''}
+        <span class="badge" style="background:rgba(255,255,255,0.07);color:rgba(200,210,225,0.7)">${o.tipo||'Correctivo'}</span>
+        <span class="badge" style="background:rgba(255,255,255,0.07);color:${PRIO_COLOR[o.prioridad]||'gray'}">${PRIO_LABEL[o.prioridad]||''}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px">
+        <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Activo</div>${o.activo||'—'}</div>
+        <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Asignado a</div>${o.asignado_nombre||o.contratista||'—'}</div>
+        <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Fecha</div>${fecha}</div>
+        <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">PDF informe</div>${o.pdf_url?'📄✓ Adjunto':'📄 Sin adjuntar'}</div>
+      </div>
+      ${o.notas?`<div style="margin-top:8px;background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px;font-size:12px;color:rgba(200,210,225,0.7)"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Notas</div>${o.notas}</div>`:''}
+    </div>
+    ${canEdit?`
+    <div style="border-top:1px solid rgba(255,255,255,0.07);padding-top:14px">
+      <div style="font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);margin-bottom:10px">Actualizar estado</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="ab" onclick="cambiarEstado('${id}','open')">Abierta</button>
+        <button class="ab" onclick="cambiarEstado('${id}','prog')">En proceso</button>
+        <button class="ab" onclick="cambiarEstado('${id}','done')" style="color:#C0DD97;border-color:rgba(99,153,34,0.3)">✓ Completada</button>
+      </div>
+    </div>`:''}
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cerrar</button>
+    </div>
+  `;
+  document.getElementById('modal-ver').classList.remove('hidden');
+}
+
+async function cambiarEstado(id, nuevoEstado){
+  try {
+    const { error } = await db.from('ots').update({estado: nuevoEstado, actualizado_en: new Date().toISOString()}).eq('id', id);
+    if(error) throw error;
+
+    const o = OTS_DATA.find(x=>x.id===id);
+    if(o) o.estado = nuevoEstado;
+
+    showToast('✓ Estado actualizado', 'rgba(99,153,34,0.4)');
+    closeModal();
+    updateStats();
+    filterTable();
+
+    // Auditoría
+    await db.from('auditoria').insert({
+      usuario_id: USER.id,
+      usuario_nombre: USER.nombre || USER.email,
+      tipo: 'ot',
+      accion: `Actualizó ${o?.codigo||id}`,
+      detalle: `Estado → ${nuevoEstado}`,
+    });
+
+  } catch(err){
+    showToast('✕ Error: ' + err.message, 'rgba(226,75,74,0.4)');
+  }
+}
+
+function closeModal(){
+  document.getElementById('modal-ver').classList.add('hidden');
+}
+document.getElementById('modal-ver').addEventListener('click', function(e){
+  if(e.target === this) closeModal();
+});
+
+// ═══════════════════════════════════════
+// FILTROS Y BÚSQUEDA
+// ═══════════════════════════════════════
+function filterTable(){
+  const search = document.getElementById('search-input').value.toLowerCase();
+  const estado = document.getElementById('filter-estado').value;
+  const prio   = document.getElementById('filter-prio').value;
+
+  OTS_FILTERED = OTS_DATA.filter(o => {
+    const matchSearch = !search ||
+      (o.descripcion||'').toLowerCase().includes(search) ||
+      (o.activo||'').toLowerCase().includes(search) ||
+      (o.codigo||'').toLowerCase().includes(search) ||
+      (o.asignado_nombre||'').toLowerCase().includes(search);
+    const matchEstado = !estado || o.estado === estado;
+    const matchPrio   = !prio   || o.prioridad === prio;
+    return matchSearch && matchEstado && matchPrio;
+  });
+
+  renderTable(OTS_FILTERED);
+}
+
+// ═══════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════
+let toastT;
+function showToast(msg, color){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.borderColor = color || 'rgba(33,150,243,0.3)';
+  t.classList.add('show');
+  clearTimeout(toastT);
+  toastT = setTimeout(()=>t.classList.remove('show'), 3200);
+}
+
+// Enter en el formulario
+document.addEventListener('keydown', e => {
+  if(e.key === 'Enter' && document.activeElement.id === 'q-desc'){
+    registrarOT();
+  }
+});
+</script>
+</body>
+</html>
