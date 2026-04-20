@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>QDC CMMS — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --navy:#08223D;--mid:#0B2545;--deep:#061C2E;
+  --accent:#2196F3;--white:#EEF4FF;
+  --ok:#97C459;--warn:#EF9F27;--crit:#E24B4A;--ext:#5DCAA5;--pm:#7F77DD;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.10);
+  --surface:rgba(255,255,255,0.04);
+  --font:'Barlow',sans-serif;--head:'Barlow Condensed',sans-serif;
+}
+body{font-family:var(--font);background:#050F1C;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;}
+.shell{display:flex;width:100%;max-width:1100px;height:860px;background:var(--mid);border-radius:12px;overflow:hidden;border:1px solid var(--border2);}
+
+/* SIDEBAR */
+.sidebar{width:210px;flex-shrink:0;background:var(--navy);display:flex;flex-direction:column;border-right:1px solid var(--border);}
+.sb-logo{padding:16px 14px 12px;border-bottom:1px solid var(--border);}
+.sb-logo-mark{font-family:var(--head);font-size:16px;font-weight:700;color:var(--white);letter-spacing:1px;}
+.sb-logo-sub{font-size:9px;color:rgba(131,131,139,0.6);margin-top:2px;}
+.sb-logo-line{width:20px;height:2px;background:var(--accent);margin-top:5px;}
+.sb-role{padding:8px 12px;border-bottom:1px solid var(--border);}
+.sb-role-label{font-size:9px;color:rgba(131,131,139,0.5);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px;}
+.role-sw{display:flex;gap:3px;}
+.rbtn{flex:1;padding:5px 0;font-size:10px;font-weight:600;border-radius:3px;border:none;cursor:pointer;background:rgba(255,255,255,0.05);color:rgba(131,131,139,0.7);transition:all .15s;font-family:var(--font);}
+.rbtn.on-t{background:#185FA5;color:#B5D4F4;}
+.rbtn.on-s{background:#854F0B;color:#FAC775;}
+.rbtn.on-g{background:#27500A;color:#C0DD97;}
+.sb-nav{flex:1;overflow-y:auto;padding:6px 0;}
+.sb-nav::-webkit-scrollbar{width:2px;}
+.sb-nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);}
+.nav-sec{padding:10px 14px 3px;font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(131,131,139,0.4);}
+.nav-item{display:flex;align-items:center;gap:8px;padding:8px 14px;cursor:pointer;transition:background .1s;border-left:2px solid transparent;}
+.nav-item:hover{background:rgba(255,255,255,0.04);}
+.nav-item.active{background:rgba(33,150,243,0.12);border-left-color:var(--accent);}
+.nav-icon{font-size:13px;width:16px;text-align:center;flex-shrink:0;}
+.nav-label{font-size:12px;color:rgba(200,210,225,0.7);flex:1;}
+.nav-item.active .nav-label{color:var(--white);font-weight:500;}
+.nav-badge{font-size:9px;font-weight:600;padding:1px 5px;border-radius:8px;background:#A32D2D;color:#F7C1C1;}
+.nav-badge.w{background:#854F0B;color:#FAC775;}
+.nav-badge.e{background:#0F6E56;color:#9FE1CB;}
+.sb-user{padding:10px 12px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+.u-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;}
+.u-name{font-size:11px;color:var(--white);font-weight:500;}
+.u-role{font-size:9px;color:rgba(131,131,139,0.6);}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;}
+.topbar{height:50px;background:var(--mid);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:12px;flex-shrink:0;}
+.page-title{font-family:var(--head);font-size:16px;font-weight:600;color:var(--white);flex:1;letter-spacing:0.5px;}
+.tb-date{font-size:11px;color:rgba(131,131,139,0.6);font-family:monospace;}
+.bell-btn{width:32px;height:32px;border-radius:6px;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.1);color:rgba(200,210,225,0.8);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;position:relative;}
+.bell-dot{position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;background:var(--crit);border:1.5px solid var(--mid);}
+.avatar-btn{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;cursor:pointer;}
+
+/* CONTENT */
+.content{flex:1;overflow-y:auto;padding:14px 16px;}
+.content::-webkit-scrollbar{width:3px;}
+.content::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);}
+
+/* WELCOME */
+.welcome{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.welcome-text{font-family:var(--head);font-size:20px;font-weight:600;color:var(--white);}
+.welcome-sub{font-size:12px;color:rgba(131,131,139,0.6);margin-top:2px;}
+.welcome-actions{display:flex;gap:8px;}
+.wb{padding:7px 14px;border-radius:6px;border:none;font-size:12px;font-weight:500;cursor:pointer;font-family:var(--font);transition:all .15s;}
+.wb-p{background:var(--accent);color:#fff;}
+.wb-p:hover{background:#1976D2;}
+.wb-g{background:rgba(255,255,255,0.06);color:rgba(200,210,225,0.8);border:0.5px solid rgba(255,255,255,0.1);}
+
+/* KPI GRID */
+.kpi-grid{display:grid;gap:10px;margin-bottom:12px;}
+.kpi-grid-4{grid-template-columns:repeat(4,1fr);}
+.kpi-grid-3{grid-template-columns:repeat(3,1fr);}
+.kpi-card{background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:13px 14px;position:relative;overflow:hidden;cursor:pointer;transition:background .15s;}
+.kpi-card:hover{background:rgba(255,255,255,0.07);}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.kc-blue::before{background:var(--accent);}
+.kc-green::before{background:var(--ok);}
+.kc-warn::before{background:var(--warn);}
+.kc-crit::before{background:var(--crit);}
+.kc-ext::before{background:var(--ext);}
+.kc-pm::before{background:var(--pm);}
+.kpi-label{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px;}
+.kpi-val{font-size:24px;font-weight:600;font-family:var(--head);}
+.kpi-val.blue{color:#85B7EB;}
+.kpi-val.green{color:var(--ok);}
+.kpi-val.warn{color:var(--warn);}
+.kpi-val.crit{color:var(--crit);}
+.kpi-val.ext{color:var(--ext);}
+.kpi-val.pm{color:#AFA9EC;}
+.kpi-delta{font-size:10px;margin-top:4px;display:flex;align-items:center;gap:3px;}
+.dg{color:var(--ok);}
+.dr{color:var(--crit);}
+.dn{color:rgba(131,131,139,0.5);}
+
+/* MAIN GRID */
+.main-grid{display:grid;grid-template-columns:1fr 320px;gap:12px;margin-bottom:12px;}
+.main-grid-full{grid-template-columns:1fr;}
+
+/* CHART CARD */
+.chart-card{background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px;}
+.cc-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.cc-title{font-size:11px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);}
+.cc-badge{font-size:10px;font-weight:500;padding:2px 8px;border-radius:8px;}
+.cw{position:relative;}
+
+/* OT PANEL */
+.ot-panel{background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px;display:flex;flex-direction:column;}
+.ot-panel-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.ot-panel-title{font-size:11px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);}
+.ot-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:5px;}
+.ot-list::-webkit-scrollbar{width:2px;}
+.ot-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);}
+.ot-item{display:flex;align-items:flex-start;gap:9px;padding:8px 10px;border-radius:6px;background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.05);cursor:pointer;transition:background .1s;}
+.ot-item:hover{background:rgba(255,255,255,0.06);}
+.ot-item.ext-ot{border-left:2px solid rgba(29,158,117,0.5);}
+.ot-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+.ot-info{flex:1;min-width:0;}
+.ot-title{font-size:11px;font-weight:500;color:var(--white);}
+.ot-meta{font-size:10px;color:rgba(131,131,139,0.5);margin-top:1px;}
+.ot-badge{font-size:9px;font-weight:500;padding:1px 6px;border-radius:7px;flex-shrink:0;align-self:flex-start;}
+.ob-open{background:rgba(33,150,243,0.12);color:#85B7EB;}
+.ob-prog{background:rgba(239,159,39,0.12);color:#FAC775;}
+.ob-ext{background:rgba(29,158,117,0.12);color:var(--ext);}
+.ob-done{background:rgba(99,153,34,0.12);color:#C0DD97;}
+
+/* BOTTOM GRID */
+.bottom-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+
+/* ALERT MINI */
+.alert-mini{background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:12px;}
+.am-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.am-title{font-size:11px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);}
+.am-count{font-family:var(--head);font-size:20px;font-weight:600;color:var(--crit);}
+.am-list{display:flex;flex-direction:column;gap:5px;}
+.am-item{display:flex;align-items:flex-start;gap:7px;font-size:11px;}
+.am-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:3px;}
+.am-text{color:rgba(200,210,225,0.7);line-height:1.4;}
+
+/* PM STATUS */
+.pm-status{background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:12px;}
+.ps-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.ps-title{font-size:11px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);}
+.ps-pct{font-family:var(--head);font-size:20px;font-weight:600;color:#AFA9EC;}
+.pm-bar{height:6px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden;margin-bottom:8px;}
+.pm-bar-fill{height:100%;border-radius:3px;background:var(--pm);}
+.pm-rows{display:flex;flex-direction:column;gap:5px;}
+.pm-row{display:flex;align-items:center;justify-content:space-between;font-size:11px;}
+.pm-row-label{color:rgba(200,210,225,0.6);display:flex;align-items:center;gap:5px;}
+.pm-row-dot{width:6px;height:6px;border-radius:50%;}
+.pm-row-val{font-weight:500;}
+
+/* EXTERNOS MINI */
+.ext-mini{background:rgba(255,255,255,0.03);border:0.5px solid rgba(29,158,117,0.2);border-radius:8px;padding:12px;}
+.em-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.em-title{font-size:11px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);}
+.em-count{font-family:var(--head);font-size:20px;font-weight:600;color:var(--ext);}
+.em-list{display:flex;flex-direction:column;gap:5px;}
+.em-item{display:flex;align-items:center;gap:7px;font-size:11px;}
+.em-dot{width:6px;height:6px;border-radius:50%;background:var(--ext);flex-shrink:0;}
+.em-text{color:rgba(200,210,225,0.7);flex:1;}
+.em-pdf{font-size:10px;}
+
+/* TECNICO VIEW */
+.tec-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.tec-card{background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px;}
+.tec-title{font-size:11px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);margin-bottom:10px;}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-mark">QDC</div>
+    <div class="sb-logo-sub">Química del Campo S.p.A · CMMS Pro</div>
+    <div class="sb-logo-line"></div>
+  </div>
+  <div class="sb-role">
+    <div class="sb-role-label">Rol activo (demo)</div>
+    <div class="role-sw">
+      <button class="rbtn on-t" id="rb-t" onclick="setRole('t')">Téc.</button>
+      <button class="rbtn" id="rb-s" onclick="setRole('s')">Sup.</button>
+      <button class="rbtn" id="rb-g" onclick="setRole('g')">Ger.</button>
+    </div>
+  </div>
+  <div class="sb-nav" id="sb-nav"></div>
+  <div class="sb-user" id="sb-user"></div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="page-title">Dashboard</div>
+    <span class="tb-date">Jueves 17 abril 2025 · Turno mañana</span>
+    <div class="bell-btn">🔔<div class="bell-dot"></div></div>
+    <div class="avatar-btn" id="topbar-avatar" style="background:#185FA5;color:#B5D4F4">LG</div>
+  </div>
+  <div class="content" id="dashboard-content"></div>
+</div>
+
+</div>
+
+<script>
+const ROLES={
+  t:{name:"Luis García",  role:"Técnico de Mantenimiento",   color:"#185FA5",tc:"#B5D4F4",initials:"LG",label:"Técnico"},
+  s:{name:"María Solís",  role:"Supervisora de Mantenimiento",color:"#854F0B",tc:"#FAC775",initials:"MS",label:"Supervisor"},
+  g:{name:"Carlos Reyes", role:"Gerente de Operaciones",      color:"#27500A",tc:"#C0DD97",initials:"CR",label:"Gerencia"}
+};
+const NAV={
+  t:[
+    {sec:"Principal",items:[{i:"▦",l:"Dashboard",active:true},{i:"📋",l:"Órdenes de trabajo",b:"3"}]},
+    {sec:"Mantenimiento",items:[{i:"🔧",l:"Correctivo"},{i:"🔄",l:"Plan preventivo"}]},
+    {sec:"Recursos",items:[{i:"🏭",l:"Activos"},{i:"📦",l:"Inventario"}]},
+    {sec:"Sistema",items:[{i:"🔔",l:"Alertas",b:"2",bt:"w"}]}
+  ],
+  s:[
+    {sec:"Principal",items:[{i:"▦",l:"Dashboard",active:true},{i:"📋",l:"Órdenes de trabajo",b:"7"}]},
+    {sec:"Mantenimiento",items:[{i:"🏢",l:"Contratistas externos",b:"2",bt:"e"},{i:"🔄",l:"Plan preventivo"},{i:"🔧",l:"Correctivo"}]},
+    {sec:"Recursos",items:[{i:"🏭",l:"Activos"},{i:"📦",l:"Inventario",b:"3",bt:"w"},{i:"👷",l:"Personal"},{i:"🤝",l:"Proveedores"}]},
+    {sec:"Análisis",items:[{i:"📊",l:"KPIs"},{i:"💰",l:"Costos"}]},
+    {sec:"Sistema",items:[{i:"🔔",l:"Alertas",b:"5"}]}
+  ],
+  g:[
+    {sec:"Principal",items:[{i:"▦",l:"Dashboard",active:true},{i:"📋",l:"OT"}]},
+    {sec:"Operaciones",items:[{i:"🏢",l:"Contratistas externos"},{i:"🔄",l:"Plan preventivo"},{i:"🏭",l:"Activos"}]},
+    {sec:"Análisis",items:[{i:"📊",l:"KPIs"},{i:"💰",l:"Costos"}]},
+    {sec:"Sistema",items:[{i:"🔔",l:"Alertas"},{i:"⚙️",l:"Configuración"}]}
+  ]
+};
+
+let role='s', charts={};
+
+function buildNav(){
+  let h='';
+  NAV[role].forEach(g=>{
+    h+=`<div class="nav-sec">${g.sec}</div>`;
+    g.items.forEach(i=>{
+      const ac=i.active?' active':'';
+      const bc=i.bt==='w'?' w':i.bt==='e'?' e':'';
+      const bd=i.b?`<span class="nav-badge${bc}">${i.b}</span>`:'';
+      h+=`<div class="nav-item${ac}"><span class="nav-icon">${i.i}</span><span class="nav-label">${i.l}</span>${bd}</div>`;
+    });
+  });
+  document.getElementById('sb-nav').innerHTML=h;
+}
+function buildUser(){
+  const u=ROLES[role];
+  document.getElementById('sb-user').innerHTML=`<div class="u-av" style="background:${u.color};color:${u.tc}">${u.initials}</div><div><div class="u-name">${u.name}</div><div class="u-role">${u.role}</div></div>`;
+  const av=document.getElementById('topbar-avatar');
+  av.textContent=u.initials; av.style.background=u.color; av.style.color=u.tc;
+}
+
+function destroyCharts(){ Object.values(charts).forEach(c=>{try{c.destroy();}catch(e){}}); charts={}; }
+
+const MONTHS=['Oct','Nov','Dic','Ene','Feb','Mar','Abr'];
+const gridColor='rgba(255,255,255,0.05)';
+const tickColor='rgba(131,131,139,0.6)';
+
+// ── TÉCNICO ──
+function renderTecnico(){
+  const u=ROLES[role];
+  document.getElementById('dashboard-content').innerHTML=`
+    <div class="welcome">
+      <div><div class="welcome-text">Buenos días, Luis</div><div class="welcome-sub">Jueves 17 de abril · Turno mañana · 3 OT pendientes</div></div>
+      <div class="welcome-actions"><button class="wb wb-p">+ Nueva OT</button></div>
+    </div>
+
+    <div class="kpi-grid kpi-grid-3" style="margin-bottom:12px">
+      <div class="kpi-card kc-blue"><div class="kpi-label">Mis OT abiertas</div><div class="kpi-val blue">3</div><div class="kpi-delta dr">1 urgente — OT-0898</div></div>
+      <div class="kpi-card kc-green"><div class="kpi-label">Completadas hoy</div><div class="kpi-val green">2</div><div class="kpi-delta dg">▲ Buen ritmo</div></div>
+      <div class="kpi-card kc-warn"><div class="kpi-label">PM a realizar</div><div class="kpi-val warn">2</div><div class="kpi-delta dn">Esta semana</div></div>
+    </div>
+
+    <div class="main-grid">
+      <div class="ot-panel" style="height:300px">
+        <div class="ot-panel-hdr">
+          <span class="ot-panel-title">Mis órdenes de trabajo</span>
+          <span style="font-size:10px;color:rgba(131,131,139,0.5)">Solo asignadas a ti</span>
+        </div>
+        <div class="ot-list">
+          <div class="ot-item"><div class="ot-dot" style="background:var(--crit)"></div><div class="ot-info"><div class="ot-title">Sobrecalentamiento Compresor C-101</div><div class="ot-meta">OT-0898 · Línea A · Alta prioridad</div></div><span class="ot-badge ob-prog">En proceso</span></div>
+          <div class="ot-item"><div class="ot-dot" style="background:var(--warn)"></div><div class="ot-info"><div class="ot-title">Cambio rodamiento Bomba P-205</div><div class="ot-meta">OT-0891 · Sala Bombas</div></div><span class="ot-badge ob-open">Abierta</span></div>
+          <div class="ot-item"><div class="ot-dot" style="background:rgba(131,131,139,0.4)"></div><div class="ot-info"><div class="ot-title">Revisión filtros compresor</div><div class="ot-meta">OT-0889 · Línea A</div></div><span class="ot-badge ob-open">Abierta</span></div>
+          <div class="ot-item"><div class="ot-dot" style="background:var(--ok)"></div><div class="ot-info"><div class="ot-title">PM mensual motor MO-18</div><div class="ot-meta">PM-005 · Línea B · Esta semana</div></div><span class="ot-badge" style="background:rgba(127,119,221,0.12);color:#AFA9EC">PM</span></div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="alert-mini">
+          <div class="am-header"><span class="am-title">Alertas para ti</span><span class="am-count">2</span></div>
+          <div class="am-list">
+            <div class="am-item"><div class="am-dot" style="background:var(--crit)"></div><div class="am-text">OT-0898 marcada urgente por supervisora</div></div>
+            <div class="am-item"><div class="am-dot" style="background:var(--warn)"></div><div class="am-text">PM vence hoy: Revisión filtros Línea B</div></div>
+          </div>
+        </div>
+        <div class="pm-status">
+          <div class="ps-header"><span class="ps-title">Mis PM este mes</span><span class="ps-pct">3/4</span></div>
+          <div class="pm-bar"><div class="pm-bar-fill" style="width:75%"></div></div>
+          <div class="pm-rows">
+            <div class="pm-row"><div class="pm-row-label"><div class="pm-row-dot" style="background:var(--ok)"></div>Completados</div><div class="pm-row-val" style="color:var(--ok)">3</div></div>
+            <div class="pm-row"><div class="pm-row-label"><div class="pm-row-dot" style="background:var(--warn)"></div>Pendientes</div><div class="pm-row-val" style="color:var(--warn)">1</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ── SUPERVISOR ──
+function renderSupervisor(){
+  document.getElementById('dashboard-content').innerHTML=`
+    <div class="welcome">
+      <div><div class="welcome-text">Buenos días, María</div><div class="welcome-sub">Jueves 17 de abril 2025 · 12 OT activas · 2 alertas críticas</div></div>
+      <div class="welcome-actions"><button class="wb wb-g">⬇ Exportar</button><button class="wb wb-p">+ Nueva OT</button></div>
+    </div>
+
+    <div class="kpi-grid kpi-grid-4" style="margin-bottom:12px">
+      <div class="kpi-card kc-blue"><div class="kpi-label">OT totales activas</div><div class="kpi-val blue">12</div><div class="kpi-delta dn">7 internas · 5 externas</div></div>
+      <div class="kpi-card kc-ext"><div class="kpi-label">Servicios externos</div><div class="kpi-val ext">5</div><div class="kpi-delta dr">2 sin informe PDF</div></div>
+      <div class="kpi-card kc-warn"><div class="kpi-label">PM vencidos</div><div class="kpi-val warn">3</div><div class="kpi-delta dr">▲ Requieren acción</div></div>
+      <div class="kpi-card kc-crit"><div class="kpi-label">Alertas críticas</div><div class="kpi-val crit">2</div><div class="kpi-delta dr">Atención inmediata</div></div>
+    </div>
+
+    <div class="main-grid">
+      <div class="chart-card">
+        <div class="cc-header">
+          <span class="cc-title">OT completadas — últimos 7 meses</span>
+          <span class="cc-badge" style="background:rgba(29,158,117,0.12);color:var(--ext)">Ext destacado</span>
+        </div>
+        <div class="cw" style="height:170px"><canvas id="ch-ot-sup"></canvas></div>
+      </div>
+
+      <div class="ot-panel">
+        <div class="ot-panel-hdr">
+          <span class="ot-panel-title">OT recientes</span>
+          <span style="font-size:10px;color:var(--ext)">Verde = externo</span>
+        </div>
+        <div class="ot-list">
+          <div class="ot-item ext-ot"><div class="ot-dot" style="background:var(--ext)"></div><div class="ot-info"><div class="ot-title">Mantención tablero eléctrico</div><div class="ot-meta">OT-0897 · Eléctricas SpA · Sin PDF</div></div><span class="ot-badge ob-ext">Externo</span></div>
+          <div class="ot-item"><div class="ot-dot" style="background:var(--crit)"></div><div class="ot-info"><div class="ot-title">Sobrecalentamiento C-101</div><div class="ot-meta">OT-0898 · L. García · Urgente</div></div><span class="ot-badge ob-prog">En proceso</span></div>
+          <div class="ot-item ext-ot"><div class="ot-dot" style="background:var(--ext)"></div><div class="ot-info"><div class="ot-title">Instalación sensor nivel T-03</div><div class="ot-meta">OT-0892 · AutoControl Ltda · Sin PDF</div></div><span class="ot-badge ob-ext">Externo</span></div>
+          <div class="ot-item"><div class="ot-dot" style="background:var(--warn)"></div><div class="ot-info"><div class="ot-title">Vibración rodamiento P-205</div><div class="ot-meta">OT-0896 · M. Pérez</div></div><span class="ot-badge ob-open">Abierta</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-grid">
+      <div class="alert-mini">
+        <div class="am-header"><span class="am-title">Alertas activas</span><span class="am-count">5</span></div>
+        <div class="am-list">
+          <div class="am-item"><div class="am-dot" style="background:var(--crit)"></div><div class="am-text">C-101 temperatura 94°C — crítica</div></div>
+          <div class="am-item"><div class="am-dot" style="background:var(--crit)"></div><div class="am-text">Aceite Mobil DTE 100 agotado</div></div>
+          <div class="am-item"><div class="am-dot" style="background:var(--warn)"></div><div class="am-text">OT-0892 sin PDF (Mant. Industrial)</div></div>
+          <div class="am-item"><div class="am-dot" style="background:var(--warn)"></div><div class="am-text">PM vencido — Sello Bomba P-205</div></div>
+        </div>
+      </div>
+      <div class="pm-status">
+        <div class="ps-header"><span class="ps-title">Cumplimiento PM</span><span class="ps-pct">83%</span></div>
+        <div class="pm-bar"><div class="pm-bar-fill" style="width:83%"></div></div>
+        <div class="pm-rows">
+          <div class="pm-row"><div class="pm-row-label"><div class="pm-row-dot" style="background:var(--ok)"></div>Programadas</div><div class="pm-row-val" style="color:var(--ok)">11</div></div>
+          <div class="pm-row"><div class="pm-row-label"><div class="pm-row-dot" style="background:var(--warn)"></div>Próximas 7d</div><div class="pm-row-val" style="color:var(--warn)">4</div></div>
+          <div class="pm-row"><div class="pm-row-label"><div class="pm-row-dot" style="background:var(--crit)"></div>Vencidas</div><div class="pm-row-val" style="color:var(--crit)">3</div></div>
+        </div>
+      </div>
+      <div class="ext-mini">
+        <div class="em-header"><span class="em-title">Servicios externos</span><span class="em-count">5 OT</span></div>
+        <div class="em-list">
+          <div class="em-item"><div class="em-dot"></div><div class="em-text">Eléctricas SpA — OT-0897</div><span class="em-pdf" style="color:var(--warn)">📄?</span></div>
+          <div class="em-item"><div class="em-dot"></div><div class="em-text">AutoControl — OT-0892</div><span class="em-pdf" style="color:var(--warn)">📄?</span></div>
+          <div class="em-item"><div class="em-dot"></div><div class="em-text">Mant. Industrial — OT-0876</div><span class="em-pdf" style="color:var(--ext)">📄✓</span></div>
+          <div class="em-item"><div class="em-dot"></div><div class="em-text">Termograf SpA — OT-0870</div><span class="em-pdf" style="color:var(--ext)">📄✓</span></div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  setTimeout(()=>{
+    destroyCharts();
+    charts.otSup=new Chart(document.getElementById('ch-ot-sup'),{
+      type:'bar',
+      data:{labels:MONTHS,datasets:[
+        {label:'Interno',data:[15,17,14,16,18,15,17],backgroundColor:'rgba(127,119,221,0.55)',borderRadius:3},
+        {label:'Externo',data:[2,1,3,2,2,3,5],backgroundColor:'rgba(93,202,165,0.7)',borderRadius:3},
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:true,position:'top',labels:{color:tickColor,font:{size:10,family:'Barlow'},boxWidth:10,padding:10}},tooltip:{backgroundColor:'#0D2D48',borderColor:'rgba(255,255,255,0.1)',borderWidth:1,titleColor:'#EEF4FF',bodyColor:'#B5D4F4'}},
+        scales:{x:{stacked:true,grid:{color:gridColor},ticks:{color:tickColor,font:{size:10,family:'Barlow'}}},y:{stacked:true,grid:{color:gridColor},ticks:{color:tickColor,font:{size:10,family:'Barlow'}}}}}
+    });
+  },50);
+}
+
+// ── GERENCIA ──
+function renderGerencia(){
+  document.getElementById('dashboard-content').innerHTML=`
+    <div class="welcome">
+      <div><div class="welcome-text">Buenos días, Carlos</div><div class="welcome-sub">Jueves 17 de abril 2025 · Vista ejecutiva</div></div>
+      <div class="welcome-actions"><button class="wb wb-g">⬇ Reporte PDF</button></div>
+    </div>
+
+    <div class="kpi-grid kpi-grid-4" style="margin-bottom:12px">
+      <div class="kpi-card kc-blue"><div class="kpi-label">Disponibilidad planta</div><div class="kpi-val blue">94.2%</div><div class="kpi-delta dg">▲ +1.8% vs anterior</div></div>
+      <div class="kpi-card kc-ext"><div class="kpi-label">Costo servicios externos</div><div class="kpi-val ext">$18.2M</div><div class="kpi-delta dr">38.6% del total mtto</div></div>
+      <div class="kpi-card kc-green"><div class="kpi-label">OEE planta</div><div class="kpi-val green">78.4%</div><div class="kpi-delta dg">▲ +2.1% vs anterior</div></div>
+      <div class="kpi-card kc-warn"><div class="kpi-label">MTTR promedio</div><div class="kpi-val warn">3.2h</div><div class="kpi-delta dg">▼ −0.4h mejora</div></div>
+    </div>
+
+    <div class="main-grid">
+      <div class="chart-card">
+        <div class="cc-header">
+          <span class="cc-title">Costo mantenimiento — interno vs externo (M CLP)</span>
+        </div>
+        <div class="cw" style="height:170px"><canvas id="ch-cost-ger"></canvas></div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="kpi-card kc-pm" style="flex:1">
+          <div class="kpi-label">Cumplimiento PM mensual</div>
+          <div class="kpi-val pm">83%</div>
+          <div style="height:4px;background:rgba(255,255,255,0.08);border-radius:2px;margin-top:8px;overflow:hidden"><div style="height:100%;width:83%;background:var(--pm);border-radius:2px"></div></div>
+          <div class="kpi-delta dn" style="margin-top:6px">18 rutinas activas · 3 vencidas</div>
+        </div>
+        <div class="kpi-card kc-crit" style="flex:1">
+          <div class="kpi-label">Fallas no planificadas</div>
+          <div class="kpi-val crit">6</div>
+          <div class="kpi-delta dr">▲ +2 vs mes anterior</div>
+          <div class="kpi-delta dn">Compresor C-101: 3 fallas</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-grid">
+      <div class="chart-card">
+        <div class="cc-header"><span class="cc-title" style="font-size:10px">Disponibilidad por activo</span></div>
+        <div class="cw" style="height:130px"><canvas id="ch-disp-ger"></canvas></div>
+      </div>
+      <div class="ext-mini">
+        <div class="em-header"><span class="em-title">Gasto por contratista 2025</span><span style="font-family:var(--head);font-size:18px;font-weight:600;color:var(--ext)">$4.9M</span></div>
+        <div class="em-list">
+          <div class="em-item"><div class="em-dot"></div><div class="em-text">Eléctricas SpA</div><span style="font-size:11px;font-weight:500;color:var(--ext)">$2.1M</span></div>
+          <div class="em-item"><div class="em-dot"></div><div class="em-text">AutoControl Ltda.</div><span style="font-size:11px;font-weight:500;color:var(--ext)">$1.4M</span></div>
+          <div class="em-item"><div class="em-dot"></div><div class="em-text">Mant. Industrial SA</div><span style="font-size:11px;color:rgba(200,210,225,0.6)">$890K</span></div>
+          <div class="em-item"><div class="em-dot"></div><div class="em-text">Otros</div><span style="font-size:11px;color:rgba(200,210,225,0.6)">$500K</span></div>
+        </div>
+      </div>
+      <div class="alert-mini">
+        <div class="am-header"><span class="am-title">Alertas ejecutivas</span><span class="am-count" style="color:var(--warn);font-size:18px">3</span></div>
+        <div class="am-list">
+          <div class="am-item"><div class="am-dot" style="background:var(--crit)"></div><div class="am-text">Compresor C-101 — disponibilidad 72% (meta 95%)</div></div>
+          <div class="am-item"><div class="am-dot" style="background:var(--warn)"></div><div class="am-text">Costo externo supera 38% del total</div></div>
+          <div class="am-item"><div class="am-dot" style="background:var(--warn)"></div><div class="am-text">3 PM vencidos sin programar</div></div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  setTimeout(()=>{
+    destroyCharts();
+    charts.costGer=new Chart(document.getElementById('ch-cost-ger'),{
+      type:'line',
+      data:{labels:MONTHS,datasets:[
+        {label:'Total',data:[52,49,55,51,48,53,47.1],borderColor:'#EEF4FF',backgroundColor:'rgba(238,244,255,0.05)',borderWidth:2,tension:0.3,fill:true,pointBackgroundColor:'#EEF4FF',pointRadius:3},
+        {label:'Externo',data:[18,15,22,19,17,21,18.2],borderColor:'#5DCAA5',backgroundColor:'rgba(93,202,165,0.06)',borderWidth:1.5,tension:0.3,borderDash:[4,3],pointBackgroundColor:'#5DCAA5',pointRadius:3},
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:true,position:'top',labels:{color:tickColor,font:{size:10,family:'Barlow'},boxWidth:10,padding:10}},tooltip:{backgroundColor:'#0D2D48',borderColor:'rgba(255,255,255,0.1)',borderWidth:1,titleColor:'#EEF4FF',bodyColor:'#B5D4F4'}},
+        scales:{x:{grid:{color:gridColor},ticks:{color:tickColor,font:{size:10,family:'Barlow'}}},y:{grid:{color:gridColor},ticks:{color:tickColor,font:{size:10,family:'Barlow'}}}}}
+    });
+    charts.dispGer=new Chart(document.getElementById('ch-disp-ger'),{
+      type:'bar',
+      data:{labels:['C-101','P-205','MO-18','CH-3','T-01'],
+        datasets:[{data:[72,94,98,96,99],backgroundColor:(ctx)=>{const v=ctx.raw;return v>=95?'rgba(151,196,89,0.7)':v>=80?'rgba(33,150,243,0.6)':'rgba(226,75,74,0.7)';},borderRadius:4}]},
+      options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
+        plugins:{legend:{display:false},tooltip:{backgroundColor:'#0D2D48',borderColor:'rgba(255,255,255,0.1)',borderWidth:1,titleColor:'#EEF4FF',bodyColor:'#B5D4F4',callbacks:{label:(c)=>`${c.raw}%`}}},
+        scales:{x:{max:100,grid:{color:gridColor},ticks:{color:tickColor,font:{size:9,family:'Barlow'},callback:(v)=>`${v}%`}},y:{grid:{display:false},ticks:{color:tickColor,font:{size:10,family:'Barlow'}}}}}
+    });
+  },50);
+}
+
+function setRole(r){
+  role=r;
+  ['t','s','g'].forEach(x=>{ document.getElementById('rb-'+x).className='rbtn'+(x===r?` on-${r}`:''); });
+  buildNav(); buildUser();
+  destroyCharts();
+  if(r==='t') renderTecnico();
+  else if(r==='s') renderSupervisor();
+  else renderGerencia();
+}
+
+setRole('s');
+</script>
+</body>
+</html>

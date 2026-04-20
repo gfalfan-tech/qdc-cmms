@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>QDC CMMS — Configuración</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --navy:#08223D;--mid:#0B2545;--deep:#061C2E;
+  --accent:#2196F3;--white:#EEF4FF;
+  --ok:#97C459;--warn:#EF9F27;--crit:#E24B4A;--ext:#5DCAA5;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.10);
+  --font:'Barlow',sans-serif;--head:'Barlow Condensed',sans-serif;
+}
+body{font-family:var(--font);background:#050F1C;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;}
+.shell{display:flex;width:100%;max-width:1100px;height:860px;background:var(--mid);border-radius:12px;overflow:hidden;border:1px solid var(--border2);}
+
+/* SIDEBAR */
+.sidebar{width:210px;flex-shrink:0;background:var(--navy);display:flex;flex-direction:column;border-right:1px solid var(--border);}
+.sb-logo{padding:16px 14px 12px;border-bottom:1px solid var(--border);}
+.sb-logo-mark{font-family:var(--head);font-size:16px;font-weight:700;color:var(--white);letter-spacing:1px;}
+.sb-logo-sub{font-size:9px;color:rgba(131,131,139,0.6);margin-top:2px;}
+.sb-logo-line{width:20px;height:2px;background:var(--accent);margin-top:5px;}
+.sb-nav{flex:1;overflow-y:auto;padding:6px 0;}
+.nav-sec{padding:10px 14px 3px;font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(131,131,139,0.4);}
+.nav-item{display:flex;align-items:center;gap:8px;padding:8px 14px;cursor:pointer;border-left:2px solid transparent;transition:background .1s;}
+.nav-item:hover{background:rgba(255,255,255,0.04);}
+.nav-item.active{background:rgba(33,150,243,0.12);border-left-color:var(--accent);}
+.nav-icon{font-size:13px;width:16px;text-align:center;}
+.nav-label{font-size:12px;color:rgba(200,210,225,0.7);flex:1;}
+.nav-item.active .nav-label{color:var(--white);font-weight:500;}
+.sb-user{padding:10px 12px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+.u-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;}
+.u-name{font-size:11px;color:var(--white);font-weight:500;}
+.u-role{font-size:9px;color:rgba(131,131,139,0.6);}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;}
+.topbar{height:50px;background:var(--mid);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0;}
+.page-title{font-family:var(--head);font-size:16px;font-weight:600;color:var(--white);flex:1;letter-spacing:0.5px;}
+
+/* CONTENT LAYOUT */
+.cfg-layout{flex:1;display:flex;overflow:hidden;}
+.cfg-sidebar{width:200px;flex-shrink:0;border-right:1px solid var(--border);padding:10px 0;overflow-y:auto;}
+.cfg-item{display:flex;align-items:center;gap:9px;padding:9px 14px;cursor:pointer;transition:background .1s;border-left:2px solid transparent;}
+.cfg-item:hover{background:rgba(255,255,255,0.04);}
+.cfg-item.on{background:rgba(33,150,243,0.1);border-left-color:var(--accent);}
+.cfg-item-icon{font-size:14px;width:18px;text-align:center;}
+.cfg-item-label{font-size:12px;color:rgba(200,210,225,0.7);}
+.cfg-item.on .cfg-item-label{color:var(--white);font-weight:500;}
+.cfg-content{flex:1;overflow-y:auto;padding:20px;}
+.cfg-content::-webkit-scrollbar{width:3px;}
+.cfg-content::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);}
+
+/* SECTION */
+.cfg-section-title{font-family:var(--head);font-size:18px;font-weight:600;color:var(--white);margin-bottom:4px;}
+.cfg-section-sub{font-size:12px;color:rgba(131,131,139,0.6);margin-bottom:20px;}
+.sec-title{font-size:10px;font-weight:500;letter-spacing:1.2px;text-transform:uppercase;color:rgba(131,131,139,0.45);margin-bottom:10px;}
+
+/* USER CARDS */
+.user-grid{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
+.user-card{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 14px;border-radius:8px;
+  background:rgba(255,255,255,0.03);
+  border:0.5px solid rgba(255,255,255,0.07);
+  transition:background .1s;
+}
+.user-card:hover{background:rgba(255,255,255,0.05);}
+.user-card.inactive{opacity:0.5;}
+.ua{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--head);font-size:14px;font-weight:700;flex-shrink:0;}
+.u-info{flex:1;}
+.u-fullname{font-size:13px;font-weight:500;color:var(--white);}
+.u-email{font-size:11px;color:rgba(131,131,139,0.6);margin-top:1px;font-family:monospace;}
+.u-meta{font-size:10px;color:rgba(131,131,139,0.4);margin-top:2px;}
+.role-pill{font-size:10px;font-weight:500;padding:3px 10px;border-radius:10px;}
+.rp-t{background:rgba(24,95,165,0.2);color:#B5D4F4;}
+.rp-s{background:rgba(133,79,11,0.2);color:#FAC775;}
+.rp-g{background:rgba(39,80,10,0.2);color:#C0DD97;}
+.status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.sd-on{background:var(--ok);}
+.sd-off{background:rgba(131,131,139,0.3);}
+.action-btns{display:flex;gap:5px;}
+.ab{padding:4px 10px;border-radius:4px;border:0.5px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:rgba(200,210,225,0.7);cursor:pointer;font-size:10px;font-family:var(--font);transition:all .1s;}
+.ab:hover{background:rgba(255,255,255,0.1);color:var(--white);}
+.ab.danger{border-color:rgba(226,75,74,0.3);color:#F09595;}
+.ab.danger:hover{background:rgba(226,75,74,0.1);}
+.ab.success{border-color:rgba(99,153,34,0.3);color:#C0DD97;}
+.ab.success:hover{background:rgba(99,153,34,0.1);}
+
+/* FORM */
+.form-card{background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.08);border-radius:8px;padding:16px;margin-bottom:16px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.form-row.full{grid-template-columns:1fr;}
+.form-row.three{grid-template-columns:1fr 1fr 1fr;}
+.form-group{display:flex;flex-direction:column;gap:5px;}
+.form-label{font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.6);}
+.req{color:var(--accent);}
+.form-input,.form-select{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:var(--white);font-size:12px;font-family:var(--font);padding:8px 10px;outline:none;transition:border-color .1s;}
+.form-input:focus,.form-select:focus{border-color:var(--accent);}
+.form-input::placeholder{color:rgba(131,131,139,0.4);}
+.form-select option{background:#0D2D48;}
+.form-hint{font-size:10px;color:rgba(131,131,139,0.4);margin-top:2px;}
+.form-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06);}
+.btn-cancel{padding:7px 14px;border-radius:5px;border:0.5px solid rgba(255,255,255,0.1);background:transparent;color:rgba(200,210,225,0.7);cursor:pointer;font-size:12px;font-family:var(--font);}
+.btn-save{padding:7px 18px;border-radius:5px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-size:12px;font-weight:600;font-family:var(--font);}
+.btn-save:hover{background:#1976D2;}
+
+/* AUDIT LOG */
+.log-list{display:flex;flex-direction:column;gap:4px;}
+.log-item{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:9px 12px;border-radius:6px;
+  background:rgba(255,255,255,0.02);
+  border-left:2px solid;
+  font-size:12px;
+}
+.log-item.create{border-color:rgba(99,153,34,0.5);}
+.log-item.edit{border-color:rgba(33,150,243,0.5);}
+.log-item.deact{border-color:rgba(239,159,39,0.5);}
+.log-item.login{border-color:rgba(131,131,139,0.3);}
+.log-item.ot{border-color:rgba(33,150,243,0.4);}
+.log-item.emb{border-color:rgba(216,90,48,0.4);}
+.log-time{font-family:monospace;font-size:10px;color:rgba(131,131,139,0.45);white-space:nowrap;flex-shrink:0;margin-top:1px;}
+.log-body{flex:1;}
+.log-action{color:var(--white);font-weight:500;}
+.log-detail{font-size:10px;color:rgba(131,131,139,0.5);margin-top:1px;}
+.log-user{font-size:10px;font-weight:500;padding:1px 6px;border-radius:8px;flex-shrink:0;}
+.lu-t{background:rgba(24,95,165,0.15);color:#B5D4F4;}
+.lu-s{background:rgba(133,79,11,0.15);color:#FAC775;}
+.lu-g{background:rgba(39,80,10,0.15);color:#C0DD97;}
+
+/* ALERT BOX */
+.alert-box{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:10px 14px;border-radius:7px;
+  background:rgba(239,159,39,0.07);
+  border:1px solid rgba(239,159,39,0.2);
+  font-size:12px;color:#FAC775;
+  margin-bottom:14px;line-height:1.5;
+}
+.alert-box.info{background:rgba(33,150,243,0.07);border-color:rgba(33,150,243,0.2);color:#85B7EB;}
+.alert-box.ok{background:rgba(99,153,34,0.07);border-color:rgba(99,153,34,0.2);color:#C0DD97;}
+
+/* INFO CARD */
+.info-card{background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px;margin-bottom:10px;}
+.info-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+.info-row:last-child{border-bottom:none;}
+.info-label{font-size:12px;color:rgba(200,210,225,0.6);}
+.info-val{font-size:12px;color:var(--white);font-weight:500;}
+.info-val.ok{color:var(--ok);}
+.info-val.warn{color:var(--warn);}
+
+/* MODAL */
+.modal-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.72);display:flex;align-items:center;justify-content:center;z-index:100;}
+.modal-overlay.hidden{display:none;}
+.modal{background:#0D2D48;border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;width:480px;max-height:680px;overflow-y:auto;padding:22px;}
+.modal::-webkit-scrollbar{width:3px;}
+.modal::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.modal-title{font-family:var(--head);font-size:16px;font-weight:600;color:var(--white);}
+.modal-close{font-size:16px;color:rgba(131,131,139,0.6);cursor:pointer;background:none;border:none;}
+.modal-close:hover{color:var(--white);}
+.pw-strength{height:3px;border-radius:2px;margin-top:5px;transition:all .2s;}
+.pw-hint{font-size:10px;margin-top:3px;}
+
+/* TOAST */
+#cfg-toast{
+  position:absolute;bottom:20px;right:20px;
+  background:#0D2D48;border:1px solid rgba(33,150,243,0.3);
+  border-radius:7px;padding:10px 14px;font-size:12px;
+  color:var(--white);z-index:200;
+  transform:translateY(60px);opacity:0;transition:all .25s;
+  max-width:280px;
+}
+#cfg-toast.show{transform:translateY(0);opacity:1;}
+
+.shell-wrap{position:relative;width:100%;max-width:1100px;}
+</style>
+</head>
+<body>
+<div class="shell-wrap">
+<div class="shell">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-mark">QDC</div>
+    <div class="sb-logo-sub">Química del Campo S.p.A · CMMS Pro</div>
+    <div class="sb-logo-line"></div>
+  </div>
+  <div class="sb-nav">
+    <div class="nav-sec">Análisis</div>
+    <div class="nav-item"><span class="nav-icon">📊</span><span class="nav-label">KPIs y reportes</span></div>
+    <div class="nav-item"><span class="nav-icon">💰</span><span class="nav-label">Costos</span></div>
+    <div class="nav-sec">Sistema</div>
+    <div class="nav-item"><span class="nav-icon">🔔</span><span class="nav-label">Alertas</span></div>
+    <div class="nav-item active"><span class="nav-icon">⚙️</span><span class="nav-label">Configuración</span></div>
+  </div>
+  <div class="sb-user">
+    <div class="u-av" style="background:#27500A;color:#C0DD97">CR</div>
+    <div><div class="u-name">Carlos Reyes</div><div class="u-role">Gerente de Operaciones</div></div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main" style="position:relative">
+  <div class="topbar">
+    <div class="page-title">Configuración del sistema</div>
+    <div style="font-size:11px;color:rgba(131,131,139,0.5)">Solo visible para Gerencia</div>
+    <div style="width:8px;height:8px;border-radius:50%;background:var(--ok)"></div>
+    <span style="font-size:11px;color:var(--ok)">Sistema activo</span>
+  </div>
+
+  <div class="cfg-layout">
+    <!-- CONFIG NAV -->
+    <div class="cfg-sidebar">
+      <div class="cfg-item on" id="ci-usuarios" onclick="showSection('usuarios',this)">
+        <span class="cfg-item-icon">👥</span>
+        <span class="cfg-item-label">Usuarios</span>
+      </div>
+      <div class="cfg-item" id="ci-nuevo" onclick="showSection('nuevo',this)">
+        <span class="cfg-item-icon">➕</span>
+        <span class="cfg-item-label">Crear usuario</span>
+      </div>
+      <div class="cfg-item" id="ci-auditoria" onclick="showSection('auditoria',this)">
+        <span class="cfg-item-icon">📋</span>
+        <span class="cfg-item-label">Log de auditoría</span>
+      </div>
+      <div class="cfg-item" id="ci-sistema" onclick="showSection('sistema',this)">
+        <span class="cfg-item-icon">🔧</span>
+        <span class="cfg-item-label">Sistema</span>
+      </div>
+      <div class="cfg-item" id="ci-seguridad" onclick="showSection('seguridad',this)">
+        <span class="cfg-item-icon">🔒</span>
+        <span class="cfg-item-label">Seguridad</span>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="cfg-content" id="cfg-content"></div>
+  </div>
+
+  <!-- MODAL -->
+  <div class="modal-overlay hidden" id="modal">
+    <div class="modal" id="modal-inner"></div>
+  </div>
+
+  <!-- TOAST -->
+  <div id="cfg-toast"></div>
+</div>
+</div>
+</div>
+
+<script>
+let toastT;
+function toast(msg, color){
+  const t=document.getElementById('cfg-toast');
+  t.textContent=msg;
+  t.style.borderColor=color||'rgba(33,150,243,0.3)';
+  t.classList.add('show');
+  clearTimeout(toastT);
+  toastT=setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+function openModal(html){
+  document.getElementById('modal-inner').innerHTML=html;
+  document.getElementById('modal').classList.remove('hidden');
+}
+function closeModal(){
+  document.getElementById('modal').classList.add('hidden');
+}
+document.getElementById('modal').addEventListener('click',function(e){
+  if(e.target===this) closeModal();
+});
+
+// ── USERS DATA ──
+const USERS = [
+  {id:1,name:'Carlos Reyes',   email:'c.reyes@qdc.cl',    rol:'g',cargo:'Gerente de Operaciones',    activo:true, creado:'15/01/2025',ultimo:'17/04/2025 09:12',color:'#27500A',tc:'#C0DD97'},
+  {id:2,name:'María Solís',    email:'m.solis@qdc.cl',     rol:'s',cargo:'Supervisora de Mantenimiento',activo:true, creado:'15/01/2025',ultimo:'17/04/2025 08:45',color:'#854F0B',tc:'#FAC775'},
+  {id:3,name:'Luis García',    email:'l.garcia@qdc.cl',    rol:'t',cargo:'Técnico de Mantenimiento',  activo:true, creado:'15/01/2025',ultimo:'17/04/2025 07:30',color:'#185FA5',tc:'#B5D4F4'},
+  {id:4,name:'María Pérez',    email:'m.perez@qdc.cl',     rol:'t',cargo:'Técnica Eléctrica',          activo:true, creado:'20/01/2025',ultimo:'16/04/2025 17:20',color:'#185FA5',tc:'#B5D4F4'},
+  {id:5,name:'Roberto Torres', email:'r.torres@qdc.cl',    rol:'t',cargo:'Técnico HVAC',               activo:true, creado:'20/01/2025',ultimo:'15/04/2025 16:10',color:'#185FA5',tc:'#B5D4F4'},
+  {id:6,name:'Andrés Campos',  email:'a.campos@qdc.cl',    rol:'t',cargo:'Técnico Mecánico',           activo:false,creado:'20/01/2025',ultimo:'01/03/2025 14:00',color:'#185FA5',tc:'#B5D4F4'},
+  {id:7,name:'Eduardo Castro', email:'e.castro@qdc.cl',    rol:'t',cargo:'Técnico Predictivo',         activo:true, creado:'01/02/2025',ultimo:'16/04/2025 18:30',color:'#185FA5',tc:'#B5D4F4'},
+];
+
+const AUDIT_LOG = [
+  {tipo:'login', user:'María Solís',    urol:'s', accion:'Inicio de sesión',                  detalle:'IP: 192.168.1.45 · Navegador Chrome',            tiempo:'17/04 09:12'},
+  {tipo:'ot',    user:'María Solís',    urol:'s', accion:'Creó OT-0898',                       detalle:'Sobrecalentamiento C-101 · Prioridad crítica',    tiempo:'17/04 09:18'},
+  {tipo:'login', user:'Luis García',    urol:'t', accion:'Inicio de sesión',                   detalle:'IP: 192.168.1.52 · Navegador Chrome',            tiempo:'17/04 07:30'},
+  {tipo:'ot',    user:'Luis García',    urol:'t', accion:'Actualizó OT-0891',                  detalle:'Estado: Completada · Bomba P-205',                tiempo:'17/04 08:15'},
+  {tipo:'emb',   user:'Luis García',    urol:'t', accion:'Registró embalaje EMB-001',           detalle:'NV-2025-0412 · Comercial Andina SpA · $68.400',  tiempo:'16/04 16:45'},
+  {tipo:'edit',  user:'Carlos Reyes',   urol:'g', accion:'Editó usuario María Pérez',           detalle:'Cambio: cargo actualizado',                      tiempo:'15/04 11:20'},
+  {tipo:'login', user:'Carlos Reyes',   urol:'g', accion:'Inicio de sesión',                   detalle:'IP: 192.168.1.10 · Navegador Chrome',            tiempo:'15/04 11:15'},
+  {tipo:'deact', user:'Carlos Reyes',   urol:'g', accion:'Desactivó usuario Andrés Campos',    detalle:'Motivo: Desvinculación empresa · 01/03/2025',    tiempo:'01/03 10:30'},
+  {tipo:'create',user:'Carlos Reyes',   urol:'g', accion:'Creó usuario Eduardo Castro',         detalle:'Rol: Técnico · e.castro@qdc.cl',                 tiempo:'01/02 09:00'},
+  {tipo:'ot',    user:'María Solís',    urol:'s', accion:'Asignó OT-0897 a Eléctricas SpA',    detalle:'Servicio externo · Tablero E-01',                tiempo:'14/04 14:22'},
+  {tipo:'emb',   user:'Luis García',    urol:'t', accion:'Registró embalaje EMB-002',           detalle:'NV-2025-0408 · Minera del Norte SA · $218.600', tiempo:'14/04 11:30'},
+  {tipo:'login', user:'Roberto Torres', urol:'t', accion:'Inicio de sesión',                   detalle:'IP: 192.168.1.67 · Navegador Firefox',           tiempo:'14/04 07:45'},
+  {tipo:'create',user:'Carlos Reyes',   urol:'g', accion:'Creó usuario Roberto Torres',         detalle:'Rol: Técnico · r.torres@qdc.cl',                 tiempo:'20/01 09:10'},
+  {tipo:'create',user:'Carlos Reyes',   urol:'g', accion:'Creó usuario Luis García',            detalle:'Rol: Técnico · l.garcia@qdc.cl',                 tiempo:'15/01 10:00'},
+  {tipo:'create',user:'Carlos Reyes',   urol:'g', accion:'Creó usuario María Solís',            detalle:'Rol: Supervisor · m.solis@qdc.cl',              tiempo:'15/01 10:05'},
+];
+
+const rolLabel = {t:'Técnico',s:'Supervisor',g:'Gerencia'};
+const rolPill  = r=> r==='t'?'rp-t':r==='s'?'rp-s':'rp-g';
+const logCls   = t=> ({create:'create',edit:'edit',deact:'deact',login:'login',ot:'ot',emb:'emb'})[t]||'login';
+const logUCls  = r=> r==='t'?'lu-t':r==='s'?'lu-s':'lu-g';
+const initials = n=> n.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+
+// ── SECTIONS ──
+function showSection(sec, el){
+  document.querySelectorAll('.cfg-item').forEach(i=>i.classList.remove('on'));
+  if(el) el.classList.add('on');
+  const content = document.getElementById('cfg-content');
+  if(sec==='usuarios')  renderUsuarios(content);
+  else if(sec==='nuevo') renderNuevo(content);
+  else if(sec==='auditoria') renderAuditoria(content);
+  else if(sec==='sistema') renderSistema(content);
+  else if(sec==='seguridad') renderSeguridad(content);
+}
+
+// ── USUARIOS ──
+function renderUsuarios(el){
+  const activos   = USERS.filter(u=>u.activo);
+  const inactivos = USERS.filter(u=>!u.activo);
+
+  el.innerHTML=`
+    <div class="cfg-section-title">Gestión de usuarios</div>
+    <div class="cfg-section-sub">Solo Gerencia puede crear, editar y desactivar usuarios del sistema.</div>
+
+    <div class="alert-box info">
+      ℹ️ &nbsp;Las sesiones no expiran automáticamente. El sistema permanece activo hasta que el usuario cierre sesión manualmente. Para revocar acceso inmediato de un usuario, desactívalo desde esta pantalla.
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px">
+      <div style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:7px;padding:12px">
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px">Usuarios totales</div>
+        <div style="font-family:var(--head);font-size:24px;font-weight:600;color:#85B7EB">${USERS.length}</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:7px;padding:12px">
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px">Activos</div>
+        <div style="font-family:var(--head);font-size:24px;font-weight:600;color:var(--ok)">${activos.length}</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:7px;padding:12px">
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px">Inactivos</div>
+        <div style="font-family:var(--head);font-size:24px;font-weight:600;color:rgba(131,131,139,0.5)">${inactivos.length}</div>
+      </div>
+    </div>
+
+    <div class="sec-title">Usuarios activos (${activos.length})</div>
+    <div class="user-grid" style="margin-bottom:20px">
+      ${activos.map(u=>userCard(u)).join('')}
+    </div>
+
+    ${inactivos.length?`
+    <div class="sec-title">Usuarios inactivos (${inactivos.length})</div>
+    <div class="user-grid">
+      ${inactivos.map(u=>userCard(u)).join('')}
+    </div>`:''}
+
+    <div style="margin-top:16px">
+      <button class="btn-save" onclick="showSection('nuevo',document.getElementById('ci-nuevo'))">➕ Crear nuevo usuario</button>
+    </div>
+  `;
+}
+
+function userCard(u){
+  const isMe = u.id===1;
+  return `<div class="user-card ${u.activo?'':'inactive'}">
+    <div class="ua" style="background:${u.color}22;color:${u.color}">${initials(u.name)}</div>
+    <div style="width:8px;height:8px;border-radius:50%;background:${u.activo?'var(--ok)':'rgba(131,131,139,0.3)'};flex-shrink:0"></div>
+    <div class="u-info">
+      <div class="u-fullname">${u.name}${isMe?' <span style="font-size:10px;color:rgba(131,131,139,0.5)">(tú)</span>':''}</div>
+      <div class="u-email">${u.email}</div>
+      <div class="u-meta">Creado ${u.creado} · Último acceso ${u.ultimo}</div>
+    </div>
+    <span class="role-pill ${rolPill(u.rol)}">${rolLabel[u.rol]}</span>
+    <div class="action-btns">
+      ${!isMe?`<button class="ab" onclick="editUser(${u.id})">✎ Editar</button>`:''}
+      ${!isMe&&u.activo?`<button class="ab danger" onclick="deactivateUser(${u.id},'${u.name}')">Desactivar</button>`:''}
+      ${!isMe&&!u.activo?`<button class="ab success" onclick="activateUser(${u.id},'${u.name}')">Reactivar</button>`:''}
+    </div>
+  </div>`;
+}
+
+// ── EDITAR USUARIO ──
+function editUser(id){
+  const u=USERS.find(x=>x.id===id);
+  openModal(`
+    <div class="modal-header">
+      <div class="modal-title">Editar usuario — ${u.name}</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="alert-box" style="margin-bottom:14px">
+      ⚠️ &nbsp;Los cambios de rol son inmediatos. Si el usuario tiene sesión activa, verá el nuevo acceso en su próxima navegación.
+    </div>
+    <div class="form-row full" style="margin-bottom:12px">
+      <div class="form-group">
+        <label class="form-label">Nombre completo</label>
+        <input type="text" class="form-input" value="${u.name}" id="edit-name"/>
+      </div>
+    </div>
+    <div class="form-row" style="margin-bottom:12px">
+      <div class="form-group">
+        <label class="form-label">Email corporativo</label>
+        <input type="email" class="form-input" value="${u.email}" id="edit-email"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Rol en el sistema</label>
+        <select class="form-select" id="edit-rol">
+          <option value="t" ${u.rol==='t'?'selected':''}>Técnico de Mantenimiento</option>
+          <option value="s" ${u.rol==='s'?'selected':''}>Supervisor de Mantenimiento</option>
+          <option value="g" ${u.rol==='g'?'selected':''}>Gerencia / Administrador</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row full" style="margin-bottom:12px">
+      <div class="form-group">
+        <label class="form-label">Nueva contraseña <span style="font-size:10px;color:rgba(131,131,139,0.5)">(dejar vacío para no cambiar)</span></label>
+        <input type="password" class="form-input" placeholder="Nueva contraseña" id="edit-pw" oninput="checkPwStrength(this.value)"/>
+        <div class="pw-strength" id="pw-bar" style="width:0%;background:var(--crit)"></div>
+        <div class="pw-hint" id="pw-hint" style="color:rgba(131,131,139,0.4)"></div>
+        <div class="form-hint">El usuario no puede cambiar su propia contraseña. Solo Gerencia puede hacerlo.</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" onclick="saveEdit(${id})">Guardar cambios</button>
+    </div>
+  `);
+}
+
+function saveEdit(id){
+  const u=USERS.find(x=>x.id===id);
+  const name=document.getElementById('edit-name').value.trim();
+  const email=document.getElementById('edit-email').value.trim();
+  const rol=document.getElementById('edit-rol').value;
+  if(!name||!email){toast('Completa todos los campos','rgba(226,75,74,0.5)');return;}
+  u.name=name; u.email=email; u.rol=rol;
+  AUDIT_LOG.unshift({tipo:'edit',user:'Carlos Reyes',urol:'g',accion:`Editó usuario ${name}`,detalle:`Rol: ${rolLabel[rol]} · ${email}`,tiempo:'Ahora'});
+  closeModal();
+  toast(`✓ Usuario ${name} actualizado correctamente`,'rgba(99,153,34,0.4)');
+  renderUsuarios(document.getElementById('cfg-content'));
+}
+
+// ── DESACTIVAR ──
+function deactivateUser(id, name){
+  openModal(`
+    <div class="modal-header">
+      <div class="modal-title">Desactivar usuario</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="alert-box" style="margin-bottom:14px">
+      ⚠️ &nbsp;<strong>${name}</strong> perderá acceso inmediatamente al sistema. Su historial de actividad se conserva. Podrás reactivar el usuario en cualquier momento.
+    </div>
+    <div class="form-row full" style="margin-bottom:12px">
+      <div class="form-group">
+        <label class="form-label">Motivo de desactivación <span class="req">*</span></label>
+        <select class="form-select" id="deact-motivo">
+          <option>Desvinculación de la empresa</option>
+          <option>Licencia médica extendida</option>
+          <option>Cambio de cargo sin acceso al sistema</option>
+          <option>Suspensión temporal</option>
+          <option>Otro</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button style="padding:7px 18px;border-radius:5px;border:none;background:var(--crit);color:#fff;cursor:pointer;font-size:12px;font-weight:600;font-family:var(--font)" onclick="confirmDeact(${id},'${name}')">Desactivar usuario</button>
+    </div>
+  `);
+}
+
+function confirmDeact(id, name){
+  const motivo=document.getElementById('deact-motivo').value;
+  const u=USERS.find(x=>x.id===id);
+  u.activo=false;
+  AUDIT_LOG.unshift({tipo:'deact',user:'Carlos Reyes',urol:'g',accion:`Desactivó usuario ${name}`,detalle:`Motivo: ${motivo}`,tiempo:'Ahora'});
+  closeModal();
+  toast(`Usuario ${name} desactivado. Historial conservado.`,'rgba(239,159,39,0.4)');
+  renderUsuarios(document.getElementById('cfg-content'));
+}
+
+function activateUser(id, name){
+  const u=USERS.find(x=>x.id===id);
+  u.activo=true;
+  AUDIT_LOG.unshift({tipo:'create',user:'Carlos Reyes',urol:'g',accion:`Reactivó usuario ${name}`,detalle:`Acceso restaurado · ${u.email}`,tiempo:'Ahora'});
+  toast(`✓ Usuario ${name} reactivado correctamente`,'rgba(99,153,34,0.4)');
+  renderUsuarios(document.getElementById('cfg-content'));
+}
+
+// ── NUEVO USUARIO ──
+function renderNuevo(el){
+  el.innerHTML=`
+    <div class="cfg-section-title">Crear nuevo usuario</div>
+    <div class="cfg-section-sub">Los campos con <span style="color:var(--accent)">*</span> son obligatorios. El usuario recibirá la contraseña asignada y no podrá modificarla.</div>
+
+    <div class="alert-box ok" style="margin-bottom:16px">
+      ✓ &nbsp;Las credenciales son individuales por persona. Gerencia asigna y controla todas las contraseñas. Los usuarios no tienen acceso al módulo de configuración.
+    </div>
+
+    <div class="form-card">
+      <div class="sec-title">Datos del usuario</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nombre completo <span class="req">*</span></label>
+          <input type="text" class="form-input" placeholder="Nombre Apellido" id="n-nombre"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email corporativo <span class="req">*</span></label>
+          <input type="email" class="form-input" placeholder="nombre@qdc.cl" id="n-email"/>
+          <div class="form-hint">Debe terminar en @qdc.cl</div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Rol en el sistema <span class="req">*</span></label>
+          <select class="form-select" id="n-rol" onchange="updateRolePreview(this.value)">
+            <option value="">Seleccionar rol…</option>
+            <option value="t">Técnico de Mantenimiento</option>
+            <option value="s">Supervisor de Mantenimiento</option>
+            <option value="g">Gerencia / Administrador</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Contraseña inicial <span class="req">*</span></label>
+          <input type="password" class="form-input" placeholder="Mín. 8 caracteres" id="n-pw" oninput="checkPwStrength(this.value)"/>
+          <div class="pw-strength" id="pw-bar" style="width:0%;background:var(--crit)"></div>
+          <div class="pw-hint" id="pw-hint" style="color:rgba(131,131,139,0.4)"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROLE PREVIEW -->
+    <div id="role-preview" style="display:none">
+      <div class="sec-title">Accesos que tendrá este usuario</div>
+      <div id="role-preview-content" style="background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px;margin-bottom:14px"></div>
+    </div>
+
+    <div class="form-footer" style="border-top:none;padding-top:0;margin-top:0">
+      <button class="btn-cancel" onclick="showSection('usuarios',document.getElementById('ci-usuarios'))">Cancelar</button>
+      <button class="btn-save" onclick="createUser()">Crear usuario</button>
+    </div>
+  `;
+}
+
+const ROLE_ACCESS = {
+  t:['Dashboard','Órdenes de trabajo (propias)','Mantenimiento correctivo','Plan preventivo (lectura)','Activos y equipos (lectura)','Inventario (lectura)','Embalajes','Alertas (lectura)'],
+  s:['Dashboard','Órdenes de trabajo (completo)','Contratistas externos','Plan preventivo (completo)','Mantenimiento correctivo','Activos y equipos','Inventario','Personal técnico','Embalajes','KPIs (lectura)','Costos (lectura)','Alertas'],
+  g:['Dashboard','Todas las operaciones (lectura)','Contratistas externos (lectura)','Plan preventivo (lectura)','Activos y equipos (lectura)','Embalajes','KPIs y reportes (completo)','Costos (completo)','Alertas','Configuración del sistema'],
+};
+
+function updateRolePreview(rol){
+  const pv=document.getElementById('role-preview');
+  const pc=document.getElementById('role-preview-content');
+  if(!rol){pv.style.display='none';return;}
+  pv.style.display='block';
+  const acc=ROLE_ACCESS[rol]||[];
+  pc.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">${acc.map(a=>`<div style="display:flex;align-items:center;gap:6px;font-size:11px;color:rgba(200,210,225,0.7)"><span style="color:var(--ok)">✓</span>${a}</div>`).join('')}</div>`;
+}
+
+function checkPwStrength(val){
+  const bar=document.getElementById('pw-bar');
+  const hint=document.getElementById('pw-hint');
+  if(!bar||!hint) return;
+  let score=0;
+  if(val.length>=8) score++;
+  if(/[A-Z]/.test(val)) score++;
+  if(/[0-9]/.test(val)) score++;
+  if(/[^A-Za-z0-9]/.test(val)) score++;
+  const colors=['var(--crit)','var(--crit)','var(--warn)','var(--warn)','var(--ok)'];
+  const labels=['','Muy débil','Débil','Aceptable','Fuerte'];
+  const labelColors=['','rgba(226,75,74,0.8)','rgba(239,159,39,0.8)','rgba(239,159,39,0.8)','rgba(99,153,34,0.8)'];
+  bar.style.width=`${score*25}%`;
+  bar.style.background=colors[score];
+  hint.textContent=val.length>0?labels[score]:'';
+  hint.style.color=labelColors[score];
+}
+
+function createUser(){
+  const nombre=document.getElementById('n-nombre').value.trim();
+  const email=document.getElementById('n-email').value.trim();
+  const rol=document.getElementById('n-rol').value;
+  const pw=document.getElementById('n-pw').value;
+  if(!nombre||!email||!rol||!pw){toast('Completa todos los campos obligatorios','rgba(226,75,74,0.5)');return;}
+  if(pw.length<8){toast('La contraseña debe tener mínimo 8 caracteres','rgba(226,75,74,0.5)');return;}
+  if(USERS.find(u=>u.email===email)){toast('Ya existe un usuario con ese email','rgba(226,75,74,0.5)');return;}
+  const newUser={
+    id:USERS.length+1,name:nombre,email,rol,cargo:rolLabel[rol],
+    activo:true,creado:'17/04/2025',ultimo:'Nunca',
+    color:rol==='t'?'#185FA5':rol==='s'?'#854F0B':'#27500A',
+    tc:rol==='t'?'#B5D4F4':rol==='s'?'#FAC775':'#C0DD97'
+  };
+  USERS.push(newUser);
+  AUDIT_LOG.unshift({tipo:'create',user:'Carlos Reyes',urol:'g',accion:`Creó usuario ${nombre}`,detalle:`Rol: ${rolLabel[rol]} · ${email}`,tiempo:'Ahora'});
+  toast(`✓ Usuario ${nombre} creado correctamente`,'rgba(99,153,34,0.4)');
+  showSection('usuarios',document.getElementById('ci-usuarios'));
+}
+
+// ── AUDITORÍA ──
+function renderAuditoria(el){
+  const typeColors={create:'rgba(99,153,34,0.7)',edit:'rgba(33,150,243,0.7)',deact:'rgba(239,159,39,0.7)',login:'rgba(131,131,139,0.3)',ot:'rgba(33,150,243,0.5)',emb:'rgba(216,90,48,0.5)'};
+  const typeLabels={create:'Creación',edit:'Edición',deact:'Desactivación',login:'Acceso',ot:'OT',emb:'Embalaje'};
+
+  el.innerHTML=`
+    <div class="cfg-section-title">Log de auditoría</div>
+    <div class="cfg-section-sub">Registro completo de actividad del sistema — quién hizo qué y cuándo.</div>
+
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:5px;padding:5px 10px;flex:1">
+        <span style="font-size:11px;color:rgba(131,131,139,0.5)">🔍</span>
+        <input type="text" style="background:none;border:none;outline:none;color:var(--white);font-size:12px;width:100%;font-family:var(--font)" placeholder="Buscar en el log…" oninput="filterLog(this.value)"/>
+      </div>
+      <select style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:5px;color:rgba(200,210,225,0.8);font-size:11px;font-family:var(--font);padding:6px 10px;outline:none" onchange="filterLogByType(this.value)">
+        <option value="">Todos los tipos</option>
+        <option value="create">Creación de usuarios</option>
+        <option value="edit">Edición de usuarios</option>
+        <option value="deact">Desactivaciones</option>
+        <option value="login">Accesos</option>
+        <option value="ot">Órdenes de trabajo</option>
+        <option value="emb">Embalajes</option>
+      </select>
+      <button class="btn-save" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1)" onclick="exportLog()">⬇ Exportar</button>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">
+      <div style="background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:7px;padding:10px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:4px">Eventos hoy</div><div style="font-family:var(--head);font-size:20px;color:#85B7EB">${AUDIT_LOG.filter(l=>l.tiempo.includes('/')?l.tiempo.startsWith('17/04')||l.tiempo==='Ahora':true).length}</div></div>
+      <div style="background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:7px;padding:10px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:4px">Accesos</div><div style="font-family:var(--head);font-size:20px;color:var(--ok)">${AUDIT_LOG.filter(l=>l.tipo==='login').length}</div></div>
+      <div style="background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:7px;padding:10px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:4px">Cambios usuarios</div><div style="font-family:var(--head);font-size:20px;color:var(--warn)">${AUDIT_LOG.filter(l=>['create','edit','deact'].includes(l.tipo)).length}</div></div>
+      <div style="background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:7px;padding:10px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:4px">Registros OT/Emb</div><div style="font-family:var(--head);font-size:20px;color:#F0997B">${AUDIT_LOG.filter(l=>['ot','emb'].includes(l.tipo)).length}</div></div>
+    </div>
+
+    <div class="log-list" id="log-list">
+      ${AUDIT_LOG.map(l=>`
+        <div class="log-item ${logCls(l.tipo)}">
+          <div class="log-time">${l.tiempo}</div>
+          <div class="log-body">
+            <div class="log-action">${l.accion}</div>
+            <div class="log-detail">${l.detalle}</div>
+          </div>
+          <span class="log-user ${logUCls(l.urol)}">${l.user.split(' ')[0]}</span>
+          <span style="font-size:10px;font-weight:500;padding:1px 7px;border-radius:8px;background:rgba(255,255,255,0.06);color:rgba(200,210,225,0.5)">${typeLabels[l.tipo]||l.tipo}</span>
+        </div>`).join('')}
+    </div>
+  `;
+}
+
+function filterLog(val){
+  const items=document.querySelectorAll('.log-item');
+  items.forEach(i=>{
+    const text=i.textContent.toLowerCase();
+    i.style.display=text.includes(val.toLowerCase())?'flex':'none';
+  });
+}
+function filterLogByType(tipo){
+  const items=document.querySelectorAll('.log-item');
+  items.forEach(i=>{
+    i.style.display=(!tipo||i.classList.contains(tipo))?'flex':'none';
+  });
+}
+function exportLog(){ toast('Sistema real: exporta log como CSV o PDF con marca de tiempo y firma digital.'); }
+
+// ── SISTEMA ──
+function renderSistema(el){
+  el.innerHTML=`
+    <div class="cfg-section-title">Información del sistema</div>
+    <div class="cfg-section-sub">Parámetros generales del CMMS QDC Pro.</div>
+
+    <div class="sec-title">Estado actual</div>
+    <div class="info-card" style="margin-bottom:14px">
+      <div class="info-row"><span class="info-label">Versión</span><span class="info-val">CMMS Pro v1.0 · Abril 2025</span></div>
+      <div class="info-row"><span class="info-label">Estado</span><span class="info-val ok">✓ Operativo</span></div>
+      <div class="info-row"><span class="info-label">Base de datos</span><span class="info-val">Supabase PostgreSQL (pendiente conexión)</span></div>
+      <div class="info-row"><span class="info-label">Almacenamiento</span><span class="info-val">Supabase Storage (pendiente conexión)</span></div>
+      <div class="info-row"><span class="info-label">Hosting</span><span class="info-val">Vercel (pendiente despliegue)</span></div>
+      <div class="info-row"><span class="info-label">Usuarios activos</span><span class="info-val ok">${USERS.filter(u=>u.activo).length} de ${USERS.length}</span></div>
+      <div class="info-row"><span class="info-label">Sesiones</span><span class="info-val">Sin expiración automática (logout manual)</span></div>
+      <div class="info-row"><span class="info-label">Desarrollado por</span><span class="info-val">Germán Falfán O. · QDC</span></div>
+    </div>
+
+    <div class="sec-title">Módulos activos</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:14px">
+      ${['Dashboard','Órdenes de trabajo','Activos y equipos','Contratistas externos','Inventario','Plan preventivo (PM)','KPIs y reportes','Centro de alertas','Embalajes','Gestión de usuarios','Log de auditoría'].map(m=>`
+        <div style="display:flex;align-items:center;gap:7px;padding:7px 10px;background:rgba(255,255,255,0.03);border-radius:5px;font-size:11px;color:rgba(200,210,225,0.7)">
+          <span style="color:var(--ok)">✓</span>${m}
+        </div>`).join('')}
+    </div>
+
+    <div class="alert-box info">
+      ℹ️ &nbsp;Para el despliegue real en Vercel + Supabase, contacta a <strong>Germán Falfán O.</strong> La conexión a la base de datos real es el próximo paso del proyecto.
+    </div>
+  `;
+}
+
+// ── SEGURIDAD ──
+function renderSeguridad(el){
+  el.innerHTML=`
+    <div class="cfg-section-title">Políticas de seguridad</div>
+    <div class="cfg-section-sub">Reglas de acceso y control definidas para el sistema QDC CMMS Pro.</div>
+
+    <div class="alert-box ok" style="margin-bottom:16px">
+      ✓ &nbsp;Todas las políticas están activas y funcionando correctamente.
+    </div>
+
+    <div class="sec-title">Control de acceso</div>
+    <div class="info-card" style="margin-bottom:14px">
+      <div class="info-row"><span class="info-label">Gestión de usuarios</span><span class="info-val ok">Solo rol Gerencia</span></div>
+      <div class="info-row"><span class="info-label">Credenciales</span><span class="info-val">Email individual + contraseña asignada por Gerencia</span></div>
+      <div class="info-row"><span class="info-label">Cambio de contraseña</span><span class="info-val">Solo desde Gerencia (usuarios no pueden cambiarla)</span></div>
+      <div class="info-row"><span class="info-label">Expiración de sesión</span><span class="info-val">Sin expiración automática (logout manual)</span></div>
+      <div class="info-row"><span class="info-label">Usuarios desactivados</span><span class="info-val ok">Acceso revocado inmediatamente · Historial conservado</span></div>
+    </div>
+
+    <div class="sec-title">Permisos por rol</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+      ${[
+        {rol:'Técnico',color:'#185FA5',tc:'#B5D4F4',permisos:['Crear y cerrar sus propias OT','Ver activos e inventario (lectura)','Registrar embalajes','Ver alertas propias','Sin acceso a configuración ni reportes financieros']},
+        {rol:'Supervisor',color:'#854F0B',tc:'#FAC775',permisos:['Gestión completa de OT (crear, editar, cerrar)','Registrar y gestionar contratistas externos','Subir informes PDF de OT externas','Control de inventario y activos','Gestión de PM y personal','KPIs y costos en lectura','Todas las alertas']},
+        {rol:'Gerencia',color:'#27500A',tc:'#C0DD97',permisos:['Todo lo del Supervisor en modo lectura','KPIs y costos con acceso completo','Configuración del sistema','Gestión de usuarios y contraseñas','Log de auditoría completo','Exportar reportes']},
+      ].map(r=>`
+        <div style="background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+            <div style="width:32px;height:32px;border-radius:50%;background:${r.color}22;color:${r.color};display:flex;align-items:center;justify-content:center;font-family:var(--head);font-size:12px;font-weight:700">${r.rol[0]}</div>
+            <div style="font-family:var(--head);font-size:14px;font-weight:600;color:var(--white)">${r.rol}</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
+            ${r.permisos.map(p=>`<div style="font-size:11px;color:rgba(200,210,225,0.65);display:flex;gap:6px"><span style="color:var(--ok);flex-shrink:0">✓</span>${p}</div>`).join('')}
+          </div>
+        </div>`).join('')}
+    </div>
+
+    <div class="sec-title">Auditoría</div>
+    <div class="info-card">
+      <div class="info-row"><span class="info-label">Log de actividad</span><span class="info-val ok">Activo — registra quién hizo qué y cuándo</span></div>
+      <div class="info-row"><span class="info-label">Eventos registrados</span><span class="info-val">Login · Creación/edición/desactivación usuarios · OT · Embalajes</span></div>
+      <div class="info-row"><span class="info-label">Acceso al log</span><span class="info-val">Solo Gerencia</span></div>
+      <div class="info-row"><span class="info-label">Exportación</span><span class="info-val">CSV / PDF con marca de tiempo (disponible en despliegue)</span></div>
+    </div>
+  `;
+}
+
+// INIT
+showSection('usuarios', document.getElementById('ci-usuarios'));
+</script>
+</body>
+</html>

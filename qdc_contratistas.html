@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>QDC CMMS — Contratistas Externos</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --navy:#08223D;--mid:#0B2545;--deep:#061C2E;
+  --accent:#2196F3;--ext:#1D9E75;--ext-bright:#5DCAA5;
+  --white:#EEF4FF;--gray:#83838B;--muted:#527088;
+  --ok:#97C459;--warn:#EF9F27;--crit:#E24B4A;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.10);
+  --surface:rgba(255,255,255,0.04);--surface2:rgba(255,255,255,0.07);
+  --font:'Barlow',sans-serif;--head:'Barlow Condensed',sans-serif;
+}
+body{font-family:var(--font);background:#050F1C;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;}
+.shell{display:flex;width:100%;max-width:1100px;height:820px;background:var(--mid);border-radius:12px;overflow:hidden;border:1px solid var(--border2);}
+
+/* SIDEBAR */
+.sidebar{width:210px;flex-shrink:0;background:var(--navy);display:flex;flex-direction:column;border-right:1px solid var(--border);}
+.sb-logo{padding:16px 14px 12px;border-bottom:1px solid var(--border);}
+.sb-logo-mark{font-family:var(--head);font-size:16px;font-weight:700;color:var(--white);letter-spacing:1px;}
+.sb-logo-sub{font-size:9px;color:rgba(131,131,139,0.6);margin-top:2px;}
+.sb-logo-line{width:20px;height:2px;background:var(--accent);margin-top:5px;}
+.sb-role{padding:8px 12px;border-bottom:1px solid var(--border);}
+.sb-role-label{font-size:9px;color:rgba(131,131,139,0.5);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px;}
+.role-sw{display:flex;gap:3px;}
+.rbtn{flex:1;padding:5px 0;font-size:10px;font-weight:600;border-radius:3px;border:none;cursor:pointer;background:rgba(255,255,255,0.05);color:rgba(131,131,139,0.7);transition:all .15s;font-family:var(--font);}
+.rbtn.on-s{background:#854F0B;color:#FAC775;}
+.rbtn.on-g{background:#27500A;color:#C0DD97;}
+.sb-nav{flex:1;overflow-y:auto;padding:6px 0;}
+.sb-nav::-webkit-scrollbar{width:2px;}
+.sb-nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);}
+.nav-sec{padding:10px 14px 3px;font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(131,131,139,0.4);}
+.nav-item{display:flex;align-items:center;gap:8px;padding:8px 14px;cursor:pointer;transition:background .1s;border-left:2px solid transparent;}
+.nav-item:hover{background:rgba(255,255,255,0.04);}
+.nav-item.active{background:rgba(29,158,117,0.12);border-left-color:var(--ext);}
+.nav-icon{font-size:13px;width:16px;text-align:center;flex-shrink:0;}
+.nav-label{font-size:12px;color:rgba(200,210,225,0.7);flex:1;}
+.nav-item.active .nav-label{color:var(--white);font-weight:500;}
+.nav-badge{font-size:9px;font-weight:600;padding:1px 5px;border-radius:8px;background:#A32D2D;color:#F7C1C1;}
+.nav-badge.w{background:#854F0B;color:#FAC775;}
+.nav-badge.e{background:#0F6E56;color:#9FE1CB;}
+.sb-user{padding:10px 12px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+.u-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;}
+.u-name{font-size:11px;color:var(--white);font-weight:500;}
+.u-role{font-size:9px;color:rgba(131,131,139,0.6);}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;}
+.topbar{height:50px;background:var(--mid);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0;}
+.page-title{font-family:var(--head);font-size:16px;font-weight:600;color:var(--white);flex:1;letter-spacing:0.5px;}
+.search-wrap{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.09);border-radius:5px;padding:5px 10px;}
+.search-wrap input{background:none;border:none;outline:none;color:var(--white);font-size:12px;width:140px;font-family:var(--font);}
+.search-wrap input::placeholder{color:rgba(131,131,139,0.5);}
+.tb-btn{padding:6px 13px;border-radius:5px;border:none;font-size:12px;font-weight:500;cursor:pointer;font-family:var(--font);transition:all .15s;}
+.btn-p{background:var(--ext);color:#fff;}
+.btn-p:hover{background:#0F6E56;}
+.btn-g{background:rgba(255,255,255,0.06);color:rgba(200,210,225,0.8);border:0.5px solid rgba(255,255,255,0.1);}
+.btn-g:hover{background:rgba(255,255,255,0.1);}
+
+/* STATS */
+.stats-row{display:flex;gap:1px;background:rgba(255,255,255,0.04);border-bottom:1px solid var(--border);flex-shrink:0;}
+.stat{flex:1;padding:10px 14px;text-align:center;}
+.stat-val{font-size:20px;font-weight:500;color:var(--white);}
+.stat-val.ext{color:var(--ext-bright);}
+.stat-val.warn{color:var(--warn);}
+.stat-val.ok{color:var(--ok);}
+.stat-label{font-size:10px;color:rgba(131,131,139,0.5);margin-top:2px;}
+
+/* SPLIT */
+.split{flex:1;display:flex;overflow:hidden;}
+
+/* LEFT — CONTRACTOR LIST */
+.clist-panel{width:250px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+.clp-header{padding:10px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.clp-search{display:flex;align-items:center;gap:5px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:5px;padding:5px 8px;margin-bottom:7px;}
+.clp-search input{background:none;border:none;outline:none;color:var(--white);font-size:11px;width:100%;font-family:var(--font);}
+.clp-search input::placeholder{color:rgba(131,131,139,0.4);}
+.filter-chips{display:flex;gap:4px;}
+.fchip{padding:3px 9px;border-radius:10px;font-size:10px;cursor:pointer;border:0.5px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:rgba(200,210,225,0.6);transition:all .1s;}
+.fchip:hover{background:rgba(255,255,255,0.08);}
+.fchip.on{background:rgba(29,158,117,0.15);border-color:var(--ext);color:var(--ext-bright);}
+.clist{flex:1;overflow-y:auto;padding:6px;}
+.clist::-webkit-scrollbar{width:2px;}
+.clist::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);}
+.c-card{padding:11px 10px;border-radius:7px;cursor:pointer;transition:background .1s;border:0.5px solid transparent;margin-bottom:3px;}
+.c-card:hover{background:rgba(255,255,255,0.05);}
+.c-card.selected{background:rgba(29,158,117,0.1);border-color:rgba(29,158,117,0.3);}
+.cc-header{display:flex;align-items:flex-start;gap:9px;margin-bottom:6px;}
+.cc-avatar{width:32px;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;font-family:var(--head);}
+.cc-name{font-size:12px;font-weight:500;color:var(--white);line-height:1.3;}
+.cc-rut{font-size:10px;color:rgba(131,131,139,0.5);font-family:monospace;margin-top:1px;}
+.cc-footer{display:flex;align-items:center;justify-content:space-between;}
+.cc-ot{font-size:10px;color:rgba(131,131,139,0.5);}
+.cc-status{font-size:10px;font-weight:500;padding:2px 7px;border-radius:8px;}
+.cs-active{background:rgba(29,158,117,0.15);color:var(--ext-bright);}
+.cs-inactive{background:rgba(131,131,139,0.12);color:rgba(131,131,139,0.6);}
+
+/* RIGHT — DETAIL */
+.detail-panel{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.detail-scroll{flex:1;overflow-y:auto;padding:16px;}
+.detail-scroll::-webkit-scrollbar{width:3px;}
+.detail-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);}
+.empty-detail{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:rgba(131,131,139,0.4);}
+
+/* CONTRACTOR HEADER */
+.cont-header{display:flex;gap:14px;margin-bottom:14px;align-items:flex-start;}
+.cont-avatar-lg{width:62px;height:62px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;flex-shrink:0;font-family:var(--head);}
+.cont-info{flex:1;}
+.cont-name{font-family:var(--head);font-size:18px;font-weight:600;color:var(--white);margin-bottom:2px;}
+.cont-rut{font-size:11px;color:rgba(131,131,139,0.5);font-family:monospace;margin-bottom:6px;}
+.cont-badges{display:flex;gap:5px;flex-wrap:wrap;}
+.cbadge{font-size:10px;font-weight:500;padding:2px 8px;border-radius:10px;}
+.cb-active{background:rgba(29,158,117,0.15);color:var(--ext-bright);}
+.cb-inactive{background:rgba(131,131,139,0.12);color:rgba(131,131,139,0.6);}
+.cb-esp{background:rgba(33,150,243,0.12);color:#85B7EB;}
+
+/* KPIs */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;}
+.kpi{background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:7px;padding:10px 12px;}
+.kpi-label{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px;}
+.kpi-val{font-size:20px;font-weight:500;color:var(--white);}
+.kpi-sub{font-size:9px;color:rgba(131,131,139,0.45);margin-top:3px;}
+.kpi-val.ext{color:var(--ext-bright);}
+.kpi-val.warn{color:var(--warn);}
+.kpi-val.ok{color:var(--ok);}
+
+/* TABS */
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:14px;}
+.tab{padding:7px 14px;font-size:12px;cursor:pointer;color:rgba(200,210,225,0.45);border-bottom:2px solid transparent;transition:all .1s;white-space:nowrap;}
+.tab:hover{color:rgba(200,210,225,0.8);}
+.tab.on{color:var(--white);border-bottom-color:var(--ext);font-weight:500;}
+
+/* SECTION TITLE */
+.sec-title{font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.45);margin-bottom:8px;}
+
+/* CONTACT CARD */
+.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+.fg-item{background:rgba(255,255,255,0.03);border-radius:5px;padding:9px 11px;}
+.fg-label{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:4px;}
+.fg-val{font-size:12px;color:var(--white);}
+.fg-val.mono{font-family:monospace;font-size:11px;}
+.fg-val.link{color:#85B7EB;cursor:pointer;}
+.fg-val.link:hover{color:var(--accent);}
+
+/* OT TABLE */
+.ot-list{display:flex;flex-direction:column;gap:5px;}
+.ot-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;background:rgba(255,255,255,0.03);border:0.5px solid rgba(29,158,117,0.15);cursor:pointer;transition:background .1s;}
+.ot-item:hover{background:rgba(29,158,117,0.07);}
+.ot-num{font-size:10px;font-family:monospace;color:rgba(131,131,139,0.5);width:68px;flex-shrink:0;}
+.ot-desc{flex:1;font-size:12px;color:var(--white);}
+.ot-date{font-size:10px;font-family:monospace;color:rgba(131,131,139,0.4);width:68px;text-align:right;}
+.ot-badge{font-size:10px;font-weight:500;padding:2px 7px;border-radius:8px;flex-shrink:0;}
+.ob-done{background:rgba(99,153,34,0.15);color:#C0DD97;}
+.ob-prog{background:rgba(186,117,23,0.15);color:#FAC775;}
+.ob-open{background:rgba(29,158,117,0.15);color:var(--ext-bright);}
+.pdf-icon{font-size:13px;flex-shrink:0;width:20px;text-align:center;}
+.pdf-ok{color:var(--ext-bright);}
+.pdf-missing{color:rgba(239,159,39,0.6);}
+
+/* DOCS */
+.doc-list{display:flex;flex-direction:column;gap:5px;}
+.doc-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:6px;background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.05);cursor:pointer;transition:background .1s;}
+.doc-item:hover{background:rgba(255,255,255,0.07);}
+.doc-icon{font-size:16px;flex-shrink:0;}
+.doc-name{flex:1;font-size:12px;color:var(--white);}
+.doc-size{font-size:10px;color:rgba(131,131,139,0.5);}
+.doc-date{font-size:10px;font-family:monospace;color:rgba(131,131,139,0.35);}
+.upload-zone{border:1px dashed rgba(29,158,117,0.3);border-radius:6px;padding:14px;text-align:center;cursor:pointer;transition:border-color .15s;margin-top:8px;background:rgba(29,158,117,0.03);}
+.upload-zone:hover{border-color:var(--ext);}
+.upload-zone-text{font-size:12px;color:rgba(131,131,139,0.5);}
+.upload-zone-sub{font-size:10px;color:rgba(131,131,139,0.3);margin-top:3px;}
+
+/* ALERT BANNER */
+.alert-banner{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:6px;background:rgba(239,159,39,0.08);border:1px solid rgba(239,159,39,0.25);margin-bottom:12px;font-size:12px;color:#FAC775;}
+.alert-banner.hidden{display:none;}
+
+/* MODAL */
+.modal-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:100;}
+.modal-overlay.hidden{display:none;}
+.modal{background:#0D2D48;border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;width:520px;max-height:700px;overflow-y:auto;padding:22px;}
+.modal::-webkit-scrollbar{width:3px;}
+.modal::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.modal-title{font-family:var(--head);font-size:16px;font-weight:600;color:var(--white);letter-spacing:0.3px;}
+.modal-close{font-size:16px;color:rgba(131,131,139,0.6);cursor:pointer;background:none;border:none;padding:2px 6px;}
+.modal-close:hover{color:var(--white);}
+
+/* FORM */
+.form-section{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(93,202,165,0.7);margin-bottom:10px;margin-top:4px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.06);}
+.form-section:first-of-type{border-top:none;padding-top:0;margin-top:0;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.form-row.full{grid-template-columns:1fr;}
+.form-group{display:flex;flex-direction:column;gap:5px;}
+.form-label{font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.6);}
+.form-label .req{color:var(--ext-bright);}
+.form-input,.form-select{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:var(--white);font-size:12px;font-family:var(--font);padding:8px 10px;outline:none;transition:border-color .1s;}
+.form-input:focus,.form-select:focus{border-color:var(--ext);}
+.form-input::placeholder{color:rgba(131,131,139,0.4);}
+.form-select option{background:#0D2D48;}
+.form-hint{font-size:10px;color:rgba(131,131,139,0.4);margin-top:2px;}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.07);}
+.btn-cancel{padding:7px 14px;border-radius:5px;border:0.5px solid rgba(255,255,255,0.1);background:transparent;color:rgba(200,210,225,0.7);cursor:pointer;font-size:12px;font-family:var(--font);}
+.btn-cancel:hover{background:rgba(255,255,255,0.06);}
+.btn-save{padding:7px 18px;border-radius:5px;border:none;background:var(--ext);color:#fff;cursor:pointer;font-size:12px;font-weight:500;font-family:var(--font);}
+.btn-save:hover{background:#0F6E56;}
+
+.shell-wrap{position:relative;width:100%;max-width:1100px;}
+</style>
+</head>
+<body>
+
+<div class="shell-wrap">
+<div class="shell">
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-mark">QDC</div>
+      <div class="sb-logo-sub">Química del Campo S.p.A · CMMS Pro</div>
+      <div class="sb-logo-line"></div>
+    </div>
+    <div class="sb-role">
+      <div class="sb-role-label">Rol activo (demo)</div>
+      <div class="role-sw">
+        <button class="rbtn" id="rb-s" onclick="setRole('s')">Supervisor</button>
+        <button class="rbtn" id="rb-g" onclick="setRole('g')">Gerencia</button>
+      </div>
+    </div>
+    <div class="sb-nav" id="sb-nav"></div>
+    <div class="sb-user" id="sb-user"></div>
+  </nav>
+
+  <!-- MAIN -->
+  <div class="main" style="position:relative">
+    <div class="topbar">
+      <div class="page-title">Contratistas Externos</div>
+      <div class="search-wrap">
+        <span style="font-size:11px;color:rgba(131,131,139,0.5)">🔍</span>
+        <input type="text" placeholder="Buscar contratista, RUT…" oninput="filterList(this.value)"/>
+      </div>
+      <button class="tb-btn btn-g">⬇ Exportar</button>
+      <button class="tb-btn btn-p" id="btn-new" onclick="openModal()">+ Registrar contratista</button>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat"><div class="stat-val ext" id="st-total">5</div><div class="stat-label">Contratistas registrados</div></div>
+      <div class="stat"><div class="stat-val ext" id="st-active">4</div><div class="stat-label">Con OT activas</div></div>
+      <div class="stat"><div class="stat-val warn" id="st-pdf">2</div><div class="stat-label">Con PDF pendiente</div></div>
+      <div class="stat"><div class="stat-val ok" id="st-cost">$4.8M</div><div class="stat-label">Gasto acumulado 2025</div></div>
+    </div>
+
+    <div class="split">
+      <!-- LISTA -->
+      <div class="clist-panel">
+        <div class="clp-header">
+          <div class="clp-search">
+            <span style="font-size:11px;color:rgba(131,131,139,0.4)">🔍</span>
+            <input type="text" placeholder="Filtrar…" oninput="filterList(this.value)" id="list-search"/>
+          </div>
+          <div class="filter-chips">
+            <span class="fchip on" onclick="setChip(this,'todos')">Todos</span>
+            <span class="fchip" onclick="setChip(this,'activo')">Activos</span>
+            <span class="fchip" onclick="setChip(this,'pdf')">PDF pendiente</span>
+          </div>
+        </div>
+        <div class="clist" id="clist"></div>
+      </div>
+
+      <!-- DETALLE -->
+      <div class="detail-panel">
+        <div class="empty-detail" id="empty-detail">
+          <span style="font-size:36px;opacity:0.25">🏢</span>
+          <span style="font-size:13px">Selecciona un contratista para ver su ficha</span>
+        </div>
+        <div class="detail-scroll" id="detail-content" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- MODAL REGISTRO -->
+    <div class="modal-overlay hidden" id="modal-overlay">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title">Registrar contratista externo</div>
+          <button class="modal-close" onclick="closeModal()">✕</button>
+        </div>
+
+        <div class="form-section">Datos de la empresa</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">RUT empresa <span class="req">*</span></label>
+            <input type="text" class="form-input" placeholder="76.543.210-5" id="f-rut"/>
+            <div class="form-hint">Formato: XX.XXX.XXX-X</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Razón social <span class="req">*</span></label>
+            <input type="text" class="form-input" placeholder="Empresa SpA" id="f-razon"/>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Especialidad <span class="req">*</span></label>
+            <select class="form-select" id="f-esp">
+              <option value="">Seleccionar…</option>
+              <option>Eléctrica industrial</option>
+              <option>Mecánica industrial</option>
+              <option>Automatización / PLC</option>
+              <option>HVAC / Refrigeración</option>
+              <option>Hidráulica / Neumática</option>
+              <option>Instrumentación</option>
+              <option>Soldadura</option>
+              <option>Obras civiles</option>
+              <option>Otro</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Giro comercial</label>
+            <input type="text" class="form-input" placeholder="ej: Servicio técnico industrial" id="f-giro"/>
+          </div>
+        </div>
+        <div class="form-row full">
+          <div class="form-group">
+            <label class="form-label">Dirección</label>
+            <input type="text" class="form-input" placeholder="Calle, número, ciudad" id="f-dir"/>
+          </div>
+        </div>
+
+        <div class="form-section">Persona de contacto</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Nombre completo <span class="req">*</span></label>
+            <input type="text" class="form-input" placeholder="Nombre Apellido" id="f-contacto"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Cargo</label>
+            <input type="text" class="form-input" placeholder="ej: Jefe de Servicio" id="f-cargo"/>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Teléfono <span class="req">*</span></label>
+            <input type="text" class="form-input" placeholder="+56 9 XXXX XXXX" id="f-tel"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email <span class="req">*</span></label>
+            <input type="text" class="form-input" placeholder="contacto@empresa.cl" id="f-email"/>
+          </div>
+        </div>
+
+        <div class="form-section">Condiciones comerciales</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Tarifa hora (CLP)</label>
+            <input type="number" class="form-input" placeholder="0" id="f-tarifa"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Días de pago</label>
+            <select class="form-select" id="f-pago">
+              <option>30 días</option>
+              <option>60 días</option>
+              <option>90 días</option>
+              <option>Contra entrega</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row full">
+          <div class="form-group">
+            <label class="form-label">Notas internas</label>
+            <input type="text" class="form-input" placeholder="Observaciones, restricciones, acuerdos especiales…" id="f-notas"/>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+          <button class="btn-save" onclick="saveContractor()">Registrar contratista</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<script>
+const CONTRACTORS = [
+  {
+    id:"EXT-001", name:"Eléctricas SpA", rut:"76.543.210-5",
+    esp:"Eléctrica industrial", giro:"Servicio técnico eléctrico industrial",
+    dir:"Av. Vicuña Mackenna 1230, Santiago",
+    contacto:"Pedro Muñoz", cargo:"Jefe de Servicio", tel:"+56 9 8821 3344", email:"pmunoz@electricas.cl",
+    tarifa:"$45.000/hr", pago:"30 días", notas:"Preferencia para trabajos en tableros de alta tensión",
+    estado:"activo", ot_activas:2, ot_total:8, costo_anual:"$2.1M",
+    rating:4, pdf_pendiente:1,
+    color:"#185FA5", tc:"#B5D4F4",
+    ots:[
+      {id:"OT-0897",desc:"Mantención tablero eléctrico principal",fecha:"17/04/2025",status:"prog",pdf:false},
+      {id:"OT-0881",desc:"Revisión circuito fuerza bomba P-205",fecha:"02/03/2025",status:"done",pdf:true},
+      {id:"OT-0874",desc:"Cambio transformador 220V tablero L-A",fecha:"15/01/2025",status:"done",pdf:true},
+    ],
+    docs:[
+      {icon:"📄",name:"Contrato marco servicios 2025.pdf",size:"0.8 MB",fecha:"2025-01"},
+      {icon:"📄",name:"Informe OT-0881 feb-2025.pdf",size:"1.2 MB",fecha:"2025-03"},
+      {icon:"📄",name:"Certificado empresa contratista.pdf",size:"0.4 MB",fecha:"2025-01"},
+    ]
+  },
+  {
+    id:"EXT-002", name:"AutoControl Ltda.", rut:"78.321.654-2",
+    esp:"Automatización / PLC", giro:"Automatización industrial y control de procesos",
+    dir:"Los Militares 6191, Las Condes, Santiago",
+    contacto:"Sandra Vega", cargo:"Gerente Técnica", tel:"+56 9 7733 9921", email:"svega@autocontrol.cl",
+    tarifa:"$65.000/hr", pago:"30 días", notas:"Especialistas en Siemens y Allen Bradley",
+    estado:"activo", ot_activas:1, ot_total:5, costo_anual:"$1.4M",
+    rating:5, pdf_pendiente:1,
+    color:"#0F6E56", tc:"#9FE1CB",
+    ots:[
+      {id:"OT-0892",desc:"Instalación sensor nivel tanque T-03",fecha:"13/04/2025",status:"prog",pdf:false},
+      {id:"OT-0877",desc:"Programación PLC Siemens S7-1200",fecha:"20/02/2025",status:"done",pdf:true},
+      {id:"OT-0862",desc:"Puesta en marcha variador frecuencia",fecha:"10/11/2024",status:"done",pdf:true},
+    ],
+    docs:[
+      {icon:"📄",name:"Contrato servicios AutoControl 2025.pdf",size:"0.9 MB",fecha:"2025-01"},
+      {icon:"📄",name:"Informe OT-0877 feb-2025.pdf",size:"2.1 MB",fecha:"2025-02"},
+    ]
+  },
+  {
+    id:"EXT-003", name:"Mant. Industrial SA", rut:"77.890.123-4",
+    esp:"Mecánica industrial", giro:"Mantención mecánica equipos rotativos",
+    dir:"Ruta 68 km 32, Pudahuel",
+    contacto:"Rodrigo Espinoza", cargo:"Supervisor de Terreno", tel:"+56 9 6644 1182", email:"respinoza@mantind.cl",
+    tarifa:"$38.000/hr", pago:"60 días", notas:"Contrato anual. Buenos precios en trabajos de alineación",
+    estado:"activo", ot_activas:1, ot_total:12, costo_anual:"$890K",
+    rating:3, pdf_pendiente:0,
+    color:"#854F0B", tc:"#FAC775",
+    ots:[
+      {id:"OT-0892",desc:"Alineación turbina eje principal T-01",fecha:"13/04/2025",status:"open",pdf:false},
+      {id:"OT-0868",desc:"Balanceo dinámico bomba P-104",fecha:"05/12/2024",status:"done",pdf:true},
+      {id:"OT-0851",desc:"Cambio rodamientos compresor C-101",fecha:"01/09/2024",status:"done",pdf:true},
+      {id:"OT-0839",desc:"Reparación acoplamiento motor M-07",fecha:"14/06/2024",status:"done",pdf:true},
+    ],
+    docs:[
+      {icon:"📄",name:"Contrato anual Mant. Industrial 2025.pdf",size:"1.1 MB",fecha:"2025-01"},
+      {icon:"📄",name:"Informe alineación dic-2024.pdf",size:"0.7 MB",fecha:"2024-12"},
+      {icon:"📄",name:"Protocolo trabajos mecánicos.pdf",size:"0.3 MB",fecha:"2024-01"},
+    ]
+  },
+  {
+    id:"EXT-004", name:"Termograf SpA", rut:"76.112.334-8",
+    esp:"Instrumentación", giro:"Termografía y análisis predictivo",
+    dir:"Av. Providencia 2340, Santiago",
+    contacto:"Ana Fuentes", cargo:"Ingeniera Predictivo", tel:"+56 9 9911 4455", email:"afuentes@termograf.cl",
+    tarifa:"$55.000/hr", pago:"30 días", notas:"Informe termográfico entregado en 48 hrs",
+    estado:"activo", ot_activas:0, ot_total:4, costo_anual:"$320K",
+    rating:5, pdf_pendiente:0,
+    color:"#3C3489", tc:"#CECBF6",
+    ots:[
+      {id:"OT-0885",desc:"Inspección termográfica tableros eléctricos",fecha:"10/02/2025",status:"done",pdf:true},
+      {id:"OT-0860",desc:"Termografía turbina T-01 anual",fecha:"10/02/2025",status:"done",pdf:true},
+      {id:"OT-0842",desc:"Termografía preventiva motores línea A",fecha:"10/08/2024",status:"done",pdf:true},
+    ],
+    docs:[
+      {icon:"📄",name:"Informe termográfico feb-2025.pdf",size:"3.2 MB",fecha:"2025-02"},
+      {icon:"📄",name:"Informe termográfico ago-2024.pdf",size:"2.8 MB",fecha:"2024-08"},
+    ]
+  },
+  {
+    id:"EXT-005", name:"Frío Industrial SpA", rut:"79.445.221-3",
+    esp:"HVAC / Refrigeración", giro:"Mantención sistemas de refrigeración industrial",
+    dir:"Parque Industrial Lo Boza, Pudahuel",
+    contacto:"Marcelo Torres", cargo:"Técnico Frigorista", tel:"+56 9 5522 8877", email:"mtorres@frioindustrial.cl",
+    tarifa:"$42.000/hr", pago:"30 días", notas:"Certificado recarga gas refrigerante",
+    estado:"inactivo", ot_activas:0, ot_total:3, costo_anual:"$180K",
+    rating:4, pdf_pendiente:0,
+    color:"#27500A", tc:"#C0DD97",
+    ots:[
+      {id:"OT-0871",desc:"Recarga refrigerante R-134a enfriadora CH-3",fecha:"20/11/2024",status:"done",pdf:true},
+      {id:"OT-0843",desc:"Limpieza condensador CH-3",fecha:"20/05/2024",status:"done",pdf:true},
+    ],
+    docs:[
+      {icon:"📄",name:"Certificado gas refrigerante.pdf",size:"0.5 MB",fecha:"2024-11"},
+      {icon:"📄",name:"Informe mantención CH-3 nov-2024.pdf",size:"0.9 MB",fecha:"2024-11"},
+    ]
+  },
+];
+
+const ROLES = {
+  s:{name:"María Solís",  role:"Supervisora de Mantenimiento",color:"#854F0B",tc:"#FAC775",initials:"MS",canEdit:true},
+  g:{name:"Carlos Reyes", role:"Gerente de Operaciones",      color:"#27500A",tc:"#C0DD97",initials:"CR",canEdit:false}
+};
+
+const NAV = {
+  s:[
+    {sec:"Principal",items:[{i:"▦",l:"Dashboard"},{i:"📋",l:"Órdenes de trabajo",b:"7"}]},
+    {sec:"Mantenimiento",items:[{i:"🏢",l:"Contratistas externos",b:"2",bt:"e",active:true},{i:"🔄",l:"Plan preventivo"},{i:"🔧",l:"Correctivo"}]},
+    {sec:"Recursos",items:[{i:"🏭",l:"Activos y equipos"},{i:"📦",l:"Inventario",b:"3",bt:"w"},{i:"👷",l:"Personal"},{i:"🤝",l:"Proveedores"}]},
+    {sec:"Análisis",items:[{i:"📊",l:"KPIs"},{i:"💰",l:"Costos"}]},
+    {sec:"Sistema",items:[{i:"🔔",l:"Alertas",b:"5"}]}
+  ],
+  g:[
+    {sec:"Principal",items:[{i:"▦",l:"Dashboard"},{i:"📋",l:"Órdenes de trabajo"}]},
+    {sec:"Operaciones",items:[{i:"🏢",l:"Contratistas externos",active:true},{i:"🔄",l:"Plan preventivo"},{i:"🏭",l:"Activos y equipos"}]},
+    {sec:"Análisis",items:[{i:"📊",l:"KPIs"},{i:"💰",l:"Costos"}]},
+    {sec:"Sistema",items:[{i:"🔔",l:"Alertas"},{i:"⚙️",l:"Configuración"}]}
+  ]
+};
+
+let role='s', selected=null, tab='ficha', chipFilter='todos', searchTerm='';
+
+function stars(n){ return '★'.repeat(n)+'☆'.repeat(5-n); }
+
+function buildNav(){
+  let h='';
+  NAV[role].forEach(g=>{
+    h+=`<div class="nav-sec">${g.sec}</div>`;
+    g.items.forEach(i=>{
+      const ac=i.active?' active':'';
+      const bc=i.bt==='w'?' w':i.bt==='e'?' e':'';
+      const bd=i.b?`<span class="nav-badge${bc}">${i.b}</span>`:'';
+      h+=`<div class="nav-item${ac}"><span class="nav-icon">${i.i}</span><span class="nav-label">${i.l}</span>${bd}</div>`;
+    });
+  });
+  document.getElementById('sb-nav').innerHTML=h;
+}
+
+function buildUser(){
+  const u=ROLES[role];
+  document.getElementById('sb-user').innerHTML=`<div class="u-av" style="background:${u.color};color:${u.tc}">${u.initials}</div><div><div class="u-name">${u.name}</div><div class="u-role">${u.role}</div></div>`;
+}
+
+function initials(name){ return name.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase(); }
+
+function renderList(){
+  let list=CONTRACTORS.filter(c=>{
+    const ms=!searchTerm||c.name.toLowerCase().includes(searchTerm)||c.rut.includes(searchTerm)||c.esp.toLowerCase().includes(searchTerm);
+    const mf=chipFilter==='todos'||(chipFilter==='activo'&&c.estado==='activo')||(chipFilter==='pdf'&&c.pdf_pendiente>0);
+    return ms&&mf;
+  });
+  let h='';
+  list.forEach(c=>{
+    const sel=selected&&selected.id===c.id?' selected':'';
+    const statusCls=c.estado==='activo'?'cs-active':'cs-inactive';
+    const statusLabel=c.estado==='activo'?'Activo':'Inactivo';
+    h+=`<div class="c-card${sel}" onclick="select('${c.id}')">
+      <div class="cc-header">
+        <div class="cc-avatar" style="background:${c.color}22;color:${c.color}">${initials(c.name)}</div>
+        <div style="min-width:0;flex:1">
+          <div class="cc-name">${c.name}</div>
+          <div class="cc-rut">${c.rut}</div>
+        </div>
+      </div>
+      <div style="font-size:10px;color:rgba(131,131,139,0.5);margin-bottom:5px">${c.esp}</div>
+      <div class="cc-footer">
+        <span class="cc-ot">${c.ot_total} OT · ${c.costo_anual}</span>
+        <span class="cc-status ${statusCls}">${statusLabel}</span>
+      </div>
+    </div>`;
+  });
+  document.getElementById('clist').innerHTML=h||`<div style="padding:16px;text-align:center;font-size:11px;color:rgba(131,131,139,0.4)">Sin resultados</div>`;
+}
+
+function select(id){
+  selected=CONTRACTORS.find(c=>c.id===id);
+  tab='ficha';
+  renderList();
+  renderDetail();
+}
+
+function renderDetail(){
+  if(!selected){
+    document.getElementById('empty-detail').style.display='flex';
+    document.getElementById('detail-content').style.display='none';
+    return;
+  }
+  document.getElementById('empty-detail').style.display='none';
+  document.getElementById('detail-content').style.display='block';
+
+  const c=selected;
+  const canEdit=ROLES[role].canEdit;
+  const pendingPDF=c.ots.filter(o=>o.status!=='open'&&!o.pdf).length;
+
+  const alert=pendingPDF>0&&canEdit
+    ?`<div class="alert-banner">⚠️ &nbsp;${pendingPDF} OT completada${pendingPDF>1?'s':''} sin informe PDF adjunto — requerido para cierre formal</div>`
+    :'';
+
+  const header=`
+    <div class="cont-header">
+      <div class="cont-avatar-lg" style="background:${c.color}22;color:${c.color}">${initials(c.name)}</div>
+      <div class="cont-info">
+        <div class="cont-name">${c.name}</div>
+        <div class="cont-rut">RUT: ${c.rut}</div>
+        <div class="cont-badges">
+          <span class="cbadge ${c.estado==='activo'?'cb-active':'cb-inactive'}">${c.estado==='activo'?'Activo':'Inactivo'}</span>
+          <span class="cbadge cb-esp">${c.esp}</span>
+          <span style="font-size:11px;color:#FAC775;letter-spacing:1px">${stars(c.rating)}</span>
+        </div>
+      </div>
+      ${canEdit?`<div style="display:flex;gap:6px;flex-shrink:0"><button class="tb-btn btn-g" style="font-size:11px;padding:4px 10px">✎ Editar</button></div>`:''}
+    </div>
+  `;
+
+  const kpis=`
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-label">OT totales</div><div class="kpi-val">${c.ot_total}</div><div class="kpi-sub">${c.ot_activas} activa${c.ot_activas!==1?'s':''} ahora</div></div>
+      <div class="kpi"><div class="kpi-label">Gasto 2025</div><div class="kpi-val ext">${c.costo_anual}</div></div>
+      <div class="kpi"><div class="kpi-label">PDF pendientes</div><div class="kpi-val ${c.pdf_pendiente>0?'warn':'ok'}">${c.pdf_pendiente}</div><div class="kpi-sub">${c.pdf_pendiente>0?'Requieren atención':'Al día'}</div></div>
+      <div class="kpi"><div class="kpi-label">Calificación</div><div class="kpi-val">${c.rating}/5</div><div class="kpi-sub" style="color:#FAC775;font-size:12px">${stars(c.rating)}</div></div>
+    </div>
+  `;
+
+  const tabs=`
+    <div class="tabs">
+      <div class="tab ${tab==='ficha'?'on':''}" onclick="setTab('ficha')">Datos empresa</div>
+      <div class="tab ${tab==='ots'?'on':''}" onclick="setTab('ots')">Historial OT (${c.ots.length})</div>
+      <div class="tab ${tab==='docs'?'on':''}" onclick="setTab('docs')">Documentos (${c.docs.length})</div>
+    </div>
+  `;
+
+  let body='';
+  if(tab==='ficha'){
+    body=`
+      <div class="sec-title">Datos de la empresa</div>
+      <div class="contact-grid">
+        <div class="fg-item"><div class="fg-label">RUT</div><div class="fg-val mono">${c.rut}</div></div>
+        <div class="fg-item"><div class="fg-label">Razón social</div><div class="fg-val">${c.name}</div></div>
+        <div class="fg-item"><div class="fg-label">Especialidad</div><div class="fg-val">${c.esp}</div></div>
+        <div class="fg-item"><div class="fg-label">Giro</div><div class="fg-val">${c.giro}</div></div>
+        <div class="fg-item" style="grid-column:1/-1"><div class="fg-label">Dirección</div><div class="fg-val">${c.dir}</div></div>
+      </div>
+      <div class="sec-title" style="margin-top:10px">Persona de contacto</div>
+      <div class="contact-grid">
+        <div class="fg-item"><div class="fg-label">Nombre</div><div class="fg-val">${c.contacto}</div></div>
+        <div class="fg-item"><div class="fg-label">Cargo</div><div class="fg-val">${c.cargo}</div></div>
+        <div class="fg-item"><div class="fg-label">Teléfono</div><div class="fg-val link">${c.tel}</div></div>
+        <div class="fg-item"><div class="fg-label">Email</div><div class="fg-val link">${c.email}</div></div>
+      </div>
+      <div class="sec-title" style="margin-top:10px">Condiciones comerciales</div>
+      <div class="contact-grid">
+        <div class="fg-item"><div class="fg-label">Tarifa hora</div><div class="fg-val">${c.tarifa}</div></div>
+        <div class="fg-item"><div class="fg-label">Días de pago</div><div class="fg-val">${c.pago}</div></div>
+        ${c.notas?`<div class="fg-item" style="grid-column:1/-1"><div class="fg-label">Notas internas</div><div class="fg-val" style="color:rgba(200,210,225,0.7)">${c.notas}</div></div>`:''}
+      </div>
+    `;
+  } else if(tab==='ots'){
+    const items=c.ots.map(o=>{
+      const bc=o.status==='done'?'ob-done':o.status==='prog'?'ob-prog':'ob-open';
+      const bl=o.status==='done'?'Completada':o.status==='prog'?'En proceso':'Abierta';
+      const pdfIcon=`<span class="pdf-icon ${o.pdf?'pdf-ok':'pdf-missing'}" title="${o.pdf?'PDF adjunto':'Falta informe PDF'}">${o.pdf?'📄✓':'📄?'}</span>`;
+      return `<div class="ot-item">
+        ${pdfIcon}
+        <span class="ot-num">${o.id}</span>
+        <span class="ot-desc">${o.desc}</span>
+        <span class="ot-date">${o.fecha}</span>
+        <span class="ot-badge ${bc}">${bl}</span>
+      </div>`;
+    }).join('');
+    body=`
+      <div class="sec-title">Órdenes de trabajo asignadas</div>
+      <div style="font-size:11px;color:rgba(131,131,139,0.5);margin-bottom:10px;display:flex;gap:12px">
+        <span style="color:var(--ext-bright)">📄✓ = informe PDF adjunto</span>
+        <span style="color:var(--warn)">📄? = PDF pendiente</span>
+      </div>
+      <div class="ot-list">${items}</div>
+    `;
+  } else if(tab==='docs'){
+    const items=c.docs.map(d=>`
+      <div class="doc-item">
+        <span class="doc-icon">${d.icon}</span>
+        <span class="doc-name">${d.name}</span>
+        <span class="doc-size">${d.size}</span>
+        <span class="doc-date">${d.fecha}</span>
+      </div>
+    `).join('');
+    const upBtn=canEdit?`<div class="upload-zone" onclick="fakeUpload()"><div class="upload-zone-text">＋ Adjuntar documento</div><div class="upload-zone-sub">Contrato, certificado, informe PDF · Máx. 10 MB</div></div>`:'';
+    body=`
+      <div class="sec-title">Documentos adjuntos</div>
+      <div class="doc-list">${items}</div>
+      ${upBtn}
+    `;
+  }
+
+  document.getElementById('detail-content').innerHTML=alert+header+kpis+tabs+body;
+}
+
+function setTab(t){ tab=t; renderDetail(); }
+
+function filterList(v){
+  searchTerm=v.toLowerCase();
+  renderList();
+}
+
+function setChip(el,f){
+  document.querySelectorAll('.fchip').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+  chipFilter=f;
+  renderList();
+}
+
+function openModal(){ document.getElementById('modal-overlay').classList.remove('hidden'); }
+function closeModal(){ document.getElementById('modal-overlay').classList.add('hidden'); }
+
+function saveContractor(){
+  const rut=document.getElementById('f-rut').value.trim();
+  const razon=document.getElementById('f-razon').value.trim();
+  const esp=document.getElementById('f-esp').value;
+  const contacto=document.getElementById('f-contacto').value.trim();
+  const tel=document.getElementById('f-tel').value.trim();
+  const email=document.getElementById('f-email').value.trim();
+  if(!rut||!razon||!esp||!contacto||!tel||!email){
+    alert('Completa los campos obligatorios (*)');
+    return;
+  }
+  const nuevo={
+    id:"EXT-00"+(CONTRACTORS.length+1),
+    name:razon, rut, esp,
+    giro:document.getElementById('f-giro').value||esp,
+    dir:document.getElementById('f-dir').value||'—',
+    contacto, cargo:document.getElementById('f-cargo').value||'Contacto',
+    tel, email,
+    tarifa:document.getElementById('f-tarifa').value?`$${parseInt(document.getElementById('f-tarifa').value).toLocaleString('es-CL')}/hr`:'—',
+    pago:document.getElementById('f-pago').value,
+    notas:document.getElementById('f-notas').value,
+    estado:"activo", ot_activas:0, ot_total:0, costo_anual:"$0",
+    rating:0, pdf_pendiente:0,
+    color:"#185FA5", tc:"#B5D4F4",
+    ots:[], docs:[]
+  };
+  CONTRACTORS.unshift(nuevo);
+  closeModal();
+  renderList();
+  select(nuevo.id);
+}
+
+function fakeUpload(){ alert('Sistema real: abre selector de archivo para adjuntar documento'); }
+
+document.getElementById('modal-overlay').addEventListener('click',function(e){
+  if(e.target===this) closeModal();
+});
+
+function setRole(r){
+  role=r;
+  selected=null; tab='ficha';
+  ['s','g'].forEach(x=>{
+    document.getElementById('rb-'+x).className='rbtn'+(x===r?` on-${r}`:'');
+  });
+  document.getElementById('btn-new').style.display=r==='s'?'':'none';
+  buildNav(); buildUser(); renderList(); renderDetail();
+}
+
+setRole('s');
+select('EXT-001');
+</script>
+</body>
+</html>
