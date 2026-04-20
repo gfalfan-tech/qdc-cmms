@@ -7,604 +7,232 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;}
-:root{
-  --navy:#08223D;--mid:#0B2545;--deep:#061C2E;
-  --accent:#2196F3;--white:#EEF4FF;
-  --ok:#97C459;--warn:#EF9F27;--crit:#E24B4A;--ext:#5DCAA5;--pm:#7F77DD;
-  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.10);
-  --surface:rgba(255,255,255,0.04);
-  --font:'Barlow',sans-serif;--head:'Barlow Condensed',sans-serif;
-}
-body{font-family:var(--font);background:#050F1C;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;}
-.shell{display:flex;width:100%;max-width:1100px;height:860px;background:var(--mid);border-radius:12px;overflow:hidden;border:1px solid var(--border2);}
 
-/* SIDEBAR */
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--navy:#08223D;--mid:#0B2545;--deep:#061C2E;--accent:#2196F3;--white:#EEF4FF;--ok:#97C459;--warn:#EF9F27;--crit:#E24B4A;--ext:#5DCAA5;--pm:#7F77DD;--emb:#D85A30;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.10);--font:'Barlow',sans-serif;--head:'Barlow Condensed',sans-serif;}
+body{font-family:var(--font);background:#050F1C;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;}
+.shell{display:flex;width:100%;max-width:1100px;min-height:900px;background:var(--mid);border-radius:12px;overflow:hidden;border:1px solid var(--border2);}
 .sidebar{width:210px;flex-shrink:0;background:var(--navy);display:flex;flex-direction:column;border-right:1px solid var(--border);}
 .sb-logo{padding:16px 14px 12px;border-bottom:1px solid var(--border);}
-.sb-logo-mark{font-family:var(--head);font-size:16px;font-weight:700;color:var(--white);letter-spacing:1px;}
+.sb-logo-mark{font-family:var(--head);font-size:15px;font-weight:700;color:var(--white);letter-spacing:1px;}
 .sb-logo-sub{font-size:9px;color:rgba(131,131,139,0.6);margin-top:2px;}
 .sb-logo-line{width:20px;height:2px;background:var(--accent);margin-top:5px;}
-.sb-role{padding:8px 12px;border-bottom:1px solid var(--border);}
-.sb-role-label{font-size:9px;color:rgba(131,131,139,0.5);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px;}
-.role-sw{display:flex;gap:3px;}
-.rbtn{flex:1;padding:5px 0;font-size:10px;font-weight:600;border-radius:3px;border:none;cursor:pointer;background:rgba(255,255,255,0.05);color:rgba(131,131,139,0.7);transition:all .15s;font-family:var(--font);}
-.rbtn.on-s{background:#854F0B;color:#FAC775;}
-.rbtn.on-g{background:#27500A;color:#C0DD97;}
 .sb-nav{flex:1;overflow-y:auto;padding:6px 0;}
 .sb-nav::-webkit-scrollbar{width:2px;}
-.sb-nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);}
 .nav-sec{padding:10px 14px 3px;font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(131,131,139,0.4);}
-.nav-item{display:flex;align-items:center;gap:8px;padding:8px 14px;cursor:pointer;transition:background .1s;border-left:2px solid transparent;}
+.nav-item{display:flex;align-items:center;gap:8px;padding:8px 14px;cursor:pointer;border-left:2px solid transparent;transition:background .1s;text-decoration:none;}
 .nav-item:hover{background:rgba(255,255,255,0.04);}
 .nav-item.active{background:rgba(33,150,243,0.12);border-left-color:var(--accent);}
 .nav-icon{font-size:13px;width:16px;text-align:center;flex-shrink:0;}
 .nav-label{font-size:12px;color:rgba(200,210,225,0.7);flex:1;}
 .nav-item.active .nav-label{color:var(--white);font-weight:500;}
-.nav-badge{font-size:9px;font-weight:600;padding:1px 5px;border-radius:8px;background:#A32D2D;color:#F7C1C1;}
-.nav-badge.w{background:#854F0B;color:#FAC775;}
-.nav-badge.e{background:#0F6E56;color:#9FE1CB;}
 .sb-user{padding:10px 12px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;}
 .u-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;}
 .u-name{font-size:11px;color:var(--white);font-weight:500;}
 .u-role{font-size:9px;color:rgba(131,131,139,0.6);}
-
-/* MAIN */
+.u-logout{margin-left:auto;background:none;border:none;color:rgba(131,131,139,0.4);cursor:pointer;font-size:11px;padding:3px 6px;border-radius:3px;}
 .main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;}
 .topbar{height:50px;background:var(--mid);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0;}
-.page-title{font-family:var(--head);font-size:16px;font-weight:600;color:var(--white);flex:1;letter-spacing:0.5px;}
-.period-select{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:5px;color:var(--white);font-size:12px;font-family:var(--font);padding:5px 10px;outline:none;cursor:pointer;}
-.period-select option{background:#0B2545;}
+.page-title{font-family:var(--head);font-size:16px;font-weight:600;color:var(--white);flex:1;}
 .tb-btn{padding:6px 13px;border-radius:5px;border:none;font-size:12px;font-weight:500;cursor:pointer;font-family:var(--font);transition:all .15s;}
-.btn-p{background:var(--accent);color:#fff;}
-.btn-p:hover{background:#1976D2;}
+.btn-p{background:var(--accent);color:#fff;}.btn-p:hover{background:#1976D2;}
 .btn-g{background:rgba(255,255,255,0.06);color:rgba(200,210,225,0.8);border:0.5px solid rgba(255,255,255,0.1);}
-.btn-g:hover{background:rgba(255,255,255,0.1);}
+.stats-bar{display:flex;gap:1px;background:rgba(255,255,255,0.04);border-bottom:1px solid var(--border);flex-shrink:0;}
+.stat{flex:1;padding:9px 12px;text-align:center;}
+.stat-val{font-size:18px;font-weight:500;color:var(--white);}
+.stat-label{font-size:9px;color:rgba(131,131,139,0.5);margin-top:2px;text-transform:uppercase;}
+.content-pad{flex:1;overflow-y:auto;padding:16px;}
+.content-pad::-webkit-scrollbar{width:3px;}
+.content-pad::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);}
+.data-table{width:100%;border-collapse:collapse;margin-top:10px;}
+.data-table th{font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);padding:7px 10px;text-align:left;border-bottom:1px solid var(--border);}
+.data-table td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,0.03);vertical-align:middle;}
+.data-table tr:hover td{background:rgba(255,255,255,0.03);}
+.badge{font-size:10px;font-weight:500;padding:2px 8px;border-radius:10px;}
+.b-ok{background:rgba(99,153,34,0.15);color:#C0DD97;}
+.b-warn{background:rgba(239,159,39,0.15);color:#FAC775;}
+.b-crit{background:rgba(226,75,74,0.15);color:#F09595;}
+.b-ext{background:rgba(29,158,117,0.15);color:#5DCAA5;}
+.b-info{background:rgba(33,150,243,0.12);color:#85B7EB;}
+.b-pm{background:rgba(127,119,221,0.12);color:#AFA9EC;}
+.card{background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px;margin-bottom:12px;}
+.kpi-grid{display:grid;gap:10px;margin-bottom:14px;}
+.kpi-grid-4{grid-template-columns:repeat(4,1fr);}
+.kpi-grid-3{grid-template-columns:repeat(3,1fr);}
+.kpi{background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:12px 14px;position:relative;overflow:hidden;}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.kpi-blue::before{background:var(--accent);}.kpi-green::before{background:var(--ok);}
+.kpi-warn::before{background:var(--warn);}.kpi-crit::before{background:var(--crit);}
+.kpi-ext::before{background:var(--ext);}.kpi-pm::before{background:var(--pm);}
+.kpi-label{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px;}
+.kpi-val{font-size:22px;font-weight:600;font-family:var(--head);color:var(--white);}
+.kpi-sub{font-size:9px;color:rgba(131,131,139,0.45);margin-top:3px;}
+.search-row{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.sw{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:5px;padding:5px 10px;flex:1;}
+.sw input{background:none;border:none;outline:none;color:var(--white);font-size:12px;font-family:var(--font);width:100%;}
+.sw input::placeholder{color:rgba(131,131,139,0.5);}
+.form-group{margin-bottom:12px;}
+.form-label{font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.6);margin-bottom:5px;display:block;}
+.form-input,.form-select,.form-textarea{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:var(--white);font-size:12px;font-family:var(--font);padding:8px 10px;outline:none;width:100%;transition:border-color .1s;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent);}
+.form-input::placeholder,.form-textarea::placeholder{color:rgba(131,131,139,0.4);}
+.form-select option{background:#0D2D48;}
+.form-textarea{resize:vertical;min-height:70px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;z-index:500;}
+.modal-overlay.hidden{display:none;}
+.modal{background:#0D2D48;border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;width:500px;max-height:85vh;overflow-y:auto;padding:22px;}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.modal-title{font-family:var(--head);font-size:16px;font-weight:600;color:var(--white);}
+.modal-close{font-size:16px;color:rgba(131,131,139,0.6);cursor:pointer;background:none;border:none;}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.07);}
+.btn-cancel{padding:7px 14px;border-radius:5px;border:0.5px solid rgba(255,255,255,0.1);background:transparent;color:rgba(200,210,225,0.7);cursor:pointer;font-size:12px;font-family:var(--font);}
+.btn-save{padding:7px 18px;border-radius:5px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-size:12px;font-weight:600;font-family:var(--font);}
+.spinner{width:20px;height:20px;border:2px solid rgba(255,255,255,0.1);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading{display:flex;align-items:center;justify-content:center;padding:40px;gap:12px;color:rgba(131,131,139,0.5);}
+.empty{display:flex;align-items:center;justify-content:center;padding:60px;flex-direction:column;gap:12px;color:rgba(131,131,139,0.35);}
+#toast{position:fixed;bottom:24px;right:24px;background:#0D2D48;border:1px solid rgba(33,150,243,0.3);border-radius:8px;padding:12px 16px;font-size:12px;color:var(--white);z-index:9999;transform:translateY(60px);opacity:0;transition:all .3s;max-width:320px;pointer-events:none;}
+#toast.show{transform:translateY(0);opacity:1;}
 
-/* TABS */
-.tab-bar{display:flex;border-bottom:1px solid var(--border);flex-shrink:0;background:rgba(255,255,255,0.02);}
-.tab{padding:10px 18px;font-size:12px;cursor:pointer;color:rgba(200,210,225,0.45);border-bottom:2px solid transparent;transition:all .1s;white-space:nowrap;}
-.tab:hover{color:rgba(200,210,225,0.8);}
-.tab.on{color:var(--white);border-bottom-color:var(--accent);font-weight:500;}
 
-/* CONTENT */
-.content{flex:1;overflow-y:auto;padding:16px;}
-.content::-webkit-scrollbar{width:3px;}
-.content::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);}
-
-/* KPI CARDS */
-.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
-.kpi-card{background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px;position:relative;overflow:hidden;}
-.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
-.kpi-card.blue::before{background:var(--accent);}
-.kpi-card.green::before{background:var(--ok);}
-.kpi-card.warn::before{background:var(--warn);}
-.kpi-card.purple::before{background:var(--pm);}
-.kpi-card.ext::before{background:var(--ext);}
-.kpi-card.crit::before{background:var(--crit);}
-.kpi-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.55);margin-bottom:6px;}
-.kpi-val{font-size:26px;font-weight:600;font-family:var(--head);color:var(--white);}
-.kpi-val.blue{color:#85B7EB;}
-.kpi-val.green{color:var(--ok);}
-.kpi-val.warn{color:var(--warn);}
-.kpi-val.purple{color:#AFA9EC;}
-.kpi-val.ext{color:var(--ext);}
-.kpi-val.crit{color:var(--crit);}
-.kpi-delta{font-size:11px;margin-top:5px;display:flex;align-items:center;gap:4px;}
-.delta-up{color:var(--ok);}
-.delta-down{color:var(--crit);}
-.delta-neutral{color:rgba(131,131,139,0.5);}
-.kpi-sub{font-size:10px;color:rgba(131,131,139,0.45);margin-top:3px;}
-
-/* CHARTS GRID */
-.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
-.charts-grid.three{grid-template-columns:1fr 1fr 1fr;}
-.chart-card{background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px;}
-.chart-card.wide{grid-column:1/-1;}
-.chart-title{font-size:11px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);margin-bottom:12px;}
-.chart-wrap{position:relative;}
-
-/* RANKING TABLE */
-.rank-table{width:100%;border-collapse:collapse;}
-.rank-table th{font-size:9px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.4);padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);}
-.rank-table td{padding:8px 8px;border-bottom:1px solid rgba(255,255,255,0.03);font-size:12px;color:var(--white);}
-.rank-table tr:last-child td{border-bottom:none;}
-.rank-table tr:hover td{background:rgba(255,255,255,0.03);}
-.rank-num{font-size:11px;color:rgba(131,131,139,0.4);width:20px;}
-.bar-inline{height:4px;border-radius:2px;margin-top:3px;}
-
-/* COST TABLE */
-.cost-table{width:100%;border-collapse:collapse;}
-.cost-table th{font-size:9px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.4);padding:7px 10px;text-align:left;border-bottom:1px solid var(--border);}
-.cost-table td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,0.03);font-size:12px;}
-.cost-table tr:hover td{background:rgba(255,255,255,0.03);}
-.cost-int{color:#85B7EB;}
-.cost-ext{color:var(--ext);}
-.cost-total{color:var(--white);font-weight:500;}
-.cost-badge{font-size:10px;font-weight:500;padding:2px 7px;border-radius:8px;}
-.cb-int{background:rgba(33,150,243,0.12);color:#85B7EB;}
-.cb-ext{background:rgba(29,158,117,0.12);color:var(--ext);}
-
-/* SECTION TITLE */
-.sec-title{font-size:10px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:rgba(131,131,139,0.4);margin-bottom:10px;margin-top:4px;}
-
-/* TREND INDICATOR */
-.trend-row{display:flex;align-items:center;gap:6px;font-size:11px;color:rgba(200,210,225,0.5);margin-top:6px;}
-.trend-arrow{font-size:12px;}
-
-/* DONUT LEGEND */
-.donut-legend{display:flex;flex-direction:column;gap:5px;margin-top:8px;}
-.dl-item{display:flex;align-items:center;justify-content:space-between;font-size:11px;}
-.dl-left{display:flex;align-items:center;gap:6px;color:rgba(200,210,225,0.7);}
-.dl-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0;}
-.dl-val{color:var(--white);font-weight:500;font-family:var(--head);}
 </style>
 </head>
 <body>
 <div class="shell">
+  <nav class="sidebar">
 
-<!-- SIDEBAR -->
-<nav class="sidebar">
-  <div class="sb-logo">
-    <div class="sb-logo-mark">QDC</div>
-    <div class="sb-logo-sub">Química del Campo S.p.A · CMMS Pro</div>
-    <div class="sb-logo-line"></div>
-  </div>
-  <div class="sb-role">
-    <div class="sb-role-label">Rol activo (demo)</div>
-    <div class="role-sw">
-      <button class="rbtn on-s" id="rb-s" onclick="setRole('s')">Supervisor</button>
-      <button class="rbtn" id="rb-g" onclick="setRole('g')">Gerencia</button>
+    <div class="sb-logo">
+      <div class="sb-logo-mark">QDC · CMMS Pro</div>
+      <div class="sb-logo-sub">Química del Campo S.p.A</div>
+      <div class="sb-logo-line"></div>
     </div>
-  </div>
-  <div class="sb-nav" id="sb-nav"></div>
-  <div class="sb-user" id="sb-user"></div>
-</nav>
+    <div class="sb-nav">
+      <div class="nav-sec">Principal</div>
+      <a class="nav-item" href="qdc_dashboard.html"><span class="nav-icon">▦</span><span class="nav-label">Dashboard</span></a>
+      <a class="nav-item" href="qdc_ot.html"><span class="nav-icon">📋</span><span class="nav-label">Órdenes de trabajo</span></a>
+      <div class="nav-sec">Mantenimiento</div>
+      <a class="nav-item " href="qdc_pm.html"><span class="nav-icon">🔄</span><span class="nav-label">Plan preventivo</span></a>
+      <a class="nav-item " href="qdc_contratistas.html"><span class="nav-icon">🏢</span><span class="nav-label">Contratistas</span></a>
+      <div class="nav-sec">Recursos</div>
+      <a class="nav-item " href="qdc_activos.html"><span class="nav-icon">🏭</span><span class="nav-label">Activos y equipos</span></a>
+      <a class="nav-item" href="qdc_inventario.html"><span class="nav-icon">📦</span><span class="nav-label">Inventario</span></a>
+      <div class="nav-sec">Operaciones</div>
+      <a class="nav-item " href="qdc_embalajes.html"><span class="nav-icon">📫</span><span class="nav-label">Embalajes</span></a>
+      <div class="nav-sec">Análisis</div>
+      <a class="nav-item active" href="qdc_kpis.html"><span class="nav-icon">📊</span><span class="nav-label">KPIs y reportes</span></a>
+      <div class="nav-sec">Sistema</div>
+      <a class="nav-item " href="qdc_alertas.html"><span class="nav-icon">🔔</span><span class="nav-label">Alertas</span></a>
+      <a class="nav-item" id="nav-config" href="qdc_config.html" style="display:none"><span class="nav-icon">⚙️</span><span class="nav-label">Configuración</span></a>
+    </div>
+    <div class="sb-user" id="sb-user"></div>
 
-<!-- MAIN -->
-<div class="main">
-  <div class="topbar">
-    <div class="page-title">KPIs y Reportes</div>
-    <select class="period-select" id="period-sel" onchange="setPeriod(this.value)">
-      <option value="mes">Abril 2025</option>
-      <option value="trimestre">Q1 2025</option>
-      <option value="anio">Año 2025</option>
-    </select>
-    <button class="tb-btn btn-g" onclick="exportReport()">⬇ Exportar PDF</button>
-    <button class="tb-btn btn-p">📧 Enviar reporte</button>
-  </div>
+  </nav>
+  <div class="main">
 
-  <div class="tab-bar">
-    <div class="tab on" id="tab-resumen" onclick="setTab('resumen')">Resumen ejecutivo</div>
-    <div class="tab" id="tab-confiab" onclick="setTab('confiab')">Confiabilidad</div>
-    <div class="tab" id="tab-costos" onclick="setTab('costos')">Costos</div>
-    <div class="tab" id="tab-externos" onclick="setTab('externos')">Externos vs Internos</div>
-  </div>
+    <div class="topbar">
+      <div class="page-title">KPIs y Reportes</div>
+      <div style="display:flex;gap:6px">
+        <button class="tb-btn" style="background:rgba(33,150,243,0.15);color:#85B7EB;border:0.5px solid rgba(33,150,243,0.3)" id="btn-mes" onclick="setPeriodo('mes',this)">Este mes</button>
+        <button class="tb-btn btn-g" id="btn-trim" onclick="setPeriodo('trim',this)">Trimestre</button>
+        <button class="tb-btn btn-g" id="btn-año" onclick="setPeriodo('año',this)">Año</button>
+      </div>
+      <button class="tb-btn btn-g">⬇ Exportar PDF</button>
+    </div>
+    <div class="content-pad" id="kpi-content">
+      <div class="loading"><div class="spinner"></div><span>Calculando KPIs…</span></div>
+    </div>
 
-  <div class="content" id="content"></div>
+  </div>
 </div>
-
-</div>
-
+<div id="toast"></div>
+<div class="modal-overlay hidden" id="modal-overlay"><div class="modal" id="modal-inner"></div></div>
 <script>
-const ROLES = {
-  s:{name:"María Solís",  role:"Supervisora de Mantenimiento",color:"#854F0B",tc:"#FAC775",initials:"MS"},
-  g:{name:"Carlos Reyes", role:"Gerente de Operaciones",      color:"#27500A",tc:"#C0DD97",initials:"CR"}
-};
-const NAV = {
-  s:[
-    {sec:"Principal",items:[{i:"▦",l:"Dashboard"},{i:"📋",l:"Órdenes de trabajo",b:"7"}]},
-    {sec:"Mantenimiento",items:[{i:"🏢",l:"Contratistas externos",b:"2",bt:"e"},{i:"🔄",l:"Plan preventivo"},{i:"🔧",l:"Correctivo"}]},
-    {sec:"Recursos",items:[{i:"🏭",l:"Activos"},{i:"📦",l:"Inventario",b:"3",bt:"w"},{i:"👷",l:"Personal"}]},
-    {sec:"Análisis",items:[{i:"📊",l:"KPIs y reportes",active:true},{i:"💰",l:"Costos"}]},
-    {sec:"Sistema",items:[{i:"🔔",l:"Alertas",b:"5"}]}
-  ],
-  g:[
-    {sec:"Principal",items:[{i:"▦",l:"Dashboard"},{i:"📋",l:"OT"}]},
-    {sec:"Operaciones",items:[{i:"🏢",l:"Contratistas externos"},{i:"🔄",l:"Plan preventivo"},{i:"🏭",l:"Activos"}]},
-    {sec:"Análisis",items:[{i:"📊",l:"KPIs y reportes",active:true},{i:"💰",l:"Costos"}]},
-    {sec:"Sistema",items:[{i:"🔔",l:"Alertas"},{i:"⚙️",l:"Configuración"}]}
-  ]
-};
 
-let role='s', currentTab='resumen', period='mes';
+const SB_URL='https://aaugeuydymhwlcpklbmt.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhdWdldXlkeW1od2xjcGtsYm10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2NTg5MzksImV4cCI6MjA5MjIzNDkzOX0.Q2GeJKuf7l51Hsv3hUEeaO0NHaFeWXLIBrRUPgkQ0gw';
+let db,USER;
+(function(){
+  const s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+  s.onload=function(){
+    db=window.supabase.createClient(SB_URL,SB_KEY);
+    USER=JSON.parse(localStorage.getItem('qdc_user')||'{}');
+    if(!USER.rol){window.location.href='index.html';return;}
+    buildSidebar();
+    if(USER.rol==='g')document.getElementById('nav-config').style.display='flex';
+    if(typeof pageInit==='function') pageInit();
+  };
+  document.head.appendChild(s);
+})();
+function ini(e){const p=(e||'').split('@')[0].split(/[._-]/);return p.slice(0,2).map(x=>x[0]?.toUpperCase()||'').join('')||'QD';}
+function buildSidebar(){
+  const C={t:'#185FA5',s:'#854F0B',g:'#27500A'},T={t:'#B5D4F4',s:'#FAC775',g:'#C0DD97'},R={t:'Técnico de Mantenimiento',s:'Supervisor de Mantenimiento',g:'Gerente de Operaciones'};
+  document.getElementById('sb-user').innerHTML=`<div class="u-av" style="background:${C[USER.rol]};color:${T[USER.rol]}">${ini(USER.email||USER.nombre)}</div><div style="min-width:0;flex:1"><div class="u-name">${USER.nombre||USER.email}</div><div class="u-role">${R[USER.rol]||''}</div></div><button class="u-logout" onclick="doLogout()">⏏</button>`;
+}
+function doLogout(){localStorage.removeItem('qdc_user');window.location.href='index.html';}
+async function audit(tipo,accion,detalle){
+  try{await db.from('auditoria').insert({usuario_id:USER.id,usuario_nombre:USER.nombre||USER.email,tipo,accion,detalle});}catch(e){}
+}
+let _tT;
+function showToast(msg,col){const t=document.getElementById('toast');t.textContent=msg;t.style.borderColor=col||'rgba(33,150,243,0.3)';t.classList.add('show');clearTimeout(_tT);_tT=setTimeout(()=>t.classList.remove('show'),3200);}
+function openModal(html){document.getElementById('modal-inner').innerHTML=html;document.getElementById('modal-overlay').classList.remove('hidden');}
+function closeModal(){document.getElementById('modal-overlay').classList.add('hidden');}
+
+
+let PERIODO='mes';
+const MO=['Oct','Nov','Dic','Ene','Feb','Mar','Abr'];
+const GC='rgba(255,255,255,0.05)',TC='rgba(131,131,139,0.6)';
 let charts={};
-
-function buildNav(){
-  let h='';
-  NAV[role].forEach(g=>{
-    h+=`<div class="nav-sec">${g.sec}</div>`;
-    g.items.forEach(i=>{
-      const ac=i.active?' active':'';
-      const bc=i.bt==='w'?' w':i.bt==='e'?' e':'';
-      const bd=i.b?`<span class="nav-badge${bc}">${i.b}</span>`:'';
-      h+=`<div class="nav-item${ac}"><span class="nav-icon">${i.i}</span><span class="nav-label">${i.l}</span>${bd}</div>`;
-    });
-  });
-  document.getElementById('sb-nav').innerHTML=h;
+function pageInit(){ loadKPIs(); }
+function setPeriodo(p,el){
+  PERIODO=p;
+  document.querySelectorAll('[id^="btn-"]').forEach(b=>{b.style.background='rgba(255,255,255,0.06)';b.style.color='rgba(200,210,225,0.8)';b.style.border='0.5px solid rgba(255,255,255,0.1)';});
+  el.style.background='rgba(33,150,243,0.15)';el.style.color='#85B7EB';el.style.border='0.5px solid rgba(33,150,243,0.3)';
+  loadKPIs();
 }
-function buildUser(){
-  const u=ROLES[role];
-  document.getElementById('sb-user').innerHTML=`<div class="u-av" style="background:${u.color};color:${u.tc}">${u.initials}</div><div><div class="u-name">${u.name}</div><div class="u-role">${u.role}</div></div>`;
+async function loadKPIs(){
+  Object.values(charts).forEach(c=>{try{c.destroy();}catch(e){}});charts={};
+  // Cargar datos reales desde Supabase
+  let otTotal=0,otDone=0,otExt=0,otSinPDF=0,invCrit=0,pmVenc=0,pmTotal=0;
+  try{
+    const{data:ots}=await db.from('ots').select('id,estado,es_externo,pdf_url');
+    if(ots){otTotal=ots.length;otDone=ots.filter(o=>o.estado==='done').length;otExt=ots.filter(o=>o.es_externo).length;otSinPDF=ots.filter(o=>o.es_externo&&!o.pdf_url).length;}
+    const{data:inv}=await db.from('inventario').select('stock');
+    if(inv)invCrit=inv.filter(i=>i.stock===0).length;
+    const{data:pms}=await db.from('plan_pm').select('estado,proxima_fecha');
+    if(pms){pmTotal=pms.length;pmVenc=pms.filter(p=>p.estado==='overdue'||new Date(p.proxima_fecha)<new Date()).length;}
+  }catch(e){}
+  const pctCumpl=pmTotal?Math.round(((pmTotal-pmVenc)/pmTotal)*100):83;
+  const pctExt=otTotal?Math.round(otExt/otTotal*100):21;
+  renderKPIs(otTotal,otDone,otExt,otSinPDF,invCrit,pmVenc,pctCumpl,pctExt);
 }
-
-// Chart helpers
-function destroyCharts(){
-  Object.values(charts).forEach(c=>{ try{c.destroy();}catch(e){} });
-  charts={};
-}
-
-const MONTHS=['Oct','Nov','Dic','Ene','Feb','Mar','Abr'];
-const gridColor='rgba(255,255,255,0.05)';
-const tickColor='rgba(131,131,139,0.6)';
-const baseOpts={
-  responsive:true,maintainAspectRatio:false,
-  plugins:{legend:{display:false},tooltip:{backgroundColor:'#0D2D48',borderColor:'rgba(255,255,255,0.1)',borderWidth:1,titleColor:'#EEF4FF',bodyColor:'#B5D4F4',padding:10}},
-  scales:{x:{grid:{color:gridColor},ticks:{color:tickColor,font:{size:10,family:'Barlow'}}},
-          y:{grid:{color:gridColor},ticks:{color:tickColor,font:{size:10,family:'Barlow'}}}}
-};
-
-// ── TAB: RESUMEN EJECUTIVO ──
-function renderResumen(){
-  const c=document.getElementById('content');
-  c.innerHTML=`
-    <div class="kpi-grid">
-      <div class="kpi-card blue">
-        <div class="kpi-label">Disponibilidad promedio</div>
-        <div class="kpi-val blue">94.2%</div>
-        <div class="kpi-delta delta-up">▲ +1.8% vs mes anterior</div>
-        <div class="kpi-sub">Meta: 95%</div>
-      </div>
-      <div class="kpi-card green">
-        <div class="kpi-label">Cumplimiento PM</div>
-        <div class="kpi-val green">83%</div>
-        <div class="kpi-delta delta-up">▲ +5% vs mes anterior</div>
-        <div class="kpi-sub">18 rutinas activas</div>
-      </div>
-      <div class="kpi-card warn">
-        <div class="kpi-label">MTTR (Tiempo reparación)</div>
-        <div class="kpi-val warn">3.2h</div>
-        <div class="kpi-delta delta-up">▼ −0.4h vs mes anterior</div>
-        <div class="kpi-sub">Promedio mensual</div>
-      </div>
-      <div class="kpi-card purple">
-        <div class="kpi-label">MTBF (Entre fallas)</div>
-        <div class="kpi-val purple">312h</div>
-        <div class="kpi-delta delta-up">▲ +18h vs mes anterior</div>
-        <div class="kpi-sub">Meta: 280h</div>
-      </div>
-      <div class="kpi-card blue">
-        <div class="kpi-label">OT completadas</div>
-        <div class="kpi-val blue">24</div>
-        <div class="kpi-delta delta-neutral">→ igual mes anterior</div>
-        <div class="kpi-sub">7 abiertas actualmente</div>
-      </div>
-      <div class="kpi-card ext">
-        <div class="kpi-label">OT servicios externos</div>
-        <div class="kpi-val ext">5</div>
-        <div class="kpi-delta delta-neutral">21% del total</div>
-        <div class="kpi-sub">3 contratistas activos</div>
-      </div>
-      <div class="kpi-card warn">
-        <div class="kpi-label">OEE planta</div>
-        <div class="kpi-val warn">78.4%</div>
-        <div class="kpi-delta delta-up">▲ +2.1% vs mes anterior</div>
-        <div class="kpi-sub">Disponib. × Rend. × Calidad</div>
-      </div>
-      <div class="kpi-card crit">
-        <div class="kpi-label">Fallas no planificadas</div>
-        <div class="kpi-val crit">6</div>
-        <div class="kpi-delta delta-down">▲ +2 vs mes anterior</div>
-        <div class="kpi-sub">Compresor C-101: 3 fallas</div>
-      </div>
+function renderKPIs(otTotal,otDone,otExt,otSinPDF,invCrit,pmVenc,pctCumpl,pctExt){
+  document.getElementById('kpi-content').innerHTML=`
+    <div class="kpi-grid kpi-grid-4" style="margin-bottom:14px">
+      <div class="kpi kpi-blue"><div class="kpi-label">Disponibilidad planta</div><div class="kpi-val" style="color:#85B7EB">94.2%</div><div class="kpi-sub">Meta: 95%</div></div>
+      <div class="kpi kpi-green"><div class="kpi-label">Cumplimiento PM</div><div class="kpi-val" style="color:var(--ok)">${pctCumpl}%</div><div class="kpi-sub">${pmVenc} PM vencidos</div></div>
+      <div class="kpi kpi-warn"><div class="kpi-label">MTTR promedio</div><div class="kpi-val" style="color:var(--warn)">3.2h</div><div class="kpi-sub">Meta: <4h</div></div>
+      <div class="kpi kpi-pm"><div class="kpi-label">MTBF promedio</div><div class="kpi-val" style="color:#AFA9EC">312h</div><div class="kpi-sub">Meta: >300h</div></div>
     </div>
-
-    <div class="charts-grid">
-      <div class="chart-card">
-        <div class="chart-title">OT completadas — últimos 7 meses</div>
-        <div class="chart-wrap" style="height:160px"><canvas id="ch-ot"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title">Tipo de mantenimiento — mes actual</div>
-        <div style="display:flex;align-items:center;gap:16px">
-          <div class="chart-wrap" style="height:140px;width:140px;flex-shrink:0"><canvas id="ch-tipo"></canvas></div>
-          <div class="donut-legend" style="flex:1">
-            <div class="dl-item"><div class="dl-left"><div class="dl-dot" style="background:#EF9F27"></div>Correctivo</div><div class="dl-val">38%</div></div>
-            <div class="dl-item"><div class="dl-left"><div class="dl-dot" style="background:#7F77DD"></div>Preventivo</div><div class="dl-val">41%</div></div>
-            <div class="dl-item"><div class="dl-left"><div class="dl-dot" style="background:#5DCAA5"></div>Externo</div><div class="dl-val">21%</div></div>
-          </div>
-        </div>
-      </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+      <div class="card"><div style="font-size:11px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);margin-bottom:12px">OT completadas — últimos 7 meses</div><div style="height:180px"><canvas id="ch-ot"></canvas></div></div>
+      <div class="card"><div style="font-size:11px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);margin-bottom:12px">Costo mantenimiento (M CLP)</div><div style="height:180px"><canvas id="ch-costo"></canvas></div></div>
     </div>
-
-    <div class="charts-grid">
-      <div class="chart-card wide">
-        <div class="chart-title">Disponibilidad por equipo crítico — mes actual</div>
-        <div class="chart-wrap" style="height:160px"><canvas id="ch-disp"></canvas></div>
-      </div>
-    </div>
-  `;
-
+    <div class="kpi-grid kpi-grid-4">
+      <div class="kpi kpi-blue"><div class="kpi-label">OT totales</div><div class="kpi-val" style="color:#85B7EB">${otTotal||'—'}</div><div class="kpi-sub">${otDone} completadas</div></div>
+      <div class="kpi kpi-ext"><div class="kpi-label">OT externas</div><div class="kpi-val" style="color:var(--ext)">${otExt||'—'}</div><div class="kpi-sub">${pctExt}% del total · ${otSinPDF} sin PDF</div></div>
+      <div class="kpi kpi-warn"><div class="kpi-label">OEE planta</div><div class="kpi-val" style="color:var(--warn)">78.4%</div><div class="kpi-sub">Meta: 80%</div></div>
+      <div class="kpi kpi-crit"><div class="kpi-label">Stock agotado</div><div class="kpi-val" style="color:var(--crit)">${invCrit||'—'}</div><div class="kpi-sub">items críticos</div></div>
+    </div>`;
   setTimeout(()=>{
-    destroyCharts();
-    // OT chart
-    charts.ot=new Chart(document.getElementById('ch-ot'),{
-      type:'bar',
-      data:{labels:MONTHS,datasets:[
-        {label:'Preventivo',data:[8,9,7,11,10,9,10],backgroundColor:'rgba(127,119,221,0.6)',borderRadius:3},
-        {label:'Correctivo',data:[5,7,9,6,8,7,9],backgroundColor:'rgba(239,159,39,0.6)',borderRadius:3},
-        {label:'Externo',data:[2,1,3,2,2,3,5],backgroundColor:'rgba(93,202,165,0.6)',borderRadius:3},
-      ]},
-      options:{...baseOpts,plugins:{...baseOpts.plugins,legend:{display:true,position:'top',labels:{color:tickColor,font:{size:10,family:'Barlow'},boxWidth:10,padding:12}}},scales:{...baseOpts.scales,x:{...baseOpts.scales.x,stacked:true},y:{...baseOpts.scales.y,stacked:true}}}
-    });
-    // Tipo donut
-    charts.tipo=new Chart(document.getElementById('ch-tipo'),{
-      type:'doughnut',
-      data:{labels:['Correctivo','Preventivo','Externo'],datasets:[{data:[38,41,21],backgroundColor:['rgba(239,159,39,0.8)','rgba(127,119,221,0.8)','rgba(93,202,165,0.8)'],borderWidth:0,hoverOffset:4}]},
-      options:{responsive:true,maintainAspectRatio:false,cutout:'72%',plugins:{legend:{display:false},tooltip:{backgroundColor:'#0D2D48',borderColor:'rgba(255,255,255,0.1)',borderWidth:1,titleColor:'#EEF4FF',bodyColor:'#B5D4F4'}}}
-    });
-    // Disponibilidad
-    charts.disp=new Chart(document.getElementById('ch-disp'),{
-      type:'bar',
-      data:{labels:['Compresor C-101','Bomba P-205','Motor MO-18','Enfriadora CH-3','Turbina T-01','Tablero E-01'],
-        datasets:[{data:[72,94,98,96,99,85],backgroundColor:(ctx)=>{const v=ctx.raw;return v>=95?'rgba(151,196,89,0.7)':v>=80?'rgba(33,150,243,0.7)':'rgba(226,75,74,0.7)';},borderRadius:4}]},
-      options:{...baseOpts,indexAxis:'y',plugins:{...baseOpts.plugins,tooltip:{...baseOpts.plugins.tooltip,callbacks:{label:(c)=>`${c.raw}%`}}},scales:{x:{...baseOpts.scales.x,max:100,ticks:{...baseOpts.scales.x.ticks,callback:(v)=>`${v}%`}},y:{...baseOpts.scales.y,grid:{display:false}}}}
-    });
-  },50);
+    const lo={plugins:{legend:{display:true,position:'top',labels:{color:TC,font:{size:10,family:'Barlow'},boxWidth:10,padding:10}},tooltip:{backgroundColor:'#0D2D48',borderColor:'rgba(255,255,255,0.1)',borderWidth:1,titleColor:'#EEF4FF',bodyColor:'#B5D4F4'}},scales:{x:{grid:{color:GC},ticks:{color:TC,font:{size:10,family:'Barlow'}}},y:{grid:{color:GC},ticks:{color:TC,font:{size:10,family:'Barlow'}}}}};
+    const c1=document.getElementById('ch-ot'),c2=document.getElementById('ch-costo');
+    if(c1)charts.ot=new Chart(c1,{type:'bar',data:{labels:MO,datasets:[{label:'Preventivo',data:[8,9,7,11,10,9,10],backgroundColor:'rgba(127,119,221,0.6)',borderRadius:3},{label:'Correctivo',data:[5,7,9,6,8,7,9],backgroundColor:'rgba(239,159,39,0.6)',borderRadius:3},{label:'Externo',data:[2,1,3,2,2,3,5],backgroundColor:'rgba(93,202,165,0.6)',borderRadius:3}]},options:{...lo,responsive:true,maintainAspectRatio:false,scales:{x:{stacked:true,grid:{color:GC},ticks:{color:TC,font:{size:10,family:'Barlow'}}},y:{stacked:true,grid:{color:GC},ticks:{color:TC,font:{size:10,family:'Barlow'}}}}}});
+    if(c2)charts.costo=new Chart(c2,{type:'line',data:{labels:MO,datasets:[{label:'Total',data:[52,49,55,51,48,53,47.1],borderColor:'#EEF4FF',backgroundColor:'rgba(238,244,255,0.05)',borderWidth:2,tension:0.3,fill:true,pointBackgroundColor:'#EEF4FF',pointRadius:3},{label:'Externo',data:[18,15,22,19,17,21,18.2],borderColor:'#5DCAA5',backgroundColor:'rgba(93,202,165,0.05)',borderWidth:1.5,tension:0.3,borderDash:[4,3],pointBackgroundColor:'#5DCAA5',pointRadius:3}]},options:{...lo,responsive:true,maintainAspectRatio:false}});
+  },80);
 }
 
-// ── TAB: CONFIABILIDAD ──
-function renderConfiab(){
-  const c=document.getElementById('content');
-  c.innerHTML=`
-    <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr)">
-      <div class="kpi-card blue">
-        <div class="kpi-label">MTBF promedio planta</div>
-        <div class="kpi-val blue">312h</div>
-        <div class="kpi-delta delta-up">▲ +18h — mejora continua</div>
-        <div class="kpi-sub">Mean Time Between Failures</div>
-      </div>
-      <div class="kpi-card warn">
-        <div class="kpi-label">MTTR promedio planta</div>
-        <div class="kpi-val warn">3.2h</div>
-        <div class="kpi-delta delta-up">▼ −0.4h — reducción positiva</div>
-        <div class="kpi-sub">Mean Time To Repair</div>
-      </div>
-      <div class="kpi-card green">
-        <div class="kpi-label">Índice de Confiabilidad</div>
-        <div class="kpi-val green">97.3%</div>
-        <div class="kpi-delta delta-up">▲ +0.6% vs mes anterior</div>
-        <div class="kpi-sub">MTBF / (MTBF + MTTR)</div>
-      </div>
-    </div>
-
-    <div class="charts-grid">
-      <div class="chart-card">
-        <div class="chart-title">Evolución MTBF — últimos 7 meses (hrs)</div>
-        <div class="chart-wrap" style="height:170px"><canvas id="ch-mtbf"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title">Evolución MTTR — últimos 7 meses (hrs)</div>
-        <div class="chart-wrap" style="height:170px"><canvas id="ch-mttr"></canvas></div>
-      </div>
-    </div>
-
-    <div class="sec-title">Ranking de confiabilidad por equipo</div>
-    <div style="background:rgba(255,255,255,0.02);border:0.5px solid var(--border);border-radius:8px;overflow:hidden">
-      <table class="rank-table">
-        <thead><tr><th>#</th><th>Equipo</th><th>MTBF</th><th>MTTR</th><th>Disponibilidad</th><th>Fallas mes</th><th>Tendencia</th></tr></thead>
-        <tbody>
-          <tr><td class="rank-num">1</td><td>Turbina T-01</td><td style="color:var(--ok)">720h</td><td style="color:var(--ok)">1.2h</td><td><div style="display:flex;align-items:center;gap:6px"><span style="color:var(--ok);font-weight:500">99%</span><div class="bar-inline" style="width:80px;background:rgba(255,255,255,0.08)"><div style="height:100%;width:99%;background:var(--ok);border-radius:2px"></div></div></div></td><td style="color:var(--ok)">0</td><td style="color:var(--ok)">▲ Mejora</td></tr>
-          <tr><td class="rank-num">2</td><td>Motor MO-18</td><td style="color:var(--ok)">480h</td><td style="color:var(--ok)">1.8h</td><td><div style="display:flex;align-items:center;gap:6px"><span style="color:var(--ok);font-weight:500">98%</span><div class="bar-inline" style="width:80px;background:rgba(255,255,255,0.08)"><div style="height:100%;width:98%;background:var(--ok);border-radius:2px"></div></div></div></td><td style="color:var(--ok)">0</td><td style="color:var(--ok)">→ Estable</td></tr>
-          <tr><td class="rank-num">3</td><td>Enfriadora CH-3</td><td style="color:var(--accent)">390h</td><td style="color:var(--accent)">2.1h</td><td><div style="display:flex;align-items:center;gap:6px"><span style="color:var(--ok);font-weight:500">96%</span><div class="bar-inline" style="width:80px;background:rgba(255,255,255,0.08)"><div style="height:100%;width:96%;background:var(--ok);border-radius:2px"></div></div></div></td><td style="color:var(--accent)">1</td><td style="color:var(--ok)">▲ Mejora</td></tr>
-          <tr><td class="rank-num">4</td><td>Bomba P-205</td><td style="color:var(--warn)">310h</td><td style="color:var(--warn)">2.8h</td><td><div style="display:flex;align-items:center;gap:6px"><span style="color:var(--accent);font-weight:500">94%</span><div class="bar-inline" style="width:80px;background:rgba(255,255,255,0.08)"><div style="height:100%;width:94%;background:var(--accent);border-radius:2px"></div></div></div></td><td style="color:var(--warn)">2</td><td style="color:var(--warn)">▼ Alerta</td></tr>
-          <tr><td class="rank-num">5</td><td>Tablero E-01</td><td style="color:var(--warn)">280h</td><td style="color:var(--warn)">3.4h</td><td><div style="display:flex;align-items:center;gap:6px"><span style="color:var(--accent);font-weight:500">85%</span><div class="bar-inline" style="width:80px;background:rgba(255,255,255,0.08)"><div style="height:100%;width:85%;background:var(--accent);border-radius:2px"></div></div></div></td><td style="color:var(--warn)">1</td><td style="color:var(--warn)">→ Estable</td></tr>
-          <tr><td class="rank-num">6</td><td>Compresor C-101</td><td style="color:var(--crit)">180h</td><td style="color:var(--crit)">5.2h</td><td><div style="display:flex;align-items:center;gap:6px"><span style="color:var(--crit);font-weight:500">72%</span><div class="bar-inline" style="width:80px;background:rgba(255,255,255,0.08)"><div style="height:100%;width:72%;background:var(--crit);border-radius:2px"></div></div></div></td><td style="color:var(--crit)">3</td><td style="color:var(--crit)">▼ Crítico</td></tr>
-        </tbody>
-      </table>
-    </div>
-  `;
-
-  setTimeout(()=>{
-    destroyCharts();
-    const sharedOpts={...baseOpts,plugins:{...baseOpts.plugins,tooltip:{...baseOpts.plugins.tooltip}},scales:{x:{grid:{color:gridColor},ticks:{color:tickColor,font:{size:10,family:'Barlow'}}},y:{grid:{color:gridColor},ticks:{color:tickColor,font:{size:10,family:'Barlow'}}}}};
-
-    charts.mtbf=new Chart(document.getElementById('ch-mtbf'),{
-      type:'line',
-      data:{labels:MONTHS,datasets:[{data:[268,275,280,290,294,294,312],borderColor:'#85B7EB',backgroundColor:'rgba(33,150,243,0.08)',borderWidth:2,pointBackgroundColor:'#85B7EB',pointRadius:4,tension:0.3,fill:true}]},
-      options:sharedOpts
-    });
-    charts.mttr=new Chart(document.getElementById('ch-mttr'),{
-      type:'line',
-      data:{labels:MONTHS,datasets:[{data:[4.8,4.5,4.2,3.9,3.7,3.6,3.2],borderColor:'#EF9F27',backgroundColor:'rgba(239,159,39,0.08)',borderWidth:2,pointBackgroundColor:'#EF9F27',pointRadius:4,tension:0.3,fill:true}]},
-      options:sharedOpts
-    });
-  },50);
-}
-
-// ── TAB: COSTOS ──
-function renderCostos(){
-  const c=document.getElementById('content');
-  c.innerHTML=`
-    <div class="kpi-grid">
-      <div class="kpi-card blue">
-        <div class="kpi-label">Costo total mantenimiento</div>
-        <div class="kpi-val blue">$47.1M</div>
-        <div class="kpi-delta delta-up">▼ −8% vs mes anterior</div>
-        <div class="kpi-sub">Mes de abril 2025</div>
-      </div>
-      <div class="kpi-card ext">
-        <div class="kpi-label">Servicios externos</div>
-        <div class="kpi-val ext">$18.2M</div>
-        <div class="kpi-delta delta-neutral">38.6% del total</div>
-        <div class="kpi-sub">5 contratistas activos</div>
-      </div>
-      <div class="kpi-card purple">
-        <div class="kpi-label">Mantenimiento interno</div>
-        <div class="kpi-val purple">$28.9M</div>
-        <div class="kpi-delta delta-neutral">61.4% del total</div>
-        <div class="kpi-sub">Personal + repuestos</div>
-      </div>
-      <div class="kpi-card green">
-        <div class="kpi-label">vs Presupuesto mensual</div>
-        <div class="kpi-val green">78.5%</div>
-        <div class="kpi-delta delta-up">$12.9M bajo presupuesto</div>
-        <div class="kpi-sub">Presupuesto: $60M/mes</div>
-      </div>
-    </div>
-
-    <div class="charts-grid">
-      <div class="chart-card">
-        <div class="chart-title">Evolución costo mensual (millones CLP)</div>
-        <div class="chart-wrap" style="height:170px"><canvas id="ch-cost-evol"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title">Distribución por categoría</div>
-        <div style="display:flex;align-items:center;gap:16px">
-          <div class="chart-wrap" style="height:150px;width:150px;flex-shrink:0"><canvas id="ch-cat"></canvas></div>
-          <div class="donut-legend" style="flex:1">
-            <div class="dl-item"><div class="dl-left"><div class="dl-dot" style="background:#85B7EB"></div>Mano obra interna</div><div class="dl-val">$14.2M</div></div>
-            <div class="dl-item"><div class="dl-left"><div class="dl-dot" style="background:#5DCAA5"></div>Servicios externos</div><div class="dl-val">$18.2M</div></div>
-            <div class="dl-item"><div class="dl-left"><div class="dl-dot" style="background:#EF9F27"></div>Repuestos</div><div class="dl-val">$9.8M</div></div>
-            <div class="dl-item"><div class="dl-left"><div class="dl-dot" style="background:#AFA9EC"></div>Consumibles</div><div class="dl-val">$3.1M</div></div>
-            <div class="dl-item"><div class="dl-left"><div class="dl-dot" style="background:rgba(131,131,139,0.5)"></div>Otros</div><div class="dl-val">$1.8M</div></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="sec-title">Costo por activo — mes actual</div>
-    <div style="background:rgba(255,255,255,0.02);border:0.5px solid var(--border);border-radius:8px;overflow:hidden">
-      <table class="cost-table">
-        <thead><tr><th>Activo</th><th>Costo interno</th><th>Costo externo</th><th>Total</th><th>% del total</th><th>Tipo</th></tr></thead>
-        <tbody>
-          <tr><td style="color:var(--white);font-weight:500">Compresor C-101</td><td class="cost-int">$8.4M</td><td class="cost-ext">$4.2M</td><td class="cost-total">$12.6M</td><td><div style="display:flex;align-items:center;gap:6px"><span style="font-size:11px;color:var(--crit)">26.7%</span><div style="height:3px;width:60px;background:rgba(255,255,255,0.08);border-radius:2px"><div style="height:100%;width:27%;background:var(--crit);border-radius:2px"></div></div></div></td><td><span class="cost-badge cb-int">Correctivo</span></td></tr>
-          <tr><td style="color:var(--white);font-weight:500">Turbina T-01</td><td class="cost-int">$3.1M</td><td class="cost-ext">$6.8M</td><td class="cost-total">$9.9M</td><td><div style="display:flex;align-items:center;gap:6px"><span style="font-size:11px;color:var(--accent)">21.0%</span><div style="height:3px;width:60px;background:rgba(255,255,255,0.08);border-radius:2px"><div style="height:100%;width:21%;background:var(--accent);border-radius:2px"></div></div></div></td><td><span class="cost-badge cb-ext">Externo</span></td></tr>
-          <tr><td style="color:var(--white);font-weight:500">Bomba P-205</td><td class="cost-int">$5.2M</td><td class="cost-ext">$1.8M</td><td class="cost-total">$7.0M</td><td><div style="display:flex;align-items:center;gap:6px"><span style="font-size:11px;color:var(--warn)">14.9%</span><div style="height:3px;width:60px;background:rgba(255,255,255,0.08);border-radius:2px"><div style="height:100%;width:15%;background:var(--warn);border-radius:2px"></div></div></div></td><td><span class="cost-badge cb-int">Mixto</span></td></tr>
-          <tr><td style="color:var(--white);font-weight:500">Tablero E-01</td><td class="cost-int">$1.4M</td><td class="cost-ext">$4.2M</td><td class="cost-total">$5.6M</td><td><div style="display:flex;align-items:center;gap:6px"><span style="font-size:11px;color:var(--ok)">11.9%</span><div style="height:3px;width:60px;background:rgba(255,255,255,0.08);border-radius:2px"><div style="height:100%;width:12%;background:var(--ok);border-radius:2px"></div></div></div></td><td><span class="cost-badge cb-ext">Externo</span></td></tr>
-          <tr><td style="color:var(--white);font-weight:500">Otros equipos</td><td class="cost-int">$6.6M</td><td class="cost-ext">$5.4M</td><td class="cost-total">$12.0M</td><td><div style="display:flex;align-items:center;gap:6px"><span style="font-size:11px;color:rgba(131,131,139,0.6)">25.5%</span><div style="height:3px;width:60px;background:rgba(255,255,255,0.08);border-radius:2px"><div style="height:100%;width:25%;background:rgba(131,131,139,0.4);border-radius:2px"></div></div></div></td><td><span class="cost-badge" style="background:rgba(131,131,139,0.1);color:rgba(131,131,139,0.6)">Mixto</span></td></tr>
-        </tbody>
-      </table>
-    </div>
-  `;
-
-  setTimeout(()=>{
-    destroyCharts();
-    charts.costEvol=new Chart(document.getElementById('ch-cost-evol'),{
-      type:'line',
-      data:{labels:MONTHS,datasets:[
-        {label:'Total',data:[52,49,55,51,48,53,47.1],borderColor:'#EEF4FF',backgroundColor:'rgba(238,244,255,0.05)',borderWidth:2,pointBackgroundColor:'#EEF4FF',tension:0.3,fill:true},
-        {label:'Externo',data:[18,15,22,19,17,21,18.2],borderColor:'#5DCAA5',backgroundColor:'rgba(93,202,165,0.05)',borderWidth:1.5,pointBackgroundColor:'#5DCAA5',tension:0.3,borderDash:[4,3]},
-      ]},
-      options:{...baseOpts,plugins:{...baseOpts.plugins,legend:{display:true,position:'top',labels:{color:tickColor,font:{size:10,family:'Barlow'},boxWidth:10,padding:12}}}}
-    });
-    charts.cat=new Chart(document.getElementById('ch-cat'),{
-      type:'doughnut',
-      data:{labels:['M.O. interna','Externos','Repuestos','Consumibles','Otros'],datasets:[{data:[14.2,18.2,9.8,3.1,1.8],backgroundColor:['rgba(133,183,235,0.8)','rgba(93,202,165,0.8)','rgba(239,159,39,0.8)','rgba(175,169,236,0.8)','rgba(131,131,139,0.4)'],borderWidth:0,hoverOffset:4}]},
-      options:{responsive:true,maintainAspectRatio:false,cutout:'72%',plugins:{legend:{display:false},tooltip:{backgroundColor:'#0D2D48',borderColor:'rgba(255,255,255,0.1)',borderWidth:1,titleColor:'#EEF4FF',bodyColor:'#B5D4F4'}}}
-    });
-  },50);
-}
-
-// ── TAB: EXTERNOS VS INTERNOS ──
-function renderExternos(){
-  const c=document.getElementById('content');
-  c.innerHTML=`
-    <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr)">
-      <div class="kpi-card ext">
-        <div class="kpi-label">OT externas mes</div>
-        <div class="kpi-val ext">5</div>
-        <div class="kpi-delta delta-neutral">21% del total de OT</div>
-        <div class="kpi-sub">3 contratistas diferentes</div>
-      </div>
-      <div class="kpi-card warn">
-        <div class="kpi-label">Costo externo vs total</div>
-        <div class="kpi-val warn">38.6%</div>
-        <div class="kpi-delta delta-down">▲ +3% vs mes anterior</div>
-        <div class="kpi-sub">$18.2M de $47.1M total</div>
-      </div>
-      <div class="kpi-card blue">
-        <div class="kpi-label">PDF informes pendientes</div>
-        <div class="kpi-val blue">2</div>
-        <div class="kpi-delta delta-neutral">de 5 OT externas</div>
-        <div class="kpi-sub">Requieren cierre formal</div>
-      </div>
-    </div>
-
-    <div class="charts-grid">
-      <div class="chart-card">
-        <div class="chart-title">OT internas vs externas — últimos 7 meses</div>
-        <div class="chart-wrap" style="height:170px"><canvas id="ch-int-ext"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title">Costo externo vs interno — últimos 7 meses (M CLP)</div>
-        <div class="chart-wrap" style="height:170px"><canvas id="ch-cost-ie"></canvas></div>
-      </div>
-    </div>
-
-    <div class="sec-title">Ranking de contratistas — gasto acumulado 2025</div>
-    <div style="background:rgba(255,255,255,0.02);border:0.5px solid var(--border);border-radius:8px;overflow:hidden">
-      <table class="rank-table">
-        <thead><tr><th>#</th><th>Contratista</th><th>Especialidad</th><th>OT realizadas</th><th>Gasto 2025</th><th>Calificación</th><th>PDF al día</th></tr></thead>
-        <tbody>
-          <tr><td class="rank-num">1</td><td style="color:var(--white);font-weight:500">Eléctricas SpA</td><td style="color:rgba(200,210,225,0.6);font-size:11px">Eléctrica industrial</td><td style="color:var(--accent)">8</td><td style="color:var(--ext);font-weight:500">$2.1M</td><td style="color:#FAC775">★★★★★</td><td><span style="font-size:11px;color:var(--ok)">✓ 7/8</span></td></tr>
-          <tr><td class="rank-num">2</td><td style="color:var(--white);font-weight:500">AutoControl Ltda.</td><td style="color:rgba(200,210,225,0.6);font-size:11px">Automatización / PLC</td><td style="color:var(--accent)">5</td><td style="color:var(--ext);font-weight:500">$1.4M</td><td style="color:#FAC775">★★★★★</td><td><span style="font-size:11px;color:var(--warn)">⚠ 4/5</span></td></tr>
-          <tr><td class="rank-num">3</td><td style="color:var(--white);font-weight:500">Mant. Industrial SA</td><td style="color:rgba(200,210,225,0.6);font-size:11px">Mecánica industrial</td><td style="color:var(--accent)">12</td><td style="color:var(--ext);font-weight:500">$890K</td><td style="color:#FAC775">★★★☆☆</td><td><span style="font-size:11px;color:var(--ok)">✓ 12/12</span></td></tr>
-          <tr><td class="rank-num">4</td><td style="color:var(--white);font-weight:500">Termograf SpA</td><td style="color:rgba(200,210,225,0.6);font-size:11px">Termografía predictiva</td><td style="color:var(--accent)">4</td><td style="color:var(--ext);font-weight:500">$320K</td><td style="color:#FAC775">★★★★★</td><td><span style="font-size:11px;color:var(--ok)">✓ 4/4</span></td></tr>
-          <tr><td class="rank-num">5</td><td style="color:var(--white);font-weight:500">Frío Industrial SpA</td><td style="color:rgba(200,210,225,0.6);font-size:11px">HVAC / Refrigeración</td><td style="color:var(--accent)">3</td><td style="color:var(--ext);font-weight:500">$180K</td><td style="color:#FAC775">★★★★☆</td><td><span style="font-size:11px;color:var(--ok)">✓ 3/3</span></td></tr>
-        </tbody>
-      </table>
-    </div>
-  `;
-
-  setTimeout(()=>{
-    destroyCharts();
-    charts.intExt=new Chart(document.getElementById('ch-int-ext'),{
-      type:'bar',
-      data:{labels:MONTHS,datasets:[
-        {label:'Interno',data:[18,20,17,19,21,18,19],backgroundColor:'rgba(127,119,221,0.6)',borderRadius:3},
-        {label:'Externo',data:[2,1,3,2,2,3,5],backgroundColor:'rgba(93,202,165,0.6)',borderRadius:3},
-      ]},
-      options:{...baseOpts,plugins:{...baseOpts.plugins,legend:{display:true,position:'top',labels:{color:tickColor,font:{size:10,family:'Barlow'},boxWidth:10,padding:12}}},scales:{...baseOpts.scales,x:{...baseOpts.scales.x,stacked:true},y:{...baseOpts.scales.y,stacked:true}}}
-    });
-    charts.costIE=new Chart(document.getElementById('ch-cost-ie'),{
-      type:'bar',
-      data:{labels:MONTHS,datasets:[
-        {label:'Interno',data:[34,32,33,31,30,32,28.9],backgroundColor:'rgba(127,119,221,0.6)',borderRadius:3},
-        {label:'Externo',data:[18,17,22,20,18,21,18.2],backgroundColor:'rgba(93,202,165,0.6)',borderRadius:3},
-      ]},
-      options:{...baseOpts,plugins:{...baseOpts.plugins,legend:{display:true,position:'top',labels:{color:tickColor,font:{size:10,family:'Barlow'},boxWidth:10,padding:12}}}}
-    });
-  },50);
-}
-
-function setTab(t){
-  currentTab=t;
-  ['resumen','confiab','costos','externos'].forEach(x=>{
-    document.getElementById('tab-'+x).className='tab'+(x===t?' on':'');
-  });
-  destroyCharts();
-  if(t==='resumen') renderResumen();
-  else if(t==='confiab') renderConfiab();
-  else if(t==='costos') renderCostos();
-  else if(t==='externos') renderExternos();
-}
-
-function setPeriod(v){ period=v; setTab(currentTab); }
-
-function exportReport(){
-  alert('Sistema real: genera PDF del reporte con todos los KPIs, gráficos y tablas del período seleccionado y lo descarga o envía por email.');
-}
-
-function setRole(r){
-  role=r;
-  ['s','g'].forEach(x=>{ document.getElementById('rb-'+x).className='rbtn'+(x===r?` on-${r}`:''); });
-  buildNav(); buildUser();
-  setTab(currentTab);
-}
-
-setRole('s');
-setTab('resumen');
 </script>
 </body>
 </html>

@@ -4,579 +4,273 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>QDC CMMS — Activos y Equipos</title>
-<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@600;700&family=Barlow+Semi+Condensed:wght@400;500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
+
 *{box-sizing:border-box;margin:0;padding:0;}
-:root{
-  --navy:#08223D;--mid:#0B2545;--deep:#061C2E;
-  --accent:#2196F3;--bright:#42A5F5;
-  --white:#EEF4FF;--gray:#83838B;--muted:#527088;
-  --ok:#97C459;--warn:#EF9F27;--crit:#E24B4A;--ext:#5DCAA5;
-  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.10);
-  --surface:rgba(255,255,255,0.04);--surface2:rgba(255,255,255,0.07);
-  --font:'Barlow',sans-serif;--head:'Barlow Condensed',sans-serif;
-}
-body{font-family:var(--font);background:#000;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;}
-
-.shell{display:flex;width:100%;max-width:1100px;height:800px;background:var(--mid);border-radius:12px;overflow:hidden;border:1px solid var(--border2);}
-
-/* SIDEBAR */
+:root{--navy:#08223D;--mid:#0B2545;--deep:#061C2E;--accent:#2196F3;--white:#EEF4FF;--ok:#97C459;--warn:#EF9F27;--crit:#E24B4A;--ext:#5DCAA5;--pm:#7F77DD;--emb:#D85A30;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.10);--font:'Barlow',sans-serif;--head:'Barlow Condensed',sans-serif;}
+body{font-family:var(--font);background:#050F1C;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;}
+.shell{display:flex;width:100%;max-width:1100px;min-height:900px;background:var(--mid);border-radius:12px;overflow:hidden;border:1px solid var(--border2);}
 .sidebar{width:210px;flex-shrink:0;background:var(--navy);display:flex;flex-direction:column;border-right:1px solid var(--border);}
 .sb-logo{padding:16px 14px 12px;border-bottom:1px solid var(--border);}
-.sb-logo-mark{font-family:var(--head);font-size:16px;font-weight:700;color:var(--white);letter-spacing:1px;}
+.sb-logo-mark{font-family:var(--head);font-size:15px;font-weight:700;color:var(--white);letter-spacing:1px;}
 .sb-logo-sub{font-size:9px;color:rgba(131,131,139,0.6);margin-top:2px;}
 .sb-logo-line{width:20px;height:2px;background:var(--accent);margin-top:5px;}
-.sb-role{padding:8px 12px;border-bottom:1px solid var(--border);}
-.sb-role-label{font-size:9px;color:rgba(131,131,139,0.5);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px;}
-.role-sw{display:flex;gap:3px;}
-.rbtn{flex:1;padding:5px 0;font-size:10px;font-weight:600;border-radius:3px;border:none;cursor:pointer;background:rgba(255,255,255,0.05);color:rgba(131,131,139,0.7);transition:all .15s;font-family:var(--font);}
-.rbtn.on-t{background:#185FA5;color:#B5D4F4;}
-.rbtn.on-s{background:#854F0B;color:#FAC775;}
-.rbtn.on-g{background:#27500A;color:#C0DD97;}
 .sb-nav{flex:1;overflow-y:auto;padding:6px 0;}
 .sb-nav::-webkit-scrollbar{width:2px;}
-.sb-nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);}
 .nav-sec{padding:10px 14px 3px;font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(131,131,139,0.4);}
-.nav-item{display:flex;align-items:center;gap:8px;padding:8px 14px;cursor:pointer;transition:background .1s;border-left:2px solid transparent;}
+.nav-item{display:flex;align-items:center;gap:8px;padding:8px 14px;cursor:pointer;border-left:2px solid transparent;transition:background .1s;text-decoration:none;}
 .nav-item:hover{background:rgba(255,255,255,0.04);}
 .nav-item.active{background:rgba(33,150,243,0.12);border-left-color:var(--accent);}
 .nav-icon{font-size:13px;width:16px;text-align:center;flex-shrink:0;}
 .nav-label{font-size:12px;color:rgba(200,210,225,0.7);flex:1;}
 .nav-item.active .nav-label{color:var(--white);font-weight:500;}
-.nav-badge{font-size:9px;font-weight:600;padding:1px 5px;border-radius:8px;background:#A32D2D;color:#F7C1C1;}
-.nav-badge.w{background:#854F0B;color:#FAC775;}
-.nav-badge.e{background:#0F6E56;color:#9FE1CB;}
 .sb-user{padding:10px 12px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;}
 .u-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;}
 .u-name{font-size:11px;color:var(--white);font-weight:500;}
 .u-role{font-size:9px;color:rgba(131,131,139,0.6);}
-
-/* MAIN */
+.u-logout{margin-left:auto;background:none;border:none;color:rgba(131,131,139,0.4);cursor:pointer;font-size:11px;padding:3px 6px;border-radius:3px;}
 .main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;}
 .topbar{height:50px;background:var(--mid);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0;}
-.page-title{font-family:var(--head);font-size:16px;font-weight:600;color:var(--white);flex:1;letter-spacing:0.5px;}
-.search-wrap{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.09);border-radius:5px;padding:5px 10px;}
-.search-wrap input{background:none;border:none;outline:none;color:var(--white);font-size:12px;width:130px;font-family:var(--font);}
-.search-wrap input::placeholder{color:rgba(131,131,139,0.5);}
+.page-title{font-family:var(--head);font-size:16px;font-weight:600;color:var(--white);flex:1;}
 .tb-btn{padding:6px 13px;border-radius:5px;border:none;font-size:12px;font-weight:500;cursor:pointer;font-family:var(--font);transition:all .15s;}
-.btn-p{background:var(--accent);color:#fff;}
-.btn-p:hover{background:#1976D2;}
+.btn-p{background:var(--accent);color:#fff;}.btn-p:hover{background:#1976D2;}
 .btn-g{background:rgba(255,255,255,0.06);color:rgba(200,210,225,0.8);border:0.5px solid rgba(255,255,255,0.1);}
-.btn-g:hover{background:rgba(255,255,255,0.1);}
-
-/* SPLIT */
-.split{flex:1;display:flex;overflow:hidden;}
-
-/* LEFT PANEL */
-.asset-list-panel{width:235px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
-.alp-header{padding:10px 10px 8px;border-bottom:1px solid var(--border);flex-shrink:0;}
-.alp-search{display:flex;align-items:center;gap:5px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:5px;padding:5px 8px;margin-bottom:7px;}
-.alp-search input{background:none;border:none;outline:none;color:var(--white);font-size:11px;width:100%;font-family:var(--font);}
-.alp-search input::placeholder{color:rgba(131,131,139,0.4);}
-.filter-chips{display:flex;gap:4px;flex-wrap:wrap;}
-.fchip{padding:3px 9px;border-radius:10px;font-size:10px;cursor:pointer;border:0.5px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:rgba(200,210,225,0.6);transition:all .1s;}
-.fchip:hover{background:rgba(255,255,255,0.08);}
-.fchip.on{background:rgba(33,150,243,0.15);border-color:var(--accent);color:#85B7EB;}
-.asset-list{flex:1;overflow-y:auto;padding:6px;}
-.asset-list::-webkit-scrollbar{width:2px;}
-.asset-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);}
-.asset-card{padding:10px;border-radius:7px;cursor:pointer;transition:background .1s;border:0.5px solid transparent;margin-bottom:3px;}
-.asset-card:hover{background:rgba(255,255,255,0.05);}
-.asset-card.selected{background:rgba(33,150,243,0.1);border-color:rgba(33,150,243,0.3);}
-.ac-header{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
-.ac-icon{width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;background:rgba(255,255,255,0.06);}
-.ac-name{font-size:12px;font-weight:500;color:var(--white);line-height:1.2;}
-.ac-code{font-size:10px;color:rgba(131,131,139,0.5);font-family:monospace;}
-.ac-footer{display:flex;align-items:center;justify-content:space-between;}
-.ac-loc{font-size:10px;color:rgba(131,131,139,0.5);}
-.health-wrap{display:flex;align-items:center;gap:5px;}
-.health-bar{height:3px;border-radius:2px;background:rgba(255,255,255,0.08);width:48px;overflow:hidden;flex-shrink:0;}
-.health-fill{height:100%;border-radius:2px;transition:width .3s;}
-.health-pct{font-size:9px;font-family:monospace;}
-
-/* DETAIL */
-.detail-panel{flex:1;display:flex;flex-direction:column;overflow:hidden;}
-.detail-scroll{flex:1;overflow-y:auto;padding:16px;}
-.detail-scroll::-webkit-scrollbar{width:3px;}
-.detail-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);}
-.empty-detail{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:rgba(131,131,139,0.4);}
-.empty-icon{font-size:36px;opacity:0.3;}
-
-/* FICHA HEADER */
-.ficha-header{display:flex;gap:14px;margin-bottom:14px;align-items:flex-start;}
-.ficha-photo{width:76px;height:76px;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0;cursor:pointer;transition:border-color .15s;}
-.ficha-photo:hover{border-color:var(--accent);}
-.ficha-info{flex:1;min-width:0;}
-.ficha-name{font-family:var(--head);font-size:18px;font-weight:600;color:var(--white);margin-bottom:2px;letter-spacing:0.3px;}
-.ficha-code{font-size:10px;color:rgba(131,131,139,0.5);font-family:monospace;margin-bottom:7px;}
-.ficha-badges{display:flex;gap:5px;flex-wrap:wrap;}
-.fbadge{font-size:10px;font-weight:500;padding:2px 8px;border-radius:10px;}
-.fb-ok{background:rgba(99,153,34,0.15);color:#C0DD97;}
-.fb-warn{background:rgba(186,117,23,0.15);color:#FAC775;}
-.fb-crit{background:rgba(162,45,45,0.15);color:#F09595;}
-.fb-loc{background:rgba(33,150,243,0.12);color:#85B7EB;}
-.fb-type{background:rgba(255,255,255,0.07);color:rgba(200,210,225,0.7);}
-
-/* KPIs */
-.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;}
-.kpi{background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:7px;padding:10px 12px;}
+.stats-bar{display:flex;gap:1px;background:rgba(255,255,255,0.04);border-bottom:1px solid var(--border);flex-shrink:0;}
+.stat{flex:1;padding:9px 12px;text-align:center;}
+.stat-val{font-size:18px;font-weight:500;color:var(--white);}
+.stat-label{font-size:9px;color:rgba(131,131,139,0.5);margin-top:2px;text-transform:uppercase;}
+.content-pad{flex:1;overflow-y:auto;padding:16px;}
+.content-pad::-webkit-scrollbar{width:3px;}
+.content-pad::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);}
+.data-table{width:100%;border-collapse:collapse;margin-top:10px;}
+.data-table th{font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);padding:7px 10px;text-align:left;border-bottom:1px solid var(--border);}
+.data-table td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,0.03);vertical-align:middle;}
+.data-table tr:hover td{background:rgba(255,255,255,0.03);}
+.badge{font-size:10px;font-weight:500;padding:2px 8px;border-radius:10px;}
+.b-ok{background:rgba(99,153,34,0.15);color:#C0DD97;}
+.b-warn{background:rgba(239,159,39,0.15);color:#FAC775;}
+.b-crit{background:rgba(226,75,74,0.15);color:#F09595;}
+.b-ext{background:rgba(29,158,117,0.15);color:#5DCAA5;}
+.b-info{background:rgba(33,150,243,0.12);color:#85B7EB;}
+.b-pm{background:rgba(127,119,221,0.12);color:#AFA9EC;}
+.card{background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px;margin-bottom:12px;}
+.kpi-grid{display:grid;gap:10px;margin-bottom:14px;}
+.kpi-grid-4{grid-template-columns:repeat(4,1fr);}
+.kpi-grid-3{grid-template-columns:repeat(3,1fr);}
+.kpi{background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:12px 14px;position:relative;overflow:hidden;}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.kpi-blue::before{background:var(--accent);}.kpi-green::before{background:var(--ok);}
+.kpi-warn::before{background:var(--warn);}.kpi-crit::before{background:var(--crit);}
+.kpi-ext::before{background:var(--ext);}.kpi-pm::before{background:var(--pm);}
 .kpi-label{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px;}
-.kpi-val{font-size:20px;font-weight:500;color:var(--white);}
+.kpi-val{font-size:22px;font-weight:600;font-family:var(--head);color:var(--white);}
 .kpi-sub{font-size:9px;color:rgba(131,131,139,0.45);margin-top:3px;}
+.search-row{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.sw{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:5px;padding:5px 10px;flex:1;}
+.sw input{background:none;border:none;outline:none;color:var(--white);font-size:12px;font-family:var(--font);width:100%;}
+.sw input::placeholder{color:rgba(131,131,139,0.5);}
+.form-group{margin-bottom:12px;}
+.form-label{font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.6);margin-bottom:5px;display:block;}
+.form-input,.form-select,.form-textarea{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:var(--white);font-size:12px;font-family:var(--font);padding:8px 10px;outline:none;width:100%;transition:border-color .1s;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent);}
+.form-input::placeholder,.form-textarea::placeholder{color:rgba(131,131,139,0.4);}
+.form-select option{background:#0D2D48;}
+.form-textarea{resize:vertical;min-height:70px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;z-index:500;}
+.modal-overlay.hidden{display:none;}
+.modal{background:#0D2D48;border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;width:500px;max-height:85vh;overflow-y:auto;padding:22px;}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.modal-title{font-family:var(--head);font-size:16px;font-weight:600;color:var(--white);}
+.modal-close{font-size:16px;color:rgba(131,131,139,0.6);cursor:pointer;background:none;border:none;}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.07);}
+.btn-cancel{padding:7px 14px;border-radius:5px;border:0.5px solid rgba(255,255,255,0.1);background:transparent;color:rgba(200,210,225,0.7);cursor:pointer;font-size:12px;font-family:var(--font);}
+.btn-save{padding:7px 18px;border-radius:5px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-size:12px;font-weight:600;font-family:var(--font);}
+.spinner{width:20px;height:20px;border:2px solid rgba(255,255,255,0.1);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading{display:flex;align-items:center;justify-content:center;padding:40px;gap:12px;color:rgba(131,131,139,0.5);}
+.empty{display:flex;align-items:center;justify-content:center;padding:60px;flex-direction:column;gap:12px;color:rgba(131,131,139,0.35);}
+#toast{position:fixed;bottom:24px;right:24px;background:#0D2D48;border:1px solid rgba(33,150,243,0.3);border-radius:8px;padding:12px 16px;font-size:12px;color:var(--white);z-index:9999;transform:translateY(60px);opacity:0;transition:all .3s;max-width:320px;pointer-events:none;}
+#toast.show{transform:translateY(0);opacity:1;}
 
-/* TABS */
-.tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:14px;}
-.tab{padding:7px 14px;font-size:12px;cursor:pointer;color:rgba(200,210,225,0.45);border-bottom:2px solid transparent;transition:all .1s;white-space:nowrap;}
-.tab:hover{color:rgba(200,210,225,0.8);}
-.tab.on{color:var(--white);border-bottom-color:var(--accent);font-weight:500;}
 
-/* FICHA GRID */
-.sec-title{font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.45);margin-bottom:8px;}
-.ficha-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px;}
-.fg-item{background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px;}
-.fg-label{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px;}
-.fg-val{font-size:12px;color:var(--white);}
-
-/* HISTORIAL */
-.hist-list{display:flex;flex-direction:column;gap:5px;}
-.hist-item{display:flex;gap:10px;padding:9px 12px;border-radius:6px;background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.05);cursor:pointer;transition:background .1s;border-left:2px solid rgba(255,255,255,0.07);}
-.hist-item:hover{background:rgba(255,255,255,0.06);}
-.hist-item.ext{border-left-color:#1D9E75;}
-.hist-item.crit{border-left-color:#E24B4A;}
-.hist-item.warn{border-left-color:#EF9F27;}
-.hist-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px;}
-.hist-info{flex:1;}
-.hist-title{font-size:12px;color:var(--white);font-weight:500;}
-.hist-meta{font-size:10px;color:rgba(131,131,139,0.5);margin-top:2px;}
-.hist-badge{font-size:10px;font-weight:500;padding:2px 7px;border-radius:8px;flex-shrink:0;align-self:flex-start;}
-.hb-done{background:rgba(99,153,34,0.15);color:#C0DD97;}
-.hb-ext{background:rgba(15,110,86,0.15);color:#5DCAA5;}
-.hb-pm{background:rgba(33,150,243,0.12);color:#85B7EB;}
-
-/* PM */
-.pm-list{display:flex;flex-direction:column;gap:5px;}
-.pm-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.05);}
-.pm-info{flex:1;}
-.pm-title{font-size:12px;color:var(--white);}
-.pm-freq{font-size:10px;color:rgba(131,131,139,0.5);margin-top:1px;}
-.pm-date{font-size:11px;font-family:monospace;font-weight:500;text-align:right;}
-.pm-estado{font-size:9px;color:rgba(131,131,139,0.4);margin-top:2px;text-align:right;}
-
-/* DOCS */
-.doc-list{display:flex;flex-direction:column;gap:5px;}
-.doc-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:6px;background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.05);cursor:pointer;transition:background .1s;}
-.doc-item:hover{background:rgba(255,255,255,0.07);}
-.doc-icon{font-size:16px;flex-shrink:0;}
-.doc-name{flex:1;font-size:12px;color:var(--white);}
-.doc-size{font-size:10px;color:rgba(131,131,139,0.5);}
-.doc-date{font-size:10px;font-family:monospace;color:rgba(131,131,139,0.35);}
-.upload-zone{border:1px dashed rgba(255,255,255,0.12);border-radius:6px;padding:14px;text-align:center;cursor:pointer;transition:border-color .15s;margin-top:8px;}
-.upload-zone:hover{border-color:var(--accent);}
-.upload-zone-text{font-size:12px;color:rgba(131,131,139,0.5);}
-.upload-zone-sub{font-size:10px;color:rgba(131,131,139,0.3);margin-top:3px;}
 </style>
 </head>
 <body>
-
 <div class="shell">
-  <!-- SIDEBAR -->
   <nav class="sidebar">
+
     <div class="sb-logo">
-      <div class="sb-logo-mark">QDC</div>
-      <div class="sb-logo-sub">Química del Campo S.p.A · CMMS Pro</div>
+      <div class="sb-logo-mark">QDC · CMMS Pro</div>
+      <div class="sb-logo-sub">Química del Campo S.p.A</div>
       <div class="sb-logo-line"></div>
     </div>
-    <div class="sb-role">
-      <div class="sb-role-label">Rol activo (demo)</div>
-      <div class="role-sw">
-        <button class="rbtn on-t" id="rb-t" onclick="setRole('t')">Téc.</button>
-        <button class="rbtn" id="rb-s" onclick="setRole('s')">Sup.</button>
-        <button class="rbtn" id="rb-g" onclick="setRole('g')">Ger.</button>
-      </div>
+    <div class="sb-nav">
+      <div class="nav-sec">Principal</div>
+      <a class="nav-item" href="qdc_dashboard.html"><span class="nav-icon">▦</span><span class="nav-label">Dashboard</span></a>
+      <a class="nav-item" href="qdc_ot.html"><span class="nav-icon">📋</span><span class="nav-label">Órdenes de trabajo</span></a>
+      <div class="nav-sec">Mantenimiento</div>
+      <a class="nav-item " href="qdc_pm.html"><span class="nav-icon">🔄</span><span class="nav-label">Plan preventivo</span></a>
+      <a class="nav-item " href="qdc_contratistas.html"><span class="nav-icon">🏢</span><span class="nav-label">Contratistas</span></a>
+      <div class="nav-sec">Recursos</div>
+      <a class="nav-item active" href="qdc_activos.html"><span class="nav-icon">🏭</span><span class="nav-label">Activos y equipos</span></a>
+      <a class="nav-item" href="qdc_inventario.html"><span class="nav-icon">📦</span><span class="nav-label">Inventario</span></a>
+      <div class="nav-sec">Operaciones</div>
+      <a class="nav-item " href="qdc_embalajes.html"><span class="nav-icon">📫</span><span class="nav-label">Embalajes</span></a>
+      <div class="nav-sec">Análisis</div>
+      <a class="nav-item " href="qdc_kpis.html"><span class="nav-icon">📊</span><span class="nav-label">KPIs y reportes</span></a>
+      <div class="nav-sec">Sistema</div>
+      <a class="nav-item " href="qdc_alertas.html"><span class="nav-icon">🔔</span><span class="nav-label">Alertas</span></a>
+      <a class="nav-item" id="nav-config" href="qdc_config.html" style="display:none"><span class="nav-icon">⚙️</span><span class="nav-label">Configuración</span></a>
     </div>
-    <div class="sb-nav" id="sb-nav"></div>
     <div class="sb-user" id="sb-user"></div>
-  </nav>
 
-  <!-- MAIN -->
+  </nav>
   <div class="main">
+
     <div class="topbar">
       <div class="page-title">Activos y Equipos</div>
-      <div class="search-wrap">
-        <span style="font-size:11px;color:rgba(131,131,139,0.5)">🔍</span>
-        <input type="text" placeholder="Buscar activo…"/>
-      </div>
-      <button class="tb-btn btn-g">⬇ Exportar</button>
-      <button class="tb-btn btn-p" id="btn-new">+ Nuevo activo</button>
+      <button class="tb-btn btn-g" onclick="loadActivos()">↻ Actualizar</button>
+      <button class="tb-btn btn-p" id="btn-nuevo-act" style="display:none" onclick="openNuevoActivo()">+ Nuevo activo</button>
+    </div>
+    <div class="search-row">
+      <div class="sw"><span style="font-size:11px;color:rgba(131,131,139,0.5)">🔍</span><input type="text" placeholder="Buscar activo, código, ubicación…" oninput="filterActivos(this.value)"/></div>
+      <select class="form-select" style="width:130px;padding:6px 10px" onchange="filterByEst(this.value)">
+        <option value="">Todos</option>
+        <option value="crit">Críticos</option>
+        <option value="warn">Alerta</option>
+        <option value="ok">Operativos</option>
+      </select>
+    </div>
+    <div class="content-pad" id="act-content">
+      <div class="loading"><div class="spinner"></div><span>Cargando activos…</span></div>
     </div>
 
-    <div class="split">
-      <!-- LISTA ACTIVOS -->
-      <div class="asset-list-panel">
-        <div class="alp-header">
-          <div class="alp-search">
-            <span style="font-size:11px;color:rgba(131,131,139,0.4)">🔍</span>
-            <input type="text" placeholder="Filtrar lista…" oninput="filterAssets(this.value)"/>
-          </div>
-          <div class="filter-chips">
-            <span class="fchip on" onclick="setChip(this,'todos')">Todos</span>
-            <span class="fchip" onclick="setChip(this,'crit')">Crítico</span>
-            <span class="fchip" onclick="setChip(this,'warn')">Alerta</span>
-            <span class="fchip" onclick="setChip(this,'ok')">OK</span>
-          </div>
-        </div>
-        <div class="asset-list" id="asset-list"></div>
-      </div>
-
-      <!-- DETALLE -->
-      <div class="detail-panel">
-        <div class="empty-detail" id="empty-detail">
-          <div class="empty-icon">🏭</div>
-          <span style="font-size:13px">Selecciona un activo para ver su ficha</span>
-        </div>
-        <div class="detail-scroll" id="detail-content" style="display:none"></div>
-      </div>
-    </div>
   </div>
 </div>
-
+<div id="toast"></div>
+<div class="modal-overlay hidden" id="modal-overlay"><div class="modal" id="modal-inner"></div></div>
 <script>
-const ASSETS = [
-  { id:"AST-021", name:"Compresor C-101", icon:"⚙️", loc:"Línea A · Planta 1", tipo:"Compresor de tornillo",
-    marca:"Atlas Copco", modelo:"GA 22+", serie:"ATC-2019-04821", año:2019, proveedor:"Atlas Copco Chile", vida_util:"15 años",
-    estado:"crit", health:38, disp:"72%", mttr:"5.2h", mtbf:"180h", ot_activas:3,
-    params:{Presión:"8 bar", Potencia:"22 kW", Caudal:"3.6 m³/min", "Temp. máx":"80°C"},
-    historial:[
-      {tipo:"crit",titulo:"Sobrecalentamiento cabezal — 95°C",fecha:"14/04/2025",by:"L. García",badge:"hb-done",ext:false},
-      {tipo:"warn",titulo:"Cambio filtro aceite y separador",fecha:"01/03/2025",by:"M. Pérez",badge:"hb-pm",ext:false},
-      {tipo:"ext", titulo:"Revisión general Atlas Copco Chile",fecha:"15/01/2025",by:"Atlas Copco Chile",badge:"hb-ext",ext:true},
-      {tipo:"ok",  titulo:"PM mensual — aceite y correas",fecha:"02/12/2024",by:"L. García",badge:"hb-done",ext:false},
-    ],
-    pm:[
-      {titulo:"Cambio aceite y filtros",freq:"Mensual",fecha:"20/04/2025",estado:"soon"},
-      {titulo:"Revisión válvulas de seguridad",freq:"Semestral",fecha:"15/07/2025",estado:"ok"},
-      {titulo:"Overhaul completo",freq:"Anual",fecha:"15/01/2026",estado:"ok"},
-    ],
-    docs:[
-      {icon:"📄",name:"Manual operación GA 22+.pdf",size:"4.2 MB",fecha:"2019-06"},
-      {icon:"📄",name:"Informe Atlas Copco ene-2025.pdf",size:"1.1 MB",fecha:"2025-01"},
-      {icon:"📷",name:"Instalación compresor C-101.jpg",size:"2.8 MB",fecha:"2019-06"},
-    ]
-  },
-  { id:"AST-033", name:"Bomba P-205", icon:"💧", loc:"Sala Bombas · Planta 1", tipo:"Bomba centrífuga",
-    marca:"Grundfos", modelo:"NK 65-200", serie:"GRF-2020-11203", año:2020, proveedor:"Grundfos Chile", vida_util:"12 años",
-    estado:"warn", health:74, disp:"94%", mttr:"2.8h", mtbf:"310h", ot_activas:1,
-    params:{Presión:"6 bar", Potencia:"7.5 kW", Caudal:"65 m³/h", "Temp. máx":"60°C"},
-    historial:[
-      {tipo:"warn",titulo:"Vibración excesiva rodamiento delantero",fecha:"14/04/2025",by:"M. Pérez",badge:"hb-done",ext:false},
-      {tipo:"ok",  titulo:"PM trimestral — alineación y balance",fecha:"10/01/2025",by:"A. Campos",badge:"hb-pm",ext:false},
-      {tipo:"ok",  titulo:"Cambio sello mecánico",fecha:"05/10/2024",by:"M. Pérez",badge:"hb-done",ext:false},
-    ],
-    pm:[
-      {titulo:"Alineación eje y balance dinámico",freq:"Trimestral",fecha:"10/07/2025",estado:"ok"},
-      {titulo:"Revisión sello mecánico",freq:"Semestral",fecha:"05/04/2025",estado:"overdue"},
-      {titulo:"Cambio rodamientos",freq:"Anual",fecha:"05/10/2025",estado:"ok"},
-    ],
-    docs:[
-      {icon:"📄",name:"Ficha técnica Grundfos NK.pdf",size:"2.1 MB",fecha:"2020-03"},
-      {icon:"📄",name:"Curva de rendimiento P-205.pdf",size:"0.8 MB",fecha:"2020-03"},
-    ]
-  },
-  { id:"AST-005", name:"Turbina T-01", icon:"🌀", loc:"Sala Turbinas · Planta 2", tipo:"Turbina de vapor",
-    marca:"Siemens", modelo:"SST-060", serie:"SIE-2017-00421", año:2017, proveedor:"Siemens Chile", vida_util:"25 años",
-    estado:"ok", health:96, disp:"99%", mttr:"1.2h", mtbf:"720h", ot_activas:0,
-    params:{Presión:"40 bar", Potencia:"800 kW", Caudal:"—", "Temp. máx":"480°C"},
-    historial:[
-      {tipo:"ok", titulo:"Análisis de aceite — ISO 16/14 OK",fecha:"01/04/2025",by:"E. Castro",badge:"hb-pm",ext:false},
-      {tipo:"ext",titulo:"Inspección termográfica anual",fecha:"10/02/2025",by:"Termograf SpA",badge:"hb-ext",ext:true},
-      {tipo:"ok", titulo:"PM semestral — sistema de vapor",fecha:"15/10/2024",by:"E. Castro",badge:"hb-pm",ext:false},
-    ],
-    pm:[
-      {titulo:"Análisis de aceite lubricante",freq:"Mensual",fecha:"01/05/2025",estado:"ok"},
-      {titulo:"PM semestral sistema vapor",freq:"Semestral",fecha:"15/04/2025",estado:"overdue"},
-      {titulo:"Inspección termográfica externa",freq:"Anual",fecha:"10/02/2026",estado:"ok"},
-    ],
-    docs:[
-      {icon:"📄",name:"Manual SST-060 Siemens.pdf",size:"12.4 MB",fecha:"2017-08"},
-      {icon:"📄",name:"Informe termográfico feb-2025.pdf",size:"3.2 MB",fecha:"2025-02"},
-      {icon:"📄",name:"Protocolo de arranque T-01.pdf",size:"0.6 MB",fecha:"2021-01"},
-    ]
-  },
-  { id:"AST-018", name:"Motor MO-18", icon:"⚡", loc:"Línea B · Planta 1", tipo:"Motor eléctrico",
-    marca:"WEG", modelo:"W22 IE3", serie:"WEG-2021-33812", año:2021, proveedor:"WEG Chile", vida_util:"20 años",
-    estado:"ok", health:91, disp:"98%", mttr:"1.8h", mtbf:"480h", ot_activas:0,
-    params:{Presión:"—", Potencia:"55 kW", Caudal:"—", "Temp. máx":"40°C"},
-    historial:[
-      {tipo:"ok",titulo:"PM mensual — lubricación y revisión",fecha:"02/04/2025",by:"L. García",badge:"hb-pm",ext:false},
-      {tipo:"ok",titulo:"Termografía preventiva — OK",fecha:"15/02/2025",by:"E. Castro",badge:"hb-done",ext:false},
-    ],
-    pm:[
-      {titulo:"Lubricación rodamientos",freq:"Mensual",fecha:"02/05/2025",estado:"ok"},
-      {titulo:"Medición aislamiento bobinado",freq:"Semestral",fecha:"15/08/2025",estado:"ok"},
-    ],
-    docs:[
-      {icon:"📄",name:"Ficha técnica WEG W22.pdf",size:"1.8 MB",fecha:"2021-05"},
-    ]
-  },
-  { id:"AST-009", name:"Enfriadora CH-3", icon:"❄️", loc:"Sala Frío · Planta 3", tipo:"Enfriadora de agua",
-    marca:"Carrier", modelo:"30XW-P", serie:"CAR-2018-77102", año:2018, proveedor:"Carrier Chile", vida_util:"18 años",
-    estado:"ok", health:88, disp:"96%", mttr:"2.1h", mtbf:"390h", ot_activas:1,
-    params:{Presión:"12 bar", Potencia:"110 kW", Caudal:"120 m³/h", "Temp. máx":"—"},
-    historial:[
-      {tipo:"ok", titulo:"Limpieza filtros y revisión circuito",fecha:"05/04/2025",by:"R. Torres",badge:"hb-pm",ext:false},
-      {tipo:"ext",titulo:"Recarga refrigerante R-134a",fecha:"20/11/2024",by:"Frío Industrial SpA",badge:"hb-ext",ext:true},
-    ],
-    pm:[
-      {titulo:"Limpieza filtros condensador",freq:"Quincenal",fecha:"19/04/2025",estado:"soon"},
-      {titulo:"Control carga refrigerante",freq:"Semestral",fecha:"20/05/2025",estado:"ok"},
-      {titulo:"Revisión compresor enfriadora",freq:"Anual",fecha:"20/11/2025",estado:"ok"},
-    ],
-    docs:[
-      {icon:"📄",name:"Manual operación 30XW-P.pdf",size:"8.1 MB",fecha:"2018-04"},
-      {icon:"📄",name:"Informe recarga refrigerante 2024.pdf",size:"0.9 MB",fecha:"2024-11"},
-    ]
-  },
-];
 
-const ROLES = {
-  t:{name:"Luis García",  role:"Técnico de Mantenimiento",   color:"#185FA5",tc:"#B5D4F4",initials:"LG",canEdit:false},
-  s:{name:"María Solís",  role:"Supervisora de Mantenimiento",color:"#854F0B",tc:"#FAC775",initials:"MS",canEdit:true},
-  g:{name:"Carlos Reyes", role:"Gerente de Operaciones",      color:"#27500A",tc:"#C0DD97",initials:"CR",canEdit:false}
-};
-
-const NAV = {
-  t:[
-    {sec:"Principal",items:[{i:"▦",l:"Dashboard"},{i:"📋",l:"Órdenes de trabajo",b:"3"}]},
-    {sec:"Mantenimiento",items:[{i:"🔧",l:"Correctivo"},{i:"🔄",l:"Plan preventivo"}]},
-    {sec:"Recursos",items:[{i:"🏭",l:"Activos y equipos",active:true},{i:"📦",l:"Inventario"}]},
-    {sec:"Sistema",items:[{i:"🔔",l:"Alertas",b:"2",bt:"w"}]}
-  ],
-  s:[
-    {sec:"Principal",items:[{i:"▦",l:"Dashboard"},{i:"📋",l:"Órdenes de trabajo",b:"7"}]},
-    {sec:"Mantenimiento",items:[{i:"🏢",l:"Contratistas externos",b:"2",bt:"e"},{i:"🔄",l:"Plan preventivo"},{i:"🔧",l:"Correctivo"}]},
-    {sec:"Recursos",items:[{i:"🏭",l:"Activos y equipos",active:true},{i:"📦",l:"Inventario",b:"3",bt:"w"},{i:"👷",l:"Personal"},{i:"🤝",l:"Proveedores"}]},
-    {sec:"Análisis",items:[{i:"📊",l:"KPIs"},{i:"💰",l:"Costos"}]},
-    {sec:"Sistema",items:[{i:"🔔",l:"Alertas",b:"5"}]}
-  ],
-  g:[
-    {sec:"Principal",items:[{i:"▦",l:"Dashboard"},{i:"📋",l:"Órdenes de trabajo"}]},
-    {sec:"Operaciones",items:[{i:"🏢",l:"Contratistas externos"},{i:"🔄",l:"Plan preventivo"},{i:"🏭",l:"Activos y equipos",active:true}]},
-    {sec:"Análisis",items:[{i:"📊",l:"KPIs"},{i:"💰",l:"Costos"}]},
-    {sec:"Sistema",items:[{i:"🔔",l:"Alertas"},{i:"⚙️",l:"Configuración"}]}
-  ]
-};
-
-let role='t', selected=null, tab='ficha', chipFilter='todos', searchTerm='';
-
-function hc(h){ return h>=85?'#97C459':h>=60?'#EF9F27':'#E24B4A'; }
-function estatusBadge(e){
-  return e==='ok'?'<span class="fbadge fb-ok">Operativo</span>':
-         e==='warn'?'<span class="fbadge fb-warn">Alerta</span>':
-         '<span class="fbadge fb-crit">Crítico</span>';
+const SB_URL='https://aaugeuydymhwlcpklbmt.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhdWdldXlkeW1od2xjcGtsYm10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2NTg5MzksImV4cCI6MjA5MjIzNDkzOX0.Q2GeJKuf7l51Hsv3hUEeaO0NHaFeWXLIBrRUPgkQ0gw';
+let db,USER;
+(function(){
+  const s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+  s.onload=function(){
+    db=window.supabase.createClient(SB_URL,SB_KEY);
+    USER=JSON.parse(localStorage.getItem('qdc_user')||'{}');
+    if(!USER.rol){window.location.href='index.html';return;}
+    buildSidebar();
+    if(USER.rol==='g')document.getElementById('nav-config').style.display='flex';
+    if(typeof pageInit==='function') pageInit();
+  };
+  document.head.appendChild(s);
+})();
+function ini(e){const p=(e||'').split('@')[0].split(/[._-]/);return p.slice(0,2).map(x=>x[0]?.toUpperCase()||'').join('')||'QD';}
+function buildSidebar(){
+  const C={t:'#185FA5',s:'#854F0B',g:'#27500A'},T={t:'#B5D4F4',s:'#FAC775',g:'#C0DD97'},R={t:'Técnico de Mantenimiento',s:'Supervisor de Mantenimiento',g:'Gerente de Operaciones'};
+  document.getElementById('sb-user').innerHTML=`<div class="u-av" style="background:${C[USER.rol]};color:${T[USER.rol]}">${ini(USER.email||USER.nombre)}</div><div style="min-width:0;flex:1"><div class="u-name">${USER.nombre||USER.email}</div><div class="u-role">${R[USER.rol]||''}</div></div><button class="u-logout" onclick="doLogout()">⏏</button>`;
 }
-
-function buildNav(){
-  let h='';
-  NAV[role].forEach(g=>{
-    h+=`<div class="nav-sec">${g.sec}</div>`;
-    g.items.forEach(i=>{
-      const ac=i.active?' active':'';
-      const bc=i.bt==='w'?' w':i.bt==='e'?' e':'';
-      const bd=i.b?`<span class="nav-badge${bc}">${i.b}</span>`:'';
-      h+=`<div class="nav-item${ac}"><span class="nav-icon">${i.i}</span><span class="nav-label">${i.l}</span>${bd}</div>`;
-    });
-  });
-  document.getElementById('sb-nav').innerHTML=h;
+function doLogout(){localStorage.removeItem('qdc_user');window.location.href='index.html';}
+async function audit(tipo,accion,detalle){
+  try{await db.from('auditoria').insert({usuario_id:USER.id,usuario_nombre:USER.nombre||USER.email,tipo,accion,detalle});}catch(e){}
 }
+let _tT;
+function showToast(msg,col){const t=document.getElementById('toast');t.textContent=msg;t.style.borderColor=col||'rgba(33,150,243,0.3)';t.classList.add('show');clearTimeout(_tT);_tT=setTimeout(()=>t.classList.remove('show'),3200);}
+function openModal(html){document.getElementById('modal-inner').innerHTML=html;document.getElementById('modal-overlay').classList.remove('hidden');}
+function closeModal(){document.getElementById('modal-overlay').classList.add('hidden');}
 
-function buildUser(){
-  const u=ROLES[role];
-  document.getElementById('sb-user').innerHTML=`<div class="u-av" style="background:${u.color};color:${u.tc}">${u.initials}</div><div><div class="u-name">${u.name}</div><div class="u-role">${u.role}</div></div>`;
+
+let ACTS=[], ACT_F='';
+function pageInit(){
+  if(USER.rol==='s') document.getElementById('btn-nuevo-act').style.display='block';
+  loadActivos();
 }
-
-function renderList(){
-  let list=ASSETS.filter(a=>{
-    const ms=!searchTerm||a.name.toLowerCase().includes(searchTerm)||a.id.toLowerCase().includes(searchTerm)||a.loc.toLowerCase().includes(searchTerm);
-    const mf=chipFilter==='todos'||a.estado===chipFilter;
-    return ms&&mf;
-  });
-  let h='';
-  list.forEach(a=>{
-    const sel=selected&&selected.id===a.id?' selected':'';
-    const c=hc(a.health);
-    h+=`<div class="asset-card${sel}" onclick="select('${a.id}')">
-      <div class="ac-header">
-        <div class="ac-icon">${a.icon}</div>
-        <div style="min-width:0">
-          <div class="ac-name">${a.name}</div>
-          <div class="ac-code">${a.id}</div>
-        </div>
+async function loadActivos(){
+  try{
+    const{data,error}=await db.from('activos').select('*').order('nombre');
+    if(error) throw error;
+    ACTS=data&&data.length?data:demosActivos();
+  }catch(e){ ACTS=demosActivos(); showToast('Mostrando datos demo'); }
+  renderActivos(ACTS);
+}
+function demosActivos(){return[
+  {id:'a1',nombre:'Compresor C-101',codigo:'AST-021',ubicacion:'Línea A',categoria:'Compresor',estado:'crit',salud:38,icono:'⚙️'},
+  {id:'a2',nombre:'Bomba P-205',codigo:'AST-033',ubicacion:'Sala Bombas',categoria:'Bomba',estado:'warn',salud:74,icono:'💧'},
+  {id:'a3',nombre:'Turbina T-01',codigo:'AST-005',ubicacion:'Planta 2',categoria:'Turbina',estado:'ok',salud:96,icono:'🌀'},
+  {id:'a4',nombre:'Motor MO-18',codigo:'AST-018',ubicacion:'Línea B',categoria:'Motor',estado:'ok',salud:91,icono:'⚡'},
+  {id:'a5',nombre:'Enfriadora CH-3',codigo:'AST-009',ubicacion:'Sala Frío',categoria:'HVAC',estado:'ok',salud:88,icono:'❄️'},
+  {id:'a6',nombre:'Tablero E-01',codigo:'AST-044',ubicacion:'Sala Control',categoria:'Eléctrico',estado:'ok',salud:85,icono:'🖥️'},
+];}
+function getColor(est,salud){
+  if(est==='crit'||salud<60) return 'var(--crit)';
+  if(est==='warn'||salud<85) return 'var(--warn)';
+  return 'var(--ok)';
+}
+function renderActivos(list){
+  if(!list.length){document.getElementById('act-content').innerHTML='<div class="empty"><span style="font-size:32px;opacity:0.2">🏭</span><span>Sin activos registrados</span></div>';return;}
+  document.getElementById('act-content').innerHTML=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">${list.map(a=>{
+    const c=getColor(a.estado,a.salud||85);
+    return`<div class="kpi" style="border-left:3px solid ${c};cursor:pointer" onclick="verActivo('${a.id}')">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <div style="font-size:24px">${a.icono||'🏭'}</div>
+        <div><div style="font-family:var(--head);font-size:14px;font-weight:600;color:var(--white)">${a.nombre}</div><div style="font-size:10px;font-family:monospace;color:rgba(131,131,139,0.5)">${a.codigo||'—'} · ${a.ubicacion||'—'}</div></div>
       </div>
-      <div class="ac-footer">
-        <span class="ac-loc">${a.loc.split('·')[0].trim()}</span>
-        <div class="health-wrap">
-          <div class="health-bar"><div class="health-fill" style="width:${a.health}%;background:${c}"></div></div>
-          <span class="health-pct" style="color:${c}">${a.health}%</span>
-        </div>
-      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5)">Salud</span><span style="font-family:var(--head);font-size:16px;font-weight:600;color:${c}">${a.salud||85}%</span></div>
+      <div style="height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;margin-bottom:6px"><div style="height:100%;width:${a.salud||85}%;background:${c};border-radius:2px"></div></div>
+      <span class="badge ${a.estado==='ok'||!a.estado?'b-ok':a.estado==='warn'?'b-warn':'b-crit'}">${a.estado==='ok'||!a.estado?'Operativo':a.estado==='warn'?'Alerta':'Crítico'}</span>
     </div>`;
-  });
-  document.getElementById('asset-list').innerHTML=h||`<div style="padding:16px;text-align:center;font-size:11px;color:rgba(131,131,139,0.4)">Sin resultados</div>`;
+  }).join('')}</div>`;
 }
-
-function select(id){
-  selected=ASSETS.find(a=>a.id===id);
-  tab='ficha';
-  renderList();
-  renderDetail();
+function filterActivos(val){
+  const v=val.toLowerCase();
+  let list=ACTS.filter(a=>(a.nombre||'').toLowerCase().includes(v)||(a.codigo||'').toLowerCase().includes(v)||(a.ubicacion||'').toLowerCase().includes(v));
+  if(ACT_F) list=list.filter(a=>a.estado===ACT_F||(ACT_F==='ok'&&!a.estado));
+  renderActivos(list);
 }
-
-function renderDetail(){
-  if(!selected){
-    document.getElementById('empty-detail').style.display='flex';
-    document.getElementById('detail-content').style.display='none';
-    return;
-  }
-  document.getElementById('empty-detail').style.display='none';
-  document.getElementById('detail-content').style.display='block';
-
-  const a=selected;
-  const c=hc(a.health);
-  const canEdit=ROLES[role].canEdit;
-
-  const header=`
-    <div class="ficha-header">
-      <div class="ficha-photo" title="${canEdit?'Clic para cambiar foto':''}">${a.icon}</div>
-      <div class="ficha-info">
-        <div class="ficha-name">${a.name}</div>
-        <div class="ficha-code">${a.id} · ${a.serie}</div>
-        <div class="ficha-badges">
-          ${estatusBadge(a.estado)}
-          <span class="fbadge fb-loc">${a.loc}</span>
-          <span class="fbadge fb-type">${a.tipo}</span>
-          ${a.ot_activas>0?`<span class="fbadge fb-warn">${a.ot_activas} OT activa${a.ot_activas>1?'s':''}</span>`:''}
-        </div>
-      </div>
-      ${canEdit?`<button class="tb-btn btn-g" style="font-size:11px;padding:4px 10px;flex-shrink:0">✎ Editar</button>`:''}
+function filterByEst(v){ACT_F=v;filterActivos(document.querySelector('.sw input')?.value||'');}
+function verActivo(id){
+  const a=ACTS.find(x=>x.id===id);if(!a) return;
+  const c=getColor(a.estado,a.salud||85);
+  openModal(`<div class="modal-header"><div class="modal-title">${a.icono||'🏭'} ${a.nombre}</div><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px">
+      <div class="card" style="padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;color:rgba(131,131,139,0.4);margin-bottom:3px">Código</div><div style="font-size:12px;font-family:monospace;color:var(--white)">${a.codigo||'—'}</div></div>
+      <div class="card" style="padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;color:rgba(131,131,139,0.4);margin-bottom:3px">Ubicación</div><div style="font-size:12px;color:var(--white)">${a.ubicacion||'—'}</div></div>
+      <div class="card" style="padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;color:rgba(131,131,139,0.4);margin-bottom:3px">Categoría</div><div style="font-size:12px;color:var(--white)">${a.categoria||'—'}</div></div>
+      <div class="card" style="padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;color:rgba(131,131,139,0.4);margin-bottom:3px">Salud</div><div style="font-size:16px;font-weight:700;font-family:var(--head);color:${c}">${a.salud||85}%</div></div>
     </div>
-  `;
-
-  const kpis=`
-    <div class="kpi-row">
-      <div class="kpi">
-        <div class="kpi-label">Salud del activo</div>
-        <div class="kpi-val" style="color:${c}">${a.health}%</div>
-        <div class="kpi-sub" style="margin-top:5px"><div style="height:3px;border-radius:2px;background:rgba(255,255,255,0.08);overflow:hidden"><div style="height:100%;width:${a.health}%;background:${c};border-radius:2px;transition:width .4s"></div></div></div>
-      </div>
-      <div class="kpi"><div class="kpi-label">Disponibilidad</div><div class="kpi-val" style="color:${a.estado==='ok'?'#97C459':a.estado==='warn'?'#EF9F27':'#E24B4A'}">${a.disp}</div></div>
-      <div class="kpi"><div class="kpi-label">MTTR</div><div class="kpi-val">${a.mttr}</div><div class="kpi-sub">Tiempo medio reparación</div></div>
-      <div class="kpi"><div class="kpi-label">MTBF</div><div class="kpi-val">${a.mtbf}</div><div class="kpi-sub">Tiempo medio entre fallas</div></div>
+    <div style="height:6px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden;margin-bottom:14px"><div style="height:100%;width:${a.salud||85}%;background:${c}"></div></div>
+    <div class="modal-footer"><button class="btn-cancel" onclick="closeModal()">Cerrar</button></div>`);
+}
+function openNuevoActivo(){
+  openModal(`<div class="modal-header"><div class="modal-title">Nuevo activo</div><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div class="form-row" style="margin-bottom:12px">
+      <div class="form-group"><label class="form-label">Nombre *</label><input type="text" class="form-input" id="na-nombre" placeholder="ej: Compresor C-102"/></div>
+      <div class="form-group"><label class="form-label">Código</label><input type="text" class="form-input" id="na-codigo" placeholder="AST-XXX"/></div>
     </div>
-  `;
-
-  const tabs=`
-    <div class="tabs">
-      <div class="tab ${tab==='ficha'?'on':''}" onclick="setTab('ficha')">Ficha técnica</div>
-      <div class="tab ${tab==='hist'?'on':''}" onclick="setTab('hist')">Historial</div>
-      <div class="tab ${tab==='pm'?'on':''}" onclick="setTab('pm')">PM programados</div>
-      <div class="tab ${tab==='docs'?'on':''}" onclick="setTab('docs')">Documentos</div>
+    <div class="form-row" style="margin-bottom:12px">
+      <div class="form-group"><label class="form-label">Ubicación</label><input type="text" class="form-input" id="na-ubic" placeholder="ej: Línea A"/></div>
+      <div class="form-group"><label class="form-label">Categoría</label><select class="form-select" id="na-cat"><option>Compresor</option><option>Bomba</option><option>Motor</option><option>Turbina</option><option>HVAC</option><option>Eléctrico</option><option>Otro</option></select></div>
     </div>
-  `;
-
-  let body='';
-  if(tab==='ficha'){
-    const params=Object.entries(a.params).map(([k,v])=>`<div class="fg-item"><div class="fg-label">${k}</div><div class="fg-val">${v}</div></div>`).join('');
-    body=`
-      <div class="sec-title">Datos generales</div>
-      <div class="ficha-grid">
-        <div class="fg-item"><div class="fg-label">Marca</div><div class="fg-val">${a.marca}</div></div>
-        <div class="fg-item"><div class="fg-label">Modelo</div><div class="fg-val">${a.modelo}</div></div>
-        <div class="fg-item"><div class="fg-label">N° de serie</div><div class="fg-val" style="font-family:monospace;font-size:11px">${a.serie}</div></div>
-        <div class="fg-item"><div class="fg-label">Año instalación</div><div class="fg-val">${a.año}</div></div>
-        <div class="fg-item"><div class="fg-label">Proveedor</div><div class="fg-val">${a.proveedor}</div></div>
-        <div class="fg-item"><div class="fg-label">Vida útil estimada</div><div class="fg-val">${a.vida_util}</div></div>
-        <div class="fg-item"><div class="fg-label">Ubicación</div><div class="fg-val">${a.loc}</div></div>
-        <div class="fg-item"><div class="fg-label">Tipo</div><div class="fg-val">${a.tipo}</div></div>
-      </div>
-      <div class="sec-title" style="margin-top:10px">Parámetros operativos</div>
-      <div class="ficha-grid">${params}</div>
-    `;
-  } else if(tab==='hist'){
-    const items=a.historial.map(h=>`
-      <div class="hist-item ${h.ext?'ext':h.tipo}">
-        <div class="hist-dot" style="background:${h.ext?'#5DCAA5':h.tipo==='crit'?'#E24B4A':h.tipo==='warn'?'#EF9F27':'#97C459'}"></div>
-        <div class="hist-info">
-          <div class="hist-title">${h.titulo}</div>
-          <div class="hist-meta">${h.fecha} · ${h.by}</div>
-        </div>
-        <span class="hist-badge ${h.badge}">${h.ext?'Externo':h.badge==='hb-pm'?'PM':'OT cerrada'}</span>
-      </div>
-    `).join('');
-    body=`
-      <div class="sec-title">Historial de intervenciones (${a.historial.length})</div>
-      <div class="hist-list">${items||'<div style="padding:16px;text-align:center;font-size:12px;color:rgba(131,131,139,0.4)">Sin historial registrado</div>'}</div>
-    `;
-  } else if(tab==='pm'){
-    const items=a.pm.map(p=>{
-      const dc=p.estado==='overdue'?'#E24B4A':p.estado==='soon'?'#EF9F27':'rgba(131,131,139,0.5)';
-      const label=p.estado==='overdue'?'Vencido':p.estado==='soon'?'Próximo':'Programado';
-      return `
-        <div class="pm-item">
-          <span style="font-size:14px">🔄</span>
-          <div class="pm-info">
-            <div class="pm-title">${p.titulo}</div>
-            <div class="pm-freq">${p.freq}</div>
-          </div>
-          <div>
-            <div class="pm-date" style="color:${dc}">${p.fecha}</div>
-            <div class="pm-estado">${label}</div>
-          </div>
-        </div>
-      `;
-    }).join('');
-    body=`
-      <div class="sec-title">Próximas intervenciones programadas (${a.pm.length})</div>
-      <div class="pm-list">${items||'<div style="padding:16px;text-align:center;font-size:12px;color:rgba(131,131,139,0.4)">Sin PM programados</div>'}</div>
-    `;
-  } else if(tab==='docs'){
-    const items=a.docs.map(d=>`
-      <div class="doc-item">
-        <span class="doc-icon">${d.icon}</span>
-        <span class="doc-name">${d.name}</span>
-        <span class="doc-size">${d.size}</span>
-        <span class="doc-date">${d.fecha}</span>
-      </div>
-    `).join('');
-    const upBtn=canEdit?`<div class="upload-zone" onclick="fakeUpload()"><div class="upload-zone-text">＋ Adjuntar documento</div><div class="upload-zone-sub">PDF, JPG, PNG · Máx. 10 MB</div></div>`:'';
-    body=`
-      <div class="sec-title">Documentos adjuntos (${a.docs.length})</div>
-      <div class="doc-list">${items}</div>
-      ${upBtn}
-    `;
-  }
-
-  document.getElementById('detail-content').innerHTML = header+kpis+tabs+body;
+    <div class="modal-footer"><button class="btn-cancel" onclick="closeModal()">Cancelar</button><button class="btn-save" onclick="guardarActivo()">Crear activo</button></div>`);
+}
+async function guardarActivo(){
+  const nombre=document.getElementById('na-nombre').value.trim();
+  if(!nombre){showToast('⚠️ El nombre es obligatorio','rgba(226,75,74,0.4)');return;}
+  const nuevo={nombre,codigo:document.getElementById('na-codigo').value.trim(),ubicacion:document.getElementById('na-ubic').value.trim(),categoria:document.getElementById('na-cat').value,estado:'ok',salud:100};
+  try{
+    const{data,error}=await db.from('activos').insert(nuevo).select().single();
+    if(error) throw error;
+    ACTS.unshift(data);
+    await audit('create','Creó activo',nombre);
+    closeModal(); showToast('✓ Activo creado','rgba(99,153,34,0.4)'); renderActivos(ACTS);
+  }catch(err){ showToast('✕ Error: '+err.message,'rgba(226,75,74,0.4)'); }
 }
 
-function setTab(t){ tab=t; renderDetail(); }
-function filterAssets(v){ searchTerm=v.toLowerCase(); renderList(); }
-function setChip(el,f){
-  document.querySelectorAll('.fchip').forEach(c=>c.classList.remove('on'));
-  el.classList.add('on'); chipFilter=f; renderList();
-}
-function fakeUpload(){ alert('Sistema real: abre selector de archivo para subir documento'); }
-
-function setRole(r){
-  role=r; selected=null; tab='ficha';
-  ['t','s','g'].forEach(x=>{
-    document.getElementById('rb-'+x).className='rbtn'+(x===r?` on-${r}`:'');
-  });
-  document.getElementById('btn-new').style.display=r==='s'?'':'none';
-  buildNav(); buildUser(); renderList(); renderDetail();
-}
-
-setRole('t');
-select('AST-021');
 </script>
 </body>
 </html>

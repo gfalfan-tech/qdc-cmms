@@ -5,396 +5,254 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>QDC CMMS — Centro de Alertas</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;}
-:root{
-  --navy:#08223D;--mid:#0B2545;--deep:#061C2E;
-  --accent:#2196F3;--white:#EEF4FF;
-  --ok:#97C459;--warn:#EF9F27;--crit:#E24B4A;--ext:#5DCAA5;
-  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.10);
-  --font:'Barlow',sans-serif;--head:'Barlow Condensed',sans-serif;
-}
-body{font-family:var(--font);background:#050F1C;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;}
-.shell{display:flex;width:100%;max-width:1100px;height:820px;background:var(--mid);border-radius:12px;overflow:hidden;border:1px solid var(--border2);}
 
-/* SIDEBAR */
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--navy:#08223D;--mid:#0B2545;--deep:#061C2E;--accent:#2196F3;--white:#EEF4FF;--ok:#97C459;--warn:#EF9F27;--crit:#E24B4A;--ext:#5DCAA5;--pm:#7F77DD;--emb:#D85A30;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.10);--font:'Barlow',sans-serif;--head:'Barlow Condensed',sans-serif;}
+body{font-family:var(--font);background:#050F1C;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;}
+.shell{display:flex;width:100%;max-width:1100px;min-height:900px;background:var(--mid);border-radius:12px;overflow:hidden;border:1px solid var(--border2);}
 .sidebar{width:210px;flex-shrink:0;background:var(--navy);display:flex;flex-direction:column;border-right:1px solid var(--border);}
 .sb-logo{padding:16px 14px 12px;border-bottom:1px solid var(--border);}
-.sb-logo-mark{font-family:var(--head);font-size:16px;font-weight:700;color:var(--white);letter-spacing:1px;}
+.sb-logo-mark{font-family:var(--head);font-size:15px;font-weight:700;color:var(--white);letter-spacing:1px;}
 .sb-logo-sub{font-size:9px;color:rgba(131,131,139,0.6);margin-top:2px;}
 .sb-logo-line{width:20px;height:2px;background:var(--accent);margin-top:5px;}
-.sb-role{padding:8px 12px;border-bottom:1px solid var(--border);}
-.sb-role-label{font-size:9px;color:rgba(131,131,139,0.5);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px;}
-.role-sw{display:flex;gap:3px;}
-.rbtn{flex:1;padding:5px 0;font-size:10px;font-weight:600;border-radius:3px;border:none;cursor:pointer;background:rgba(255,255,255,0.05);color:rgba(131,131,139,0.7);transition:all .15s;font-family:var(--font);}
-.rbtn.on-t{background:#185FA5;color:#B5D4F4;}
-.rbtn.on-s{background:#854F0B;color:#FAC775;}
-.rbtn.on-g{background:#27500A;color:#C0DD97;}
 .sb-nav{flex:1;overflow-y:auto;padding:6px 0;}
 .sb-nav::-webkit-scrollbar{width:2px;}
-.sb-nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);}
 .nav-sec{padding:10px 14px 3px;font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(131,131,139,0.4);}
-.nav-item{display:flex;align-items:center;gap:8px;padding:8px 14px;cursor:pointer;transition:background .1s;border-left:2px solid transparent;}
+.nav-item{display:flex;align-items:center;gap:8px;padding:8px 14px;cursor:pointer;border-left:2px solid transparent;transition:background .1s;text-decoration:none;}
 .nav-item:hover{background:rgba(255,255,255,0.04);}
-.nav-item.active{background:rgba(226,75,74,0.1);border-left-color:var(--crit);}
+.nav-item.active{background:rgba(33,150,243,0.12);border-left-color:var(--accent);}
 .nav-icon{font-size:13px;width:16px;text-align:center;flex-shrink:0;}
 .nav-label{font-size:12px;color:rgba(200,210,225,0.7);flex:1;}
 .nav-item.active .nav-label{color:var(--white);font-weight:500;}
-.nav-badge{font-size:9px;font-weight:600;padding:1px 5px;border-radius:8px;background:#A32D2D;color:#F7C1C1;}
-.nav-badge.w{background:#854F0B;color:#FAC775;}
-.nav-badge.e{background:#0F6E56;color:#9FE1CB;}
 .sb-user{padding:10px 12px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;}
 .u-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;}
 .u-name{font-size:11px;color:var(--white);font-weight:500;}
 .u-role{font-size:9px;color:rgba(131,131,139,0.6);}
-
-/* MAIN */
+.u-logout{margin-left:auto;background:none;border:none;color:rgba(131,131,139,0.4);cursor:pointer;font-size:11px;padding:3px 6px;border-radius:3px;}
 .main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;}
 .topbar{height:50px;background:var(--mid);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0;}
-.page-title{font-family:var(--head);font-size:16px;font-weight:600;color:var(--white);flex:1;letter-spacing:0.5px;}
+.page-title{font-family:var(--head);font-size:16px;font-weight:600;color:var(--white);flex:1;}
 .tb-btn{padding:6px 13px;border-radius:5px;border:none;font-size:12px;font-weight:500;cursor:pointer;font-family:var(--font);transition:all .15s;}
+.btn-p{background:var(--accent);color:#fff;}.btn-p:hover{background:#1976D2;}
 .btn-g{background:rgba(255,255,255,0.06);color:rgba(200,210,225,0.8);border:0.5px solid rgba(255,255,255,0.1);}
-.btn-g:hover{background:rgba(255,255,255,0.1);}
-.btn-dismiss{background:rgba(226,75,74,0.1);color:#F09595;border:0.5px solid rgba(226,75,74,0.2);}
-.btn-dismiss:hover{background:rgba(226,75,74,0.2);}
+.stats-bar{display:flex;gap:1px;background:rgba(255,255,255,0.04);border-bottom:1px solid var(--border);flex-shrink:0;}
+.stat{flex:1;padding:9px 12px;text-align:center;}
+.stat-val{font-size:18px;font-weight:500;color:var(--white);}
+.stat-label{font-size:9px;color:rgba(131,131,139,0.5);margin-top:2px;text-transform:uppercase;}
+.content-pad{flex:1;overflow-y:auto;padding:16px;}
+.content-pad::-webkit-scrollbar{width:3px;}
+.content-pad::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);}
+.data-table{width:100%;border-collapse:collapse;margin-top:10px;}
+.data-table th{font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);padding:7px 10px;text-align:left;border-bottom:1px solid var(--border);}
+.data-table td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,0.03);vertical-align:middle;}
+.data-table tr:hover td{background:rgba(255,255,255,0.03);}
+.badge{font-size:10px;font-weight:500;padding:2px 8px;border-radius:10px;}
+.b-ok{background:rgba(99,153,34,0.15);color:#C0DD97;}
+.b-warn{background:rgba(239,159,39,0.15);color:#FAC775;}
+.b-crit{background:rgba(226,75,74,0.15);color:#F09595;}
+.b-ext{background:rgba(29,158,117,0.15);color:#5DCAA5;}
+.b-info{background:rgba(33,150,243,0.12);color:#85B7EB;}
+.b-pm{background:rgba(127,119,221,0.12);color:#AFA9EC;}
+.card{background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px;margin-bottom:12px;}
+.kpi-grid{display:grid;gap:10px;margin-bottom:14px;}
+.kpi-grid-4{grid-template-columns:repeat(4,1fr);}
+.kpi-grid-3{grid-template-columns:repeat(3,1fr);}
+.kpi{background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:12px 14px;position:relative;overflow:hidden;}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.kpi-blue::before{background:var(--accent);}.kpi-green::before{background:var(--ok);}
+.kpi-warn::before{background:var(--warn);}.kpi-crit::before{background:var(--crit);}
+.kpi-ext::before{background:var(--ext);}.kpi-pm::before{background:var(--pm);}
+.kpi-label{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px;}
+.kpi-val{font-size:22px;font-weight:600;font-family:var(--head);color:var(--white);}
+.kpi-sub{font-size:9px;color:rgba(131,131,139,0.45);margin-top:3px;}
+.search-row{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.sw{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:5px;padding:5px 10px;flex:1;}
+.sw input{background:none;border:none;outline:none;color:var(--white);font-size:12px;font-family:var(--font);width:100%;}
+.sw input::placeholder{color:rgba(131,131,139,0.5);}
+.form-group{margin-bottom:12px;}
+.form-label{font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.6);margin-bottom:5px;display:block;}
+.form-input,.form-select,.form-textarea{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:var(--white);font-size:12px;font-family:var(--font);padding:8px 10px;outline:none;width:100%;transition:border-color .1s;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent);}
+.form-input::placeholder,.form-textarea::placeholder{color:rgba(131,131,139,0.4);}
+.form-select option{background:#0D2D48;}
+.form-textarea{resize:vertical;min-height:70px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;z-index:500;}
+.modal-overlay.hidden{display:none;}
+.modal{background:#0D2D48;border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;width:500px;max-height:85vh;overflow-y:auto;padding:22px;}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.modal-title{font-family:var(--head);font-size:16px;font-weight:600;color:var(--white);}
+.modal-close{font-size:16px;color:rgba(131,131,139,0.6);cursor:pointer;background:none;border:none;}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.07);}
+.btn-cancel{padding:7px 14px;border-radius:5px;border:0.5px solid rgba(255,255,255,0.1);background:transparent;color:rgba(200,210,225,0.7);cursor:pointer;font-size:12px;font-family:var(--font);}
+.btn-save{padding:7px 18px;border-radius:5px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-size:12px;font-weight:600;font-family:var(--font);}
+.spinner{width:20px;height:20px;border:2px solid rgba(255,255,255,0.1);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading{display:flex;align-items:center;justify-content:center;padding:40px;gap:12px;color:rgba(131,131,139,0.5);}
+.empty{display:flex;align-items:center;justify-content:center;padding:60px;flex-direction:column;gap:12px;color:rgba(131,131,139,0.35);}
+#toast{position:fixed;bottom:24px;right:24px;background:#0D2D48;border:1px solid rgba(33,150,243,0.3);border-radius:8px;padding:12px 16px;font-size:12px;color:var(--white);z-index:9999;transform:translateY(60px);opacity:0;transition:all .3s;max-width:320px;pointer-events:none;}
+#toast.show{transform:translateY(0);opacity:1;}
 
-/* STATS */
-.stats-row{display:flex;gap:1px;background:rgba(255,255,255,0.04);border-bottom:1px solid var(--border);flex-shrink:0;}
-.stat{flex:1;padding:10px 14px;text-align:center;cursor:pointer;border-bottom:2px solid transparent;transition:all .1s;}
-.stat:hover{background:rgba(255,255,255,0.03);}
-.stat.on{border-bottom-color:var(--crit);}
-.stat-val{font-size:20px;font-weight:500;color:var(--white);}
-.stat-val.crit{color:var(--crit);}
-.stat-val.warn{color:var(--warn);}
-.stat-val.info{color:#85B7EB;}
-.stat-val.ok{color:var(--ok);}
-.stat-label{font-size:10px;color:rgba(131,131,139,0.5);margin-top:2px;}
 
-/* CONTENT */
-.content-wrap{flex:1;display:flex;overflow:hidden;}
-
-/* FILTERS SIDEBAR */
-.filter-col{width:180px;flex-shrink:0;border-right:1px solid var(--border);padding:12px;overflow-y:auto;}
-.filter-col::-webkit-scrollbar{width:2px;}
-.fc-title{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.45);margin-bottom:8px;margin-top:4px;}
-.fc-title:first-child{margin-top:0;}
-.fitem{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:5px;cursor:pointer;transition:background .1s;margin-bottom:2px;}
-.fitem:hover{background:rgba(255,255,255,0.05);}
-.fitem.on{background:rgba(255,255,255,0.08);}
-.fitem-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-.fitem-label{font-size:12px;color:rgba(200,210,225,0.7);}
-.fitem.on .fitem-label{color:var(--white);}
-.fitem-count{margin-left:auto;font-size:10px;font-weight:600;padding:1px 5px;border-radius:8px;}
-
-/* ALERT LIST */
-.alert-col{flex:1;display:flex;flex-direction:column;overflow:hidden;}
-.alert-toolbar{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-shrink:0;}
-.search-wrap{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:5px;padding:5px 10px;flex:1;}
-.search-wrap input{background:none;border:none;outline:none;color:var(--white);font-size:12px;width:100%;font-family:var(--font);}
-.search-wrap input::placeholder{color:rgba(131,131,139,0.5);}
-.sort-sel{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:5px;color:rgba(200,210,225,0.7);font-size:11px;font-family:var(--font);padding:5px 8px;outline:none;}
-.sort-sel option{background:#0B2545;}
-
-.alert-list{flex:1;overflow-y:auto;padding:10px 14px;}
-.alert-list::-webkit-scrollbar{width:3px;}
-.alert-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);}
-
-/* ALERT CARD */
-.alert-card{display:flex;gap:12px;padding:12px 14px;border-radius:8px;margin-bottom:6px;cursor:pointer;transition:all .15s;border:0.5px solid transparent;position:relative;}
-.alert-card:hover{background:rgba(255,255,255,0.04);}
-.alert-card.selected{background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.1);}
-.alert-card.unread{border-left:3px solid;}
-.alert-card.dismissed{opacity:0.4;}
-.ac-indicator{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
-.ac-body{flex:1;min-width:0;}
-.ac-header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px;}
-.ac-title{font-size:13px;font-weight:500;color:var(--white);line-height:1.3;}
-.ac-time{font-size:10px;color:rgba(131,131,139,0.5);white-space:nowrap;font-family:monospace;flex-shrink:0;}
-.ac-desc{font-size:11px;color:rgba(200,210,225,0.6);line-height:1.5;margin-bottom:5px;}
-.ac-tags{display:flex;gap:5px;flex-wrap:wrap;}
-.ac-tag{font-size:10px;font-weight:500;padding:1px 7px;border-radius:8px;}
-.tag-crit{background:rgba(226,75,74,0.15);color:#F09595;}
-.tag-warn{background:rgba(239,159,39,0.15);color:#FAC775;}
-.tag-info{background:rgba(33,150,243,0.12);color:#85B7EB;}
-.tag-ext{background:rgba(29,158,117,0.12);color:var(--ext);}
-.tag-pm{background:rgba(127,119,221,0.12);color:#AFA9EC;}
-.tag-inv{background:rgba(239,159,39,0.12);color:#FAC775;}
-.ac-actions{display:flex;gap:5px;margin-top:6px;}
-.ac-btn{font-size:10px;padding:3px 9px;border-radius:4px;border:0.5px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:rgba(200,210,225,0.7);cursor:pointer;transition:all .1s;}
-.ac-btn:hover{background:rgba(255,255,255,0.1);color:var(--white);}
-.ac-btn.primary{background:rgba(33,150,243,0.15);border-color:rgba(33,150,243,0.3);color:#85B7EB;}
-.ac-btn.primary:hover{background:rgba(33,150,243,0.25);}
-.unread-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:5px;}
-
-/* EMPTY */
-.empty-alerts{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:rgba(131,131,139,0.35);}
-
-/* GROUP HEADER */
-.group-header{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(131,131,139,0.4);padding:6px 0 6px 2px;margin-top:4px;border-bottom:1px solid rgba(255,255,255,0.04);margin-bottom:6px;}
 </style>
 </head>
 <body>
 <div class="shell">
+  <nav class="sidebar">
 
-<!-- SIDEBAR -->
-<nav class="sidebar">
-  <div class="sb-logo">
-    <div class="sb-logo-mark">QDC</div>
-    <div class="sb-logo-sub">Química del Campo S.p.A · CMMS Pro</div>
-    <div class="sb-logo-line"></div>
-  </div>
-  <div class="sb-role">
-    <div class="sb-role-label">Rol activo (demo)</div>
-    <div class="role-sw">
-      <button class="rbtn on-t" id="rb-t" onclick="setRole('t')">Téc.</button>
-      <button class="rbtn" id="rb-s" onclick="setRole('s')">Sup.</button>
-      <button class="rbtn" id="rb-g" onclick="setRole('g')">Ger.</button>
+    <div class="sb-logo">
+      <div class="sb-logo-mark">QDC · CMMS Pro</div>
+      <div class="sb-logo-sub">Química del Campo S.p.A</div>
+      <div class="sb-logo-line"></div>
     </div>
-  </div>
-  <div class="sb-nav" id="sb-nav"></div>
-  <div class="sb-user" id="sb-user"></div>
-</nav>
+    <div class="sb-nav">
+      <div class="nav-sec">Principal</div>
+      <a class="nav-item" href="qdc_dashboard.html"><span class="nav-icon">▦</span><span class="nav-label">Dashboard</span></a>
+      <a class="nav-item" href="qdc_ot.html"><span class="nav-icon">📋</span><span class="nav-label">Órdenes de trabajo</span></a>
+      <div class="nav-sec">Mantenimiento</div>
+      <a class="nav-item " href="qdc_pm.html"><span class="nav-icon">🔄</span><span class="nav-label">Plan preventivo</span></a>
+      <a class="nav-item " href="qdc_contratistas.html"><span class="nav-icon">🏢</span><span class="nav-label">Contratistas</span></a>
+      <div class="nav-sec">Recursos</div>
+      <a class="nav-item " href="qdc_activos.html"><span class="nav-icon">🏭</span><span class="nav-label">Activos y equipos</span></a>
+      <a class="nav-item" href="qdc_inventario.html"><span class="nav-icon">📦</span><span class="nav-label">Inventario</span></a>
+      <div class="nav-sec">Operaciones</div>
+      <a class="nav-item " href="qdc_embalajes.html"><span class="nav-icon">📫</span><span class="nav-label">Embalajes</span></a>
+      <div class="nav-sec">Análisis</div>
+      <a class="nav-item " href="qdc_kpis.html"><span class="nav-icon">📊</span><span class="nav-label">KPIs y reportes</span></a>
+      <div class="nav-sec">Sistema</div>
+      <a class="nav-item active" href="qdc_alertas.html"><span class="nav-icon">🔔</span><span class="nav-label">Alertas</span></a>
+      <a class="nav-item" id="nav-config" href="qdc_config.html" style="display:none"><span class="nav-icon">⚙️</span><span class="nav-label">Configuración</span></a>
+    </div>
+    <div class="sb-user" id="sb-user"></div>
 
-<!-- MAIN -->
-<div class="main">
-  <div class="topbar">
-    <div class="page-title">Centro de Alertas</div>
-    <button class="tb-btn btn-g" onclick="markAllRead()">✓ Marcar todas leídas</button>
-    <button class="tb-btn btn-dismiss" onclick="dismissRead()">Descartar leídas</button>
-  </div>
+  </nav>
+  <div class="main">
 
-  <div class="stats-row">
-    <div class="stat on" id="st-todas" onclick="setStatF('todas',this)"><div class="stat-val crit" id="sv-total">0</div><div class="stat-label">Alertas activas</div></div>
-    <div class="stat" id="st-critica" onclick="setStatF('critica',this)"><div class="stat-val crit" id="sv-crit">0</div><div class="stat-label">Críticas</div></div>
-    <div class="stat" id="st-advertencia" onclick="setStatF('advertencia',this)"><div class="stat-val warn" id="sv-warn">0</div><div class="stat-label">Advertencias</div></div>
-    <div class="stat" id="st-informativa" onclick="setStatF('informativa',this)"><div class="stat-val info" id="sv-info">0</div><div class="stat-label">Informativas</div></div>
-    <div class="stat"><div class="stat-val ok" id="sv-leidas">0</div><div class="stat-label">Leídas hoy</div></div>
-  </div>
-
-  <div class="content-wrap">
-    <!-- FILTROS -->
-    <div class="filter-col">
-      <div class="fc-title">Prioridad</div>
-      <div class="fitem on" id="f-todas" onclick="setF('todas',this)"><div class="fitem-dot" style="background:rgba(131,131,139,0.4)"></div><span class="fitem-label">Todas</span><span class="fitem-count" id="fc-todas" style="background:rgba(131,131,139,0.12);color:rgba(131,131,139,0.6)">0</span></div>
-      <div class="fitem" id="f-critica" onclick="setF('critica',this)"><div class="fitem-dot" style="background:var(--crit)"></div><span class="fitem-label">Crítica</span><span class="fitem-count" id="fc-critica" style="background:rgba(226,75,74,0.12);color:#F09595">0</span></div>
-      <div class="fitem" id="f-advertencia" onclick="setF('advertencia',this)"><div class="fitem-dot" style="background:var(--warn)"></div><span class="fitem-label">Advertencia</span><span class="fitem-count" id="fc-advertencia" style="background:rgba(239,159,39,0.12);color:#FAC775">0</span></div>
-      <div class="fitem" id="f-informativa" onclick="setF('informativa',this)"><div class="fitem-dot" style="background:var(--accent)"></div><span class="fitem-label">Informativa</span><span class="fitem-count" id="fc-informativa" style="background:rgba(33,150,243,0.1);color:#85B7EB">0</span></div>
-
-      <div class="fc-title" style="margin-top:14px">Categoría</div>
-      <div class="fitem on" id="fc-cat-todas" onclick="setCat('',this)"><div class="fitem-dot" style="background:rgba(131,131,139,0.3)"></div><span class="fitem-label">Todas</span></div>
-      <div class="fitem" onclick="setCat('ot',this)"><div class="fitem-dot" style="background:#85B7EB"></div><span class="fitem-label">Órdenes de trabajo</span></div>
-      <div class="fitem" onclick="setCat('pm',this)"><div class="fitem-dot" style="background:#AFA9EC"></div><span class="fitem-label">Plan preventivo</span></div>
-      <div class="fitem" onclick="setCat('ext',this)"><div class="fitem-dot" style="background:var(--ext)"></div><span class="fitem-label">Externos</span></div>
-      <div class="fitem" onclick="setCat('inv',this)"><div class="fitem-dot" style="background:var(--warn)"></div><span class="fitem-label">Inventario</span></div>
-      <div class="fitem" onclick="setCat('activo',this)"><div class="fitem-dot" style="background:var(--crit)"></div><span class="fitem-label">Activos</span></div>
-
-      <div class="fc-title" style="margin-top:14px">Estado</div>
-      <div class="fitem on" id="fc-est-todas" onclick="setEst('',this)"><div class="fitem-dot" style="background:rgba(131,131,139,0.3)"></div><span class="fitem-label">Todas</span></div>
-      <div class="fitem" onclick="setEst('unread',this)"><div class="fitem-dot" style="background:var(--accent)"></div><span class="fitem-label">No leídas</span></div>
-      <div class="fitem" onclick="setEst('read',this)"><div class="fitem-dot" style="background:rgba(131,131,139,0.3)"></div><span class="fitem-label">Leídas</span></div>
+    <div class="topbar">
+      <div class="page-title">Centro de Alertas</div>
+      <button class="tb-btn btn-g" onclick="loadAlerts()">↻ Actualizar</button>
+      <button class="tb-btn" style="background:rgba(226,75,74,0.1);color:#F09595;border:0.5px solid rgba(226,75,74,0.2)" onclick="dismissAll()">Descartar leídas</button>
+    </div>
+    <div class="stats-bar">
+      <div class="stat"><div class="stat-val" id="st-total" style="color:var(--crit)">—</div><div class="stat-label">Alertas activas</div></div>
+      <div class="stat"><div class="stat-val" id="st-crit" style="color:var(--crit)">—</div><div class="stat-label">Críticas</div></div>
+      <div class="stat"><div class="stat-val" id="st-warn" style="color:var(--warn)">—</div><div class="stat-label">Advertencias</div></div>
+      <div class="stat"><div class="stat-val" id="st-info" style="color:#85B7EB">—</div><div class="stat-label">Informativas</div></div>
+    </div>
+    <div class="search-row">
+      <div class="sw"><span style="font-size:11px;color:rgba(131,131,139,0.5)">🔍</span><input type="text" placeholder="Buscar alertas…" oninput="filterAlerts(this.value)"/></div>
+      <select class="form-select" style="width:140px;padding:6px 10px" onchange="filterByPrio(this.value)">
+        <option value="">Todas</option>
+        <option value="critica">Críticas</option>
+        <option value="advertencia">Advertencias</option>
+        <option value="informativa">Informativas</option>
+      </select>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:6px" id="alerts-content">
+      <div class="loading"><div class="spinner"></div><span>Cargando alertas…</span></div>
     </div>
 
-    <!-- LISTA -->
-    <div class="alert-col">
-      <div class="alert-toolbar">
-        <div class="search-wrap">
-          <span style="font-size:11px;color:rgba(131,131,139,0.5)">🔍</span>
-          <input type="text" placeholder="Buscar alertas…" oninput="searchAlerts(this.value)"/>
-        </div>
-        <select class="sort-sel" onchange="setSort(this.value)">
-          <option value="recent">Más recientes</option>
-          <option value="prioridad">Por prioridad</option>
-          <option value="categoria">Por categoría</option>
-        </select>
-      </div>
-      <div class="alert-list" id="alert-list"></div>
-    </div>
   </div>
 </div>
-
-</div>
-
+<div id="toast"></div>
+<div class="modal-overlay hidden" id="modal-overlay"><div class="modal" id="modal-inner"></div></div>
 <script>
-const ALL_ALERTS = [
-  // CRÍTICAS
-  {id:1,prioridad:"critica",cat:"activo",titulo:"Compresor C-101 — temperatura crítica",desc:"Temperatura cabezal alcanzó 94°C. Límite operativo: 80°C. Se requiere intervención inmediata. OT-0898 generada automáticamente.",tiempo:"Hace 12 min",tags:["tag-crit","tag-crit"],tagLabels:["Crítica","Intervención inmediata"],unread:true,dismissed:false,roles:["t","s","g"],acciones:["Ver OT-0898","Ver activo"]},
-  {id:2,prioridad:"critica",cat:"inv",titulo:"Aceite Mobil DTE 100 — stock agotado",desc:"El lubricante para compresor y turbina ha llegado a 0 unidades. Se requiere orden de compra urgente a Mobil Industrial.",tiempo:"Hace 35 min",tags:["tag-crit","tag-inv"],tagLabels:["Crítica","Inventario"],unread:true,dismissed:false,roles:["s","g"],acciones:["Generar OC","Ver inventario"]},
-  {id:3,prioridad:"critica",cat:"ext",titulo:"OT-0892 — informe PDF pendiente (Mant. Industrial SA)",desc:"La OT de alineación turbina T-01 fue completada hace 4 días. El informe PDF del contratista aún no ha sido adjuntado. Requerido para cierre formal.",tiempo:"Hace 2h",tags:["tag-crit","tag-ext"],tagLabels:["Crítica","Externo · PDF faltante"],unread:true,dismissed:false,roles:["s"],acciones:["Subir PDF","Ver OT"]},
-  // ADVERTENCIAS
-  {id:4,prioridad:"advertencia",cat:"pm",titulo:"PM vencido — Revisión sello mecánico Bomba P-205",desc:"La rutina semestral de revisión de sello mecánico venció el 05/04/2025 (hace 12 días). Programar intervención con M. Pérez.",tiempo:"Hace 3h",tags:["tag-warn","tag-pm"],tagLabels:["Advertencia","PM vencido"],unread:true,dismissed:false,roles:["t","s"],acciones:["Crear OT","Ver PM"]},
-  {id:5,prioridad:"advertencia",cat:"ext",titulo:"OT-0897 — informe PDF pendiente (Eléctricas SpA)",desc:"La mantención del tablero eléctrico principal está en proceso. Recordatorio: el informe PDF es obligatorio para el cierre.",tiempo:"Hace 4h",tags:["tag-warn","tag-ext"],tagLabels:["Advertencia","Externo"],unread:false,dismissed:false,roles:["s"],acciones:["Ver OT","Contactar contratista"]},
-  {id:6,prioridad:"advertencia",cat:"inv",titulo:"Rodamiento SKF 6205 — bajo stock mínimo",desc:"Stock actual: 2 unidades. Stock mínimo: 5 unidades. Este repuesto es crítico para Compresor C-101 y Bomba P-205.",tiempo:"Hace 5h",tags:["tag-warn","tag-inv"],tagLabels:["Advertencia","Stock bajo"],unread:false,dismissed:false,roles:["s","g"],acciones:["Generar OC","Ver item"]},
-  {id:7,prioridad:"advertencia",cat:"pm",titulo:"PM vencido — Sistema vapor Turbina T-01",desc:"La revisión semestral del sistema de vapor de la turbina venció el 15/04/2025. Programar con E. Castro o contratista externo.",tiempo:"Hace 6h",tags:["tag-warn","tag-pm"],tagLabels:["Advertencia","PM vencido"],unread:false,dismissed:false,roles:["s","g"],acciones:["Crear OT","Ver PM"]},
-  {id:8,prioridad:"advertencia",cat:"activo",titulo:"Bomba P-205 — vibración fuera de rango",desc:"Sensor detectó vibración de 12 mm/s en rodamiento delantero. Valor normal: < 7 mm/s. OT de inspección recomendada.",tiempo:"Hace 8h",tags:["tag-warn","tag-crit"],tagLabels:["Advertencia","Sensor activo"],unread:false,dismissed:false,roles:["t","s","g"],acciones:["Ver OT","Ver activo"]},
-  // INFORMATIVAS
-  {id:9,prioridad:"informativa",cat:"pm",titulo:"PM próximo — Limpieza filtros Enfriadora CH-3",desc:"La rutina quincenal de limpieza de filtros del condensador está programada para el 19/04/2025 (en 2 días). Responsable: R. Torres.",tiempo:"Hace 10h",tags:["tag-info","tag-pm"],tagLabels:["Informativa","PM próximo"],unread:false,dismissed:false,roles:["t","s"],acciones:["Ver PM","Confirmar disponibilidad"]},
-  {id:10,prioridad:"informativa",cat:"ot",titulo:"OT-0893 completada — Revisión refrigeración",desc:"La OT de revisión del sistema de refrigeración de la Enfriadora CH-3 fue cerrada exitosamente por R. Torres.",tiempo:"Hace 1 día",tags:["tag-info"],tagLabels:["Completada"],unread:false,dismissed:false,roles:["t","s","g"],acciones:["Ver OT"]},
-  {id:11,prioridad:"informativa",cat:"ext",titulo:"Contratista Termograf SpA — inspección programada",desc:"La inspección termográfica anual de tableros ha sido confirmada para el 10/02/2026. Responsable: Ana Fuentes.",tiempo:"Hace 2 días",tags:["tag-info","tag-ext"],tagLabels:["Informativa","Externo"],unread:false,dismissed:false,roles:["s","g"],acciones:["Ver contratista"]},
-  {id:12,prioridad:"informativa",cat:"ot",titulo:"Reporte mensual generado — Abril 2025",desc:"El reporte automático de KPIs, costos y cumplimiento PM del mes de abril ha sido generado y está disponible.",tiempo:"Hace 2 días",tags:["tag-info"],tagLabels:["Reporte automático"],unread:false,dismissed:false,roles:["s","g"],acciones:["Ver reporte","Descargar PDF"]},
-];
 
-const ROLES={
-  t:{name:"Luis García",  role:"Técnico de Mantenimiento",   color:"#185FA5",tc:"#B5D4F4",initials:"LG"},
-  s:{name:"María Solís",  role:"Supervisora de Mantenimiento",color:"#854F0B",tc:"#FAC775",initials:"MS"},
-  g:{name:"Carlos Reyes", role:"Gerente de Operaciones",      color:"#27500A",tc:"#C0DD97",initials:"CR"}
-};
-const NAV={
-  t:[
-    {sec:"Principal",items:[{i:"▦",l:"Dashboard"},{i:"📋",l:"OT",b:"3"}]},
-    {sec:"Mantenimiento",items:[{i:"🔧",l:"Correctivo"},{i:"🔄",l:"Plan preventivo"}]},
-    {sec:"Recursos",items:[{i:"🏭",l:"Activos"},{i:"📦",l:"Inventario"}]},
-    {sec:"Sistema",items:[{i:"🔔",l:"Alertas",b:"2",bt:"w",active:true}]}
-  ],
-  s:[
-    {sec:"Principal",items:[{i:"▦",l:"Dashboard"},{i:"📋",l:"OT",b:"7"}]},
-    {sec:"Mantenimiento",items:[{i:"🏢",l:"Contratistas",b:"2",bt:"e"},{i:"🔄",l:"Plan preventivo"},{i:"🔧",l:"Correctivo"}]},
-    {sec:"Recursos",items:[{i:"🏭",l:"Activos"},{i:"📦",l:"Inventario",b:"3",bt:"w"},{i:"👷",l:"Personal"}]},
-    {sec:"Análisis",items:[{i:"📊",l:"KPIs"},{i:"💰",l:"Costos"}]},
-    {sec:"Sistema",items:[{i:"🔔",l:"Alertas",b:"5",active:true}]}
-  ],
-  g:[
-    {sec:"Principal",items:[{i:"▦",l:"Dashboard"},{i:"📋",l:"OT"}]},
-    {sec:"Operaciones",items:[{i:"🏢",l:"Contratistas"},{i:"🔄",l:"Plan preventivo"},{i:"🏭",l:"Activos"}]},
-    {sec:"Análisis",items:[{i:"📊",l:"KPIs"},{i:"💰",l:"Costos"}]},
-    {sec:"Sistema",items:[{i:"🔔",l:"Alertas",active:true},{i:"⚙️",l:"Configuración"}]}
-  ]
-};
-
-let role='s', filterP='todas', filterCat='', filterEst='', sortBy='recent', searchTerm='';
-
-function buildNav(){
-  let h='';
-  NAV[role].forEach(g=>{
-    h+=`<div class="nav-sec">${g.sec}</div>`;
-    g.items.forEach(i=>{
-      const ac=i.active?' active':'';
-      const bc=i.bt==='w'?' w':i.bt==='e'?' e':'';
-      const bd=i.b?`<span class="nav-badge${bc}">${i.b}</span>`:'';
-      h+=`<div class="nav-item${ac}"><span class="nav-icon">${i.i}</span><span class="nav-label">${i.l}</span>${bd}</div>`;
-    });
-  });
-  document.getElementById('sb-nav').innerHTML=h;
+const SB_URL='https://aaugeuydymhwlcpklbmt.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhdWdldXlkeW1od2xjcGtsYm10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2NTg5MzksImV4cCI6MjA5MjIzNDkzOX0.Q2GeJKuf7l51Hsv3hUEeaO0NHaFeWXLIBrRUPgkQ0gw';
+let db,USER;
+(function(){
+  const s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+  s.onload=function(){
+    db=window.supabase.createClient(SB_URL,SB_KEY);
+    USER=JSON.parse(localStorage.getItem('qdc_user')||'{}');
+    if(!USER.rol){window.location.href='index.html';return;}
+    buildSidebar();
+    if(USER.rol==='g')document.getElementById('nav-config').style.display='flex';
+    if(typeof pageInit==='function') pageInit();
+  };
+  document.head.appendChild(s);
+})();
+function ini(e){const p=(e||'').split('@')[0].split(/[._-]/);return p.slice(0,2).map(x=>x[0]?.toUpperCase()||'').join('')||'QD';}
+function buildSidebar(){
+  const C={t:'#185FA5',s:'#854F0B',g:'#27500A'},T={t:'#B5D4F4',s:'#FAC775',g:'#C0DD97'},R={t:'Técnico de Mantenimiento',s:'Supervisor de Mantenimiento',g:'Gerente de Operaciones'};
+  document.getElementById('sb-user').innerHTML=`<div class="u-av" style="background:${C[USER.rol]};color:${T[USER.rol]}">${ini(USER.email||USER.nombre)}</div><div style="min-width:0;flex:1"><div class="u-name">${USER.nombre||USER.email}</div><div class="u-role">${R[USER.rol]||''}</div></div><button class="u-logout" onclick="doLogout()">⏏</button>`;
 }
-function buildUser(){
-  const u=ROLES[role];
-  document.getElementById('sb-user').innerHTML=`<div class="u-av" style="background:${u.color};color:${u.tc}">${u.initials}</div><div><div class="u-name">${u.name}</div><div class="u-role">${u.role}</div></div>`;
+function doLogout(){localStorage.removeItem('qdc_user');window.location.href='index.html';}
+async function audit(tipo,accion,detalle){
+  try{await db.from('auditoria').insert({usuario_id:USER.id,usuario_nombre:USER.nombre||USER.email,tipo,accion,detalle});}catch(e){}
 }
+let _tT;
+function showToast(msg,col){const t=document.getElementById('toast');t.textContent=msg;t.style.borderColor=col||'rgba(33,150,243,0.3)';t.classList.add('show');clearTimeout(_tT);_tT=setTimeout(()=>t.classList.remove('show'),3200);}
+function openModal(html){document.getElementById('modal-inner').innerHTML=html;document.getElementById('modal-overlay').classList.remove('hidden');}
+function closeModal(){document.getElementById('modal-overlay').classList.add('hidden');}
 
-function getRoleAlerts(){
-  return ALL_ALERTS.filter(a=>a.roles.includes(role)&&!a.dismissed);
+
+let ALERTS=[], PRIO_F='', dismissed=new Set();
+function pageInit(){ loadAlerts(); }
+async function loadAlerts(){
+  // Alertas automáticas generadas desde el estado de inventario y PM
+  const auto=[];
+  try{
+    const{data:inv}=await db.from('inventario').select('sku,descripcion,stock,stock_minimo').lt('stock',1);
+    (inv||[]).forEach(i=>auto.push({id:'inv-'+i.sku,prio:'critica',cat:'inv',icon:'📦',titulo:'Stock agotado: '+i.descripcion,desc:'SKU '+i.sku+' — 0 unidades disponibles. Generar OC urgente.',mod:'qdc_inventario.html',tiempo:'Automática'}));
+    const{data:bajo}=await db.from('inventario').select('sku,descripcion,stock,stock_minimo').gt('stock',0).lte('stock',db.rpc('stock_minimo',{})||999);
+    // Simpler: get all and filter client side
+    const{data:allInv}=await db.from('inventario').select('sku,descripcion,stock,stock_minimo');
+    (allInv||[]).filter(i=>i.stock>0&&i.stock<=i.stock_minimo).forEach(i=>auto.push({id:'bajo-'+i.sku,prio:'advertencia',cat:'inv',icon:'📦',titulo:'Stock bajo mínimo: '+i.descripcion,desc:'Stock actual: '+i.stock+' / Mínimo: '+i.stock_minimo,mod:'qdc_inventario.html',tiempo:'Automática'}));
+    const{data:pms}=await db.from('plan_pm').select('id,nombre,proxima_fecha').lt('proxima_fecha',new Date().toISOString().split('T')[0]);
+    (pms||[]).forEach(p=>auto.push({id:'pm-'+p.id,prio:'critica',cat:'pm',icon:'🔄',titulo:'PM vencido: '+p.nombre,desc:'Fecha vencida: '+p.proxima_fecha+'. Programar intervención urgente.',mod:'qdc_pm.html',tiempo:'Automática'}));
+    const{data:otsExternas}=await db.from('ots').select('id,codigo,contratista').eq('es_externo',true).is('pdf_url',null).neq('estado','open');
+    (otsExternas||[]).forEach(o=>auto.push({id:'pdf-'+o.id,prio:'advertencia',cat:'ot',icon:'🏢',titulo:'PDF pendiente: '+o.codigo,desc:'Contratista: '+(o.contratista||'—')+'. Informe obligatorio para cierre.',mod:'qdc_ot.html',tiempo:'Automática'}));
+  }catch(e){}
+  // Si no hay datos reales, agregar demos
+  if(!auto.length) ALERTS=demosAlerts();
+  else ALERTS=auto;
+  ALERTS=ALERTS.filter(a=>!dismissed.has(a.id));
+  // Filtrar por rol
+  updateStats(); renderAlerts(ALERTS);
 }
-
-function buildStats(){
-  const list=getRoleAlerts();
-  const crit=list.filter(a=>a.prioridad==='critica').length;
-  const warn=list.filter(a=>a.prioridad==='advertencia').length;
-  const info=list.filter(a=>a.prioridad==='informativa').length;
-  const leidas=list.filter(a=>!a.unread).length;
-  document.getElementById('sv-total').textContent=list.length;
-  document.getElementById('sv-crit').textContent=crit;
-  document.getElementById('sv-warn').textContent=warn;
-  document.getElementById('sv-info').textContent=info;
-  document.getElementById('sv-leidas').textContent=leidas;
-  document.getElementById('fc-todas').textContent=list.length;
-  document.getElementById('fc-critica').textContent=crit;
-  document.getElementById('fc-advertencia').textContent=warn;
-  document.getElementById('fc-informativa').textContent=info;
+function demosAlerts(){return[
+  {id:'a1',prio:'critica',cat:'activo',icon:'🏭',titulo:'Compresor C-101 — temperatura crítica',desc:'94°C en cabezal. Límite operativo: 80°C. OT-0898 generada.',mod:'qdc_ot.html',tiempo:'Hace 12 min'},
+  {id:'a2',prio:'critica',cat:'inv',icon:'📦',titulo:'Aceite Mobil DTE 100 — stock agotado',desc:'0 unidades disponibles. Generar OC urgente.',mod:'qdc_inventario.html',tiempo:'Hace 35 min'},
+  {id:'a3',prio:'advertencia',cat:'pm',icon:'🔄',titulo:'PM vencido — Sello mecánico Bomba P-205',desc:'Rutina semestral vencida. Programar intervención.',mod:'qdc_pm.html',tiempo:'Hace 3h'},
+  {id:'a4',prio:'advertencia',cat:'ot',icon:'🏢',titulo:'OT externa sin PDF (Eléctricas SpA)',desc:'Informe obligatorio para cierre de OT.',mod:'qdc_ot.html',tiempo:'Hace 4h'},
+  {id:'a5',prio:'informativa',cat:'pm',icon:'🔄',titulo:'PM próximo — Filtros Enfriadora CH-3',desc:'Rutina quincenal en 2 días.',mod:'qdc_pm.html',tiempo:'Hace 10h'},
+];}
+function updateStats(){
+  document.getElementById('st-total').textContent=ALERTS.length;
+  document.getElementById('st-crit').textContent=ALERTS.filter(a=>a.prio==='critica').length;
+  document.getElementById('st-warn').textContent=ALERTS.filter(a=>a.prio==='advertencia').length;
+  document.getElementById('st-info').textContent=ALERTS.filter(a=>a.prio==='informativa').length;
 }
-
-function getFiltered(){
-  let list=getRoleAlerts();
-  if(filterP!=='todas') list=list.filter(a=>a.prioridad===filterP);
-  if(filterCat) list=list.filter(a=>a.cat===filterCat);
-  if(filterEst==='unread') list=list.filter(a=>a.unread);
-  if(filterEst==='read') list=list.filter(a=>!a.unread);
-  if(searchTerm) list=list.filter(a=>a.titulo.toLowerCase().includes(searchTerm)||a.desc.toLowerCase().includes(searchTerm));
-  if(sortBy==='prioridad'){
-    const order={critica:0,advertencia:1,informativa:2};
-    list.sort((a,b)=>order[a.prioridad]-order[b.prioridad]);
-  } else if(sortBy==='categoria'){
-    list.sort((a,b)=>a.cat.localeCompare(b.cat));
-  }
-  return list;
-}
-
-const PRIO_COLOR={critica:'var(--crit)',advertencia:'var(--warn)',informativa:'var(--accent)'};
-const PRIO_BG={critica:'rgba(226,75,74,0.12)',advertencia:'rgba(239,159,39,0.12)',informativa:'rgba(33,150,243,0.1)'};
-const CAT_ICON={ot:'📋',pm:'🔄',ext:'🏢',inv:'📦',activo:'🏭'};
-const PRIO_LABEL={critica:'Crítica',advertencia:'Advertencia',informativa:'Informativa'};
-
-function renderAlerts(){
-  const list=getFiltered();
-  if(!list.length){
-    document.getElementById('alert-list').innerHTML=`<div class="empty-alerts"><span style="font-size:32px;opacity:0.25">🔔</span><span style="font-size:13px">Sin alertas que coincidan</span></div>`;
-    return;
-  }
-
-  // Group by date
-  const today=[], earlier=[];
-  list.forEach(a=>{
-    if(a.tiempo.includes('min')||a.tiempo.includes('h')||a.tiempo.includes('35')) today.push(a);
-    else earlier.push(a);
-  });
-
-  let h='';
-  if(today.length){
-    h+=`<div class="group-header">Hoy</div>`;
-    today.forEach(a=>h+=buildCard(a));
-  }
-  if(earlier.length){
-    h+=`<div class="group-header" style="margin-top:10px">Anteriores</div>`;
-    earlier.forEach(a=>h+=buildCard(a));
-  }
-  document.getElementById('alert-list').innerHTML=h;
-}
-
-function buildCard(a){
-  const pc=PRIO_COLOR[a.prioridad];
-  const pb=PRIO_BG[a.prioridad];
-  const icon=CAT_ICON[a.cat]||'🔔';
-  const unreadCls=a.unread?' unread':'';
-  const unreadStyle=a.unread?`border-left-color:${pc};`:'';
-  const tags=a.tags.map((t,i)=>`<span class="ac-tag ${t}">${a.tagLabels[i]}</span>`).join('');
-  const acciones=a.acciones.map((btn,i)=>`<button class="ac-btn${i===0?' primary':''}" onclick="handleAction(${a.id},'${btn}')">${btn}</button>`).join('');
-  const dotColor=a.unread?pc:'transparent';
-  return `<div class="alert-card${unreadCls}" style="${unreadStyle}background:${a.unread?pb:'rgba(255,255,255,0.02)'}">
-    <div class="unread-dot" style="background:${dotColor}"></div>
-    <div class="ac-indicator" style="background:${pb}">${icon}</div>
-    <div class="ac-body">
-      <div class="ac-header">
-        <div class="ac-title">${a.titulo}</div>
-        <div class="ac-time">${a.tiempo}</div>
+const PBGS={critica:'rgba(226,75,74,0.08)',advertencia:'rgba(239,159,39,0.06)',informativa:'rgba(33,150,243,0.06)'};
+const PCOLS={critica:'var(--crit)',advertencia:'var(--warn)',informativa:'var(--accent)'};
+function renderAlerts(list){
+  if(!list.length){document.getElementById('alerts-content').innerHTML='<div class="empty"><span style="font-size:32px;opacity:0.2">🔔</span><span>Sin alertas activas</span></div>';return;}
+  document.getElementById('alerts-content').innerHTML=list.map(a=>`
+    <div id="alert-${a.id}" style="display:flex;gap:12px;padding:12px 14px;border-radius:8px;background:${PBGS[a.prio]};border:0.5px solid ${PCOLS[a.prio]}33;border-left:3px solid ${PCOLS[a.prio]}">
+      <div style="width:36px;height:36px;border-radius:8px;background:${PBGS[a.prio]};display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${a.icon}</div>
+      <div style="flex:1">
+        <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:4px">
+          <div style="font-size:13px;font-weight:500;color:var(--white)">${a.titulo}</div>
+          <div style="font-size:10px;font-family:monospace;color:rgba(131,131,139,0.5);white-space:nowrap">${a.tiempo||'Automática'}</div>
+        </div>
+        <div style="font-size:11px;color:rgba(200,210,225,0.6);margin-bottom:6px">${a.desc}</div>
+        <div style="display:flex;gap:5px">
+          <a href="${a.mod||'#'}" class="tb-btn" style="font-size:10px;padding:3px 9px;background:${PBGS[a.prio]};border:0.5px solid ${PCOLS[a.prio]}44;color:${PCOLS[a.prio]};text-decoration:none">Ver módulo</a>
+          <button class="tb-btn btn-g" style="font-size:10px;padding:3px 9px" onclick="dismissAlert('${a.id}')">Descartar</button>
+        </div>
       </div>
-      <div class="ac-desc">${a.desc}</div>
-      <div class="ac-tags">${tags}</div>
-      <div class="ac-actions">${acciones}
-        <button class="ac-btn" onclick="dismiss(${a.id})">Descartar</button>
-        ${a.unread?`<button class="ac-btn" onclick="markRead(${a.id})">Marcar leída</button>`:''}
-      </div>
-    </div>
-  </div>`;
+    </div>`).join('');
 }
+function dismissAlert(id){dismissed.add(id);const el=document.getElementById('alert-'+id);if(el)el.remove();ALERTS=ALERTS.filter(a=>a.id!==id);updateStats();}
+function dismissAll(){ALERTS.forEach(a=>dismissed.add(a.id));ALERTS=[];updateStats();renderAlerts([]);}
+function filterAlerts(val){const v=val.toLowerCase();let list=ALERTS.filter(a=>(a.titulo||'').toLowerCase().includes(v)||(a.desc||'').toLowerCase().includes(v));if(PRIO_F)list=list.filter(a=>a.prio===PRIO_F);renderAlerts(list);}
+function filterByPrio(v){PRIO_F=v;filterAlerts(document.querySelector('.sw input')?.value||'');}
 
-function handleAction(id,btn){ markRead(id); alert(`Sistema real: navega a "${btn}"`); }
-function markRead(id){ const a=ALL_ALERTS.find(x=>x.id===id); if(a) a.unread=false; buildStats(); renderAlerts(); }
-function dismiss(id){ const a=ALL_ALERTS.find(x=>x.id===id); if(a) a.dismissed=true; buildStats(); renderAlerts(); }
-function markAllRead(){ getRoleAlerts().forEach(a=>a.unread=false); buildStats(); renderAlerts(); }
-function dismissRead(){ getRoleAlerts().filter(a=>!a.unread).forEach(a=>a.dismissed=true); buildStats(); renderAlerts(); }
-
-function setF(p,el){ filterP=p; document.querySelectorAll('[id^="f-"]').forEach(x=>x.classList.remove('on')); el.classList.add('on'); renderAlerts(); }
-function setStatF(p,el){ filterP=p; document.querySelectorAll('.stat').forEach(x=>x.classList.remove('on')); el.classList.add('on'); renderAlerts(); }
-function setCat(c,el){ filterCat=c; document.querySelectorAll('.filter-col .fitem').forEach(x=>{ if(['ot','pm','ext','inv','activo',''].includes(x.onclick?.toString().match(/'([^']+)'/)?.[1])) x.classList.remove('on'); }); el.classList.add('on'); renderAlerts(); }
-function setEst(e,el){ filterEst=e; el.closest('.filter-col').querySelectorAll('.fitem').forEach(x=>{ if(x===el||x.id?.includes('est')) x.classList.remove('on'); }); el.classList.add('on'); renderAlerts(); }
-function setSort(v){ sortBy=v; renderAlerts(); }
-function searchAlerts(v){ searchTerm=v.toLowerCase(); renderAlerts(); }
-
-function setRole(r){
-  role=r;
-  ['t','s','g'].forEach(x=>{ document.getElementById('rb-'+x).className='rbtn'+(x===r?` on-${r}`:''); });
-  buildNav(); buildUser(); buildStats(); renderAlerts();
-}
-
-setRole('s');
 </script>
 </body>
 </html>

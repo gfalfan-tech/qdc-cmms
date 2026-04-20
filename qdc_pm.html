@@ -5,656 +5,317 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>QDC CMMS — Plan Preventivo</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;}
-:root{
-  --navy:#08223D;--mid:#0B2545;--deep:#061C2E;
-  --accent:#2196F3;--pm:#7F77DD;--pm-bright:#AFA9EC;
-  --white:#EEF4FF;--gray:#83838B;--muted:#527088;
-  --ok:#97C459;--warn:#EF9F27;--crit:#E24B4A;--ext:#5DCAA5;
-  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.10);
-  --surface:rgba(255,255,255,0.04);
-  --font:'Barlow',sans-serif;--head:'Barlow Condensed',sans-serif;
-}
-body{font-family:var(--font);background:#050F1C;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;}
-.shell{display:flex;width:100%;max-width:1100px;height:840px;background:var(--mid);border-radius:12px;overflow:hidden;border:1px solid var(--border2);}
 
-/* SIDEBAR */
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--navy:#08223D;--mid:#0B2545;--deep:#061C2E;--accent:#2196F3;--white:#EEF4FF;--ok:#97C459;--warn:#EF9F27;--crit:#E24B4A;--ext:#5DCAA5;--pm:#7F77DD;--emb:#D85A30;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.10);--font:'Barlow',sans-serif;--head:'Barlow Condensed',sans-serif;}
+body{font-family:var(--font);background:#050F1C;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;}
+.shell{display:flex;width:100%;max-width:1100px;min-height:900px;background:var(--mid);border-radius:12px;overflow:hidden;border:1px solid var(--border2);}
 .sidebar{width:210px;flex-shrink:0;background:var(--navy);display:flex;flex-direction:column;border-right:1px solid var(--border);}
 .sb-logo{padding:16px 14px 12px;border-bottom:1px solid var(--border);}
-.sb-logo-mark{font-family:var(--head);font-size:16px;font-weight:700;color:var(--white);letter-spacing:1px;}
+.sb-logo-mark{font-family:var(--head);font-size:15px;font-weight:700;color:var(--white);letter-spacing:1px;}
 .sb-logo-sub{font-size:9px;color:rgba(131,131,139,0.6);margin-top:2px;}
 .sb-logo-line{width:20px;height:2px;background:var(--accent);margin-top:5px;}
-.sb-role{padding:8px 12px;border-bottom:1px solid var(--border);}
-.sb-role-label{font-size:9px;color:rgba(131,131,139,0.5);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px;}
-.role-sw{display:flex;gap:3px;}
-.rbtn{flex:1;padding:5px 0;font-size:10px;font-weight:600;border-radius:3px;border:none;cursor:pointer;background:rgba(255,255,255,0.05);color:rgba(131,131,139,0.7);transition:all .15s;font-family:var(--font);}
-.rbtn.on-t{background:#185FA5;color:#B5D4F4;}
-.rbtn.on-s{background:#854F0B;color:#FAC775;}
-.rbtn.on-g{background:#27500A;color:#C0DD97;}
 .sb-nav{flex:1;overflow-y:auto;padding:6px 0;}
 .sb-nav::-webkit-scrollbar{width:2px;}
-.sb-nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);}
 .nav-sec{padding:10px 14px 3px;font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(131,131,139,0.4);}
-.nav-item{display:flex;align-items:center;gap:8px;padding:8px 14px;cursor:pointer;transition:background .1s;border-left:2px solid transparent;}
+.nav-item{display:flex;align-items:center;gap:8px;padding:8px 14px;cursor:pointer;border-left:2px solid transparent;transition:background .1s;text-decoration:none;}
 .nav-item:hover{background:rgba(255,255,255,0.04);}
-.nav-item.active{background:rgba(127,119,221,0.12);border-left-color:var(--pm);}
+.nav-item.active{background:rgba(33,150,243,0.12);border-left-color:var(--accent);}
 .nav-icon{font-size:13px;width:16px;text-align:center;flex-shrink:0;}
 .nav-label{font-size:12px;color:rgba(200,210,225,0.7);flex:1;}
 .nav-item.active .nav-label{color:var(--white);font-weight:500;}
-.nav-badge{font-size:9px;font-weight:600;padding:1px 5px;border-radius:8px;background:#A32D2D;color:#F7C1C1;}
-.nav-badge.w{background:#854F0B;color:#FAC775;}
-.nav-badge.e{background:#0F6E56;color:#9FE1CB;}
 .sb-user{padding:10px 12px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;}
 .u-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;}
 .u-name{font-size:11px;color:var(--white);font-weight:500;}
 .u-role{font-size:9px;color:rgba(131,131,139,0.6);}
-
-/* MAIN */
+.u-logout{margin-left:auto;background:none;border:none;color:rgba(131,131,139,0.4);cursor:pointer;font-size:11px;padding:3px 6px;border-radius:3px;}
 .main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;}
 .topbar{height:50px;background:var(--mid);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0;}
-.page-title{font-family:var(--head);font-size:16px;font-weight:600;color:var(--white);flex:1;letter-spacing:0.5px;}
+.page-title{font-family:var(--head);font-size:16px;font-weight:600;color:var(--white);flex:1;}
 .tb-btn{padding:6px 13px;border-radius:5px;border:none;font-size:12px;font-weight:500;cursor:pointer;font-family:var(--font);transition:all .15s;}
-.btn-p{background:var(--pm);color:#fff;}
-.btn-p:hover{background:#534AB7;}
+.btn-p{background:var(--accent);color:#fff;}.btn-p:hover{background:#1976D2;}
 .btn-g{background:rgba(255,255,255,0.06);color:rgba(200,210,225,0.8);border:0.5px solid rgba(255,255,255,0.1);}
-.btn-g:hover{background:rgba(255,255,255,0.1);}
-.view-toggle{display:flex;background:rgba(255,255,255,0.05);border-radius:5px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);}
-.vbtn{padding:5px 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;background:transparent;color:rgba(200,210,225,0.5);transition:all .15s;font-family:var(--font);}
-.vbtn.on{background:var(--pm);color:#fff;}
-
-/* STATS */
-.stats-row{display:flex;gap:1px;background:rgba(255,255,255,0.04);border-bottom:1px solid var(--border);flex-shrink:0;}
-.stat{flex:1;padding:10px 14px;text-align:center;cursor:pointer;border-bottom:2px solid transparent;transition:all .1s;}
-.stat:hover{background:rgba(255,255,255,0.03);}
-.stat.on{border-bottom-color:var(--pm);}
-.stat-val{font-size:20px;font-weight:500;color:var(--white);}
-.stat-val.pm{color:var(--pm-bright);}
-.stat-val.ok{color:var(--ok);}
-.stat-val.warn{color:var(--warn);}
-.stat-val.crit{color:var(--crit);}
-.stat-label{font-size:10px;color:rgba(131,131,139,0.5);margin-top:2px;}
-
-/* CONTENT */
-.content{flex:1;overflow-y:auto;padding:16px;}
-.content::-webkit-scrollbar{width:3px;}
-.content::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);}
-
-/* FILTERS ROW */
-.filters-row{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap;}
-.fchip{padding:4px 11px;border-radius:10px;font-size:11px;cursor:pointer;border:0.5px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:rgba(200,210,225,0.6);transition:all .1s;}
-.fchip:hover{background:rgba(255,255,255,0.08);}
-.fchip.on{background:rgba(127,119,221,0.15);border-color:var(--pm);color:var(--pm-bright);}
-.search-wrap{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:5px;padding:5px 10px;margin-left:auto;}
-.search-wrap input{background:none;border:none;outline:none;color:var(--white);font-size:12px;width:160px;font-family:var(--font);}
-.search-wrap input::placeholder{color:rgba(131,131,139,0.5);}
-
-/* ── CALENDAR VIEW ── */
-.calendar-wrap{background:rgba(255,255,255,0.02);border:0.5px solid var(--border);border-radius:8px;overflow:hidden;}
-.cal-header{display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);gap:12px;}
-.cal-nav{display:flex;gap:4px;}
-.cal-nav-btn{width:26px;height:26px;border-radius:4px;border:0.5px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:rgba(200,210,225,0.7);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:all .1s;}
-.cal-nav-btn:hover{background:rgba(255,255,255,0.1);}
-.cal-month{font-family:var(--head);font-size:16px;font-weight:600;color:var(--white);letter-spacing:0.5px;flex:1;}
-.cal-legend{display:flex;gap:12px;}
-.leg{display:flex;align-items:center;gap:5px;font-size:10px;color:rgba(131,131,139,0.6);}
-.leg-dot{width:8px;height:8px;border-radius:2px;}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);}
-.cal-day-name{padding:7px 0;text-align:center;font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);border-bottom:1px solid var(--border);}
-.cal-cell{min-height:90px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:6px;position:relative;transition:background .1s;}
-.cal-cell:nth-child(7n){border-right:none;}
-.cal-cell:hover{background:rgba(255,255,255,0.03);}
-.cal-cell.today{background:rgba(127,119,221,0.06);}
-.cal-cell.other-month .cal-day-num{color:rgba(131,131,139,0.25);}
-.cal-day-num{font-size:12px;font-weight:500;color:rgba(200,210,225,0.6);margin-bottom:4px;}
-.cal-cell.today .cal-day-num{color:var(--pm-bright);font-weight:600;}
-.pm-pill{font-size:9px;font-weight:500;padding:2px 6px;border-radius:3px;margin-bottom:2px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;transition:opacity .1s;}
-.pm-pill:hover{opacity:0.85;}
-.pp-ok{background:rgba(127,119,221,0.2);color:var(--pm-bright);}
-.pp-warn{background:rgba(239,159,39,0.2);color:#FAC775;}
-.pp-crit{background:rgba(226,75,74,0.2);color:#F09595;}
-.pp-done{background:rgba(99,153,34,0.15);color:#C0DD97;}
-.pp-ext{background:rgba(29,158,117,0.15);color:var(--ext);}
-
-/* ── LIST VIEW ── */
-.pm-table{width:100%;border-collapse:collapse;}
-.pm-table th{font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);padding:7px 10px;text-align:left;border-bottom:1px solid var(--border);}
-.pm-table td{padding:10px;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:middle;}
-.pm-table tr:hover td{background:rgba(255,255,255,0.03);}
-.pm-table tr.vencido td{border-left:2px solid var(--crit);}
-.pm-table tr.proximo td{border-left:2px solid var(--warn);}
-.pm-name{font-size:12px;font-weight:500;color:var(--white);}
-.pm-asset{font-size:10px;color:rgba(131,131,139,0.5);margin-top:2px;}
-.freq-badge{font-size:10px;font-weight:500;padding:2px 8px;border-radius:10px;background:rgba(127,119,221,0.12);color:var(--pm-bright);}
-.date-cell{font-size:11px;font-family:monospace;font-weight:500;}
-.date-ok{color:rgba(131,131,139,0.6);}
-.date-soon{color:var(--warn);}
-.date-overdue{color:var(--crit);}
-.status-badge{font-size:10px;font-weight:500;padding:2px 8px;border-radius:10px;}
-.sb-pend{background:rgba(127,119,221,0.12);color:var(--pm-bright);}
-.sb-soon{background:rgba(239,159,39,0.12);color:#FAC775;}
-.sb-over{background:rgba(226,75,74,0.12);color:#F09595;}
-.sb-done{background:rgba(99,153,34,0.12);color:#C0DD97;}
-.sb-ext{background:rgba(29,158,117,0.12);color:var(--ext);}
-.resp-pill{font-size:10px;color:rgba(200,210,225,0.6);display:flex;align-items:center;gap:5px;}
-.resp-dot{width:6px;height:6px;border-radius:50%;}
-.act-btn{font-size:10px;padding:4px 9px;border-radius:4px;border:0.5px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:rgba(200,210,225,0.7);cursor:pointer;transition:all .1s;}
-.act-btn:hover{background:rgba(127,119,221,0.15);color:var(--pm-bright);border-color:var(--pm);}
-
-/* CUMPLIMIENTO BAR */
-.compliance-bar-wrap{margin-bottom:16px;}
-.compliance-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
-.compliance-title{font-size:11px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);}
-.compliance-pct{font-family:var(--head);font-size:22px;font-weight:600;}
-.bar-track{height:8px;background:rgba(255,255,255,0.07);border-radius:4px;overflow:hidden;}
-.bar-fill{height:100%;border-radius:4px;transition:width .6s ease;}
-.bar-segments{display:flex;gap:6px;margin-top:6px;}
-.bar-seg{font-size:10px;display:flex;align-items:center;gap:4px;color:rgba(131,131,139,0.6);}
-.seg-dot{width:8px;height:8px;border-radius:2px;}
-
-/* MODAL */
-.modal-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:100;}
-.modal-overlay.hidden{display:none;}
-.modal{background:#0D2D48;border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;width:500px;max-height:680px;overflow-y:auto;padding:22px;}
-.modal::-webkit-scrollbar{width:3px;}
-.modal::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);}
-.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
-.modal-title{font-family:var(--head);font-size:16px;font-weight:600;color:var(--white);}
-.modal-close{font-size:16px;color:rgba(131,131,139,0.6);cursor:pointer;background:none;border:none;padding:2px 6px;}
-.modal-close:hover{color:var(--white);}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
-.form-row.full{grid-template-columns:1fr;}
-.form-group{display:flex;flex-direction:column;gap:5px;}
-.form-label{font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.6);}
-.req{color:#AFA9EC;}
-.form-input,.form-select,.form-textarea{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:var(--white);font-size:12px;font-family:var(--font);padding:8px 10px;outline:none;transition:border-color .1s;}
-.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--pm);}
+.stats-bar{display:flex;gap:1px;background:rgba(255,255,255,0.04);border-bottom:1px solid var(--border);flex-shrink:0;}
+.stat{flex:1;padding:9px 12px;text-align:center;}
+.stat-val{font-size:18px;font-weight:500;color:var(--white);}
+.stat-label{font-size:9px;color:rgba(131,131,139,0.5);margin-top:2px;text-transform:uppercase;}
+.content-pad{flex:1;overflow-y:auto;padding:16px;}
+.content-pad::-webkit-scrollbar{width:3px;}
+.content-pad::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);}
+.data-table{width:100%;border-collapse:collapse;margin-top:10px;}
+.data-table th{font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);padding:7px 10px;text-align:left;border-bottom:1px solid var(--border);}
+.data-table td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,0.03);vertical-align:middle;}
+.data-table tr:hover td{background:rgba(255,255,255,0.03);}
+.badge{font-size:10px;font-weight:500;padding:2px 8px;border-radius:10px;}
+.b-ok{background:rgba(99,153,34,0.15);color:#C0DD97;}
+.b-warn{background:rgba(239,159,39,0.15);color:#FAC775;}
+.b-crit{background:rgba(226,75,74,0.15);color:#F09595;}
+.b-ext{background:rgba(29,158,117,0.15);color:#5DCAA5;}
+.b-info{background:rgba(33,150,243,0.12);color:#85B7EB;}
+.b-pm{background:rgba(127,119,221,0.12);color:#AFA9EC;}
+.card{background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px;margin-bottom:12px;}
+.kpi-grid{display:grid;gap:10px;margin-bottom:14px;}
+.kpi-grid-4{grid-template-columns:repeat(4,1fr);}
+.kpi-grid-3{grid-template-columns:repeat(3,1fr);}
+.kpi{background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:12px 14px;position:relative;overflow:hidden;}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.kpi-blue::before{background:var(--accent);}.kpi-green::before{background:var(--ok);}
+.kpi-warn::before{background:var(--warn);}.kpi-crit::before{background:var(--crit);}
+.kpi-ext::before{background:var(--ext);}.kpi-pm::before{background:var(--pm);}
+.kpi-label{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px;}
+.kpi-val{font-size:22px;font-weight:600;font-family:var(--head);color:var(--white);}
+.kpi-sub{font-size:9px;color:rgba(131,131,139,0.45);margin-top:3px;}
+.search-row{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.sw{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:5px;padding:5px 10px;flex:1;}
+.sw input{background:none;border:none;outline:none;color:var(--white);font-size:12px;font-family:var(--font);width:100%;}
+.sw input::placeholder{color:rgba(131,131,139,0.5);}
+.form-group{margin-bottom:12px;}
+.form-label{font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.6);margin-bottom:5px;display:block;}
+.form-input,.form-select,.form-textarea{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:var(--white);font-size:12px;font-family:var(--font);padding:8px 10px;outline:none;width:100%;transition:border-color .1s;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent);}
 .form-input::placeholder,.form-textarea::placeholder{color:rgba(131,131,139,0.4);}
 .form-select option{background:#0D2D48;}
 .form-textarea{resize:vertical;min-height:70px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;z-index:500;}
+.modal-overlay.hidden{display:none;}
+.modal{background:#0D2D48;border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;width:500px;max-height:85vh;overflow-y:auto;padding:22px;}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.modal-title{font-family:var(--head);font-size:16px;font-weight:600;color:var(--white);}
+.modal-close{font-size:16px;color:rgba(131,131,139,0.6);cursor:pointer;background:none;border:none;}
 .modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.07);}
 .btn-cancel{padding:7px 14px;border-radius:5px;border:0.5px solid rgba(255,255,255,0.1);background:transparent;color:rgba(200,210,225,0.7);cursor:pointer;font-size:12px;font-family:var(--font);}
-.btn-cancel:hover{background:rgba(255,255,255,0.06);}
-.btn-save{padding:7px 18px;border-radius:5px;border:none;background:var(--pm);color:#fff;cursor:pointer;font-size:12px;font-weight:500;font-family:var(--font);}
-.btn-save:hover{background:#534AB7;}
+.btn-save{padding:7px 18px;border-radius:5px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-size:12px;font-weight:600;font-family:var(--font);}
+.spinner{width:20px;height:20px;border:2px solid rgba(255,255,255,0.1);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading{display:flex;align-items:center;justify-content:center;padding:40px;gap:12px;color:rgba(131,131,139,0.5);}
+.empty{display:flex;align-items:center;justify-content:center;padding:60px;flex-direction:column;gap:12px;color:rgba(131,131,139,0.35);}
+#toast{position:fixed;bottom:24px;right:24px;background:#0D2D48;border:1px solid rgba(33,150,243,0.3);border-radius:8px;padding:12px 16px;font-size:12px;color:var(--white);z-index:9999;transform:translateY(60px);opacity:0;transition:all .3s;max-width:320px;pointer-events:none;}
+#toast.show{transform:translateY(0);opacity:1;}
 
-.shell-wrap{position:relative;width:100%;max-width:1100px;}
+
 </style>
 </head>
 <body>
-<div class="shell-wrap">
 <div class="shell">
+  <nav class="sidebar">
 
-<!-- SIDEBAR -->
-<nav class="sidebar">
-  <div class="sb-logo">
-    <div class="sb-logo-mark">QDC</div>
-    <div class="sb-logo-sub">Química del Campo S.p.A · CMMS Pro</div>
-    <div class="sb-logo-line"></div>
-  </div>
-  <div class="sb-role">
-    <div class="sb-role-label">Rol activo (demo)</div>
-    <div class="role-sw">
-      <button class="rbtn on-t" id="rb-t" onclick="setRole('t')">Téc.</button>
-      <button class="rbtn" id="rb-s" onclick="setRole('s')">Sup.</button>
-      <button class="rbtn" id="rb-g" onclick="setRole('g')">Ger.</button>
+    <div class="sb-logo">
+      <div class="sb-logo-mark">QDC · CMMS Pro</div>
+      <div class="sb-logo-sub">Química del Campo S.p.A</div>
+      <div class="sb-logo-line"></div>
     </div>
-  </div>
-  <div class="sb-nav" id="sb-nav"></div>
-  <div class="sb-user" id="sb-user"></div>
-</nav>
-
-<!-- MAIN -->
-<div class="main" style="position:relative">
-  <div class="topbar">
-    <div class="page-title">Plan de Mantenimiento Preventivo</div>
-    <div class="view-toggle">
-      <button class="vbtn on" id="vbtn-cal" onclick="setView('cal')">📅 Calendario</button>
-      <button class="vbtn" id="vbtn-list" onclick="setView('list')">☰ Lista</button>
+    <div class="sb-nav">
+      <div class="nav-sec">Principal</div>
+      <a class="nav-item" href="qdc_dashboard.html"><span class="nav-icon">▦</span><span class="nav-label">Dashboard</span></a>
+      <a class="nav-item" href="qdc_ot.html"><span class="nav-icon">📋</span><span class="nav-label">Órdenes de trabajo</span></a>
+      <div class="nav-sec">Mantenimiento</div>
+      <a class="nav-item active" href="qdc_pm.html"><span class="nav-icon">🔄</span><span class="nav-label">Plan preventivo</span></a>
+      <a class="nav-item " href="qdc_contratistas.html"><span class="nav-icon">🏢</span><span class="nav-label">Contratistas</span></a>
+      <div class="nav-sec">Recursos</div>
+      <a class="nav-item " href="qdc_activos.html"><span class="nav-icon">🏭</span><span class="nav-label">Activos y equipos</span></a>
+      <a class="nav-item" href="qdc_inventario.html"><span class="nav-icon">📦</span><span class="nav-label">Inventario</span></a>
+      <div class="nav-sec">Operaciones</div>
+      <a class="nav-item " href="qdc_embalajes.html"><span class="nav-icon">📫</span><span class="nav-label">Embalajes</span></a>
+      <div class="nav-sec">Análisis</div>
+      <a class="nav-item " href="qdc_kpis.html"><span class="nav-icon">📊</span><span class="nav-label">KPIs y reportes</span></a>
+      <div class="nav-sec">Sistema</div>
+      <a class="nav-item " href="qdc_alertas.html"><span class="nav-icon">🔔</span><span class="nav-label">Alertas</span></a>
+      <a class="nav-item" id="nav-config" href="qdc_config.html" style="display:none"><span class="nav-icon">⚙️</span><span class="nav-label">Configuración</span></a>
     </div>
-    <button class="tb-btn btn-g">⬇ Exportar</button>
-    <button class="tb-btn btn-p" id="btn-new" onclick="openModal()">+ Nuevo PM</button>
-  </div>
+    <div class="sb-user" id="sb-user"></div>
 
-  <!-- STATS -->
-  <div class="stats-row">
-    <div class="stat on" id="st-todos" onclick="setStatFilter('todos',this)"><div class="stat-val pm" id="sv-total">18</div><div class="stat-label">Rutinas activas</div></div>
-    <div class="stat" id="st-venc" onclick="setStatFilter('vencido',this)"><div class="stat-val crit" id="sv-venc">3</div><div class="stat-label">Vencidas</div></div>
-    <div class="stat" id="st-prox" onclick="setStatFilter('proximo',this)"><div class="stat-val warn" id="sv-prox">4</div><div class="stat-label">Próximas 7 días</div></div>
-    <div class="stat" id="st-done" onclick="setStatFilter('done',this)"><div class="stat-val ok" id="sv-done">11</div><div class="stat-label">Al día</div></div>
-    <div class="stat"><div class="stat-val" id="sv-pct" style="color:var(--pm-bright)">83%</div><div class="stat-label">Cumplimiento mes</div></div>
-  </div>
+  </nav>
+  <div class="main">
 
-  <div class="content" id="main-content"></div>
-
-  <!-- MODAL -->
-  <div class="modal-overlay hidden" id="modal-overlay">
-    <div class="modal">
-      <div class="modal-header">
-        <div class="modal-title">Nueva rutina de PM</div>
-        <button class="modal-close" onclick="closeModal()">✕</button>
-      </div>
-      <div class="form-row full">
-        <div class="form-group">
-          <label class="form-label">Nombre de la tarea <span class="req">*</span></label>
-          <input type="text" class="form-input" placeholder="ej: Cambio aceite compresor" id="f-nombre"/>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Activo / Equipo <span class="req">*</span></label>
-          <select class="form-select" id="f-activo">
-            <option>Compresor C-101 · Línea A</option>
-            <option>Bomba P-205 · Sala Bombas</option>
-            <option>Motor MO-18 · Línea B</option>
-            <option>Turbina T-01 · Planta 2</option>
-            <option>Enfriadora CH-3 · Sala Frío</option>
-            <option>Tablero Eléctrico E-01</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Frecuencia <span class="req">*</span></label>
-          <select class="form-select" id="f-freq">
-            <option>Diaria</option>
-            <option>Semanal</option>
-            <option>Quincenal</option>
-            <option selected>Mensual</option>
-            <option>Trimestral</option>
-            <option>Semestral</option>
-            <option>Anual</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Próxima fecha <span class="req">*</span></label>
-          <input type="date" class="form-input" id="f-fecha" value="2025-04-25"/>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Duración estimada (hrs)</label>
-          <input type="number" class="form-input" placeholder="2" id="f-horas"/>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Responsable</label>
-          <select class="form-select" id="f-resp">
-            <option>Luis García</option>
-            <option>María Pérez</option>
-            <option>Roberto Torres</option>
-            <option>Andrés Campos</option>
-            <option>Externo — contratista</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Prioridad</label>
-          <select class="form-select" id="f-prio">
-            <option>Alta</option>
-            <option selected>Media</option>
-            <option>Baja</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-row full">
-        <div class="form-group">
-          <label class="form-label">Instrucciones / Procedimiento</label>
-          <textarea class="form-textarea" placeholder="Pasos a seguir, herramientas necesarias, repuestos requeridos…" id="f-inst"></textarea>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
-        <button class="btn-save" onclick="savePM()">Crear rutina PM</button>
-      </div>
+    <div class="topbar">
+      <div class="page-title">Plan Preventivo (PM)</div>
+      <button class="tb-btn btn-g" onclick="loadPM()">↻ Actualizar</button>
+      <button class="tb-btn btn-p" id="btn-nuevo-pm" style="display:none" onclick="openNuevoPM()">+ Nueva rutina</button>
     </div>
+    <div class="stats-bar">
+      <div class="stat"><div class="stat-val" id="st-total" style="color:#AFA9EC">—</div><div class="stat-label">Rutinas activas</div></div>
+      <div class="stat"><div class="stat-val" id="st-venc" style="color:var(--crit)">—</div><div class="stat-label">Vencidas</div></div>
+      <div class="stat"><div class="stat-val" id="st-prox" style="color:var(--warn)">—</div><div class="stat-label">Próximas 7 días</div></div>
+      <div class="stat"><div class="stat-val" id="st-ok" style="color:var(--ok)">—</div><div class="stat-label">Programadas</div></div>
+      <div class="stat"><div class="stat-val" id="st-pct" style="color:#AFA9EC">—</div><div class="stat-label">Cumplimiento</div></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid var(--border);flex-shrink:0;">
+      <div style="flex:1;height:6px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden"><div id="pm-bar" style="height:100%;background:var(--pm);border-radius:3px;transition:width .4s;width:0%"></div></div>
+      <span id="pm-pct-label" style="font-family:var(--head);font-size:13px;font-weight:600;color:#AFA9EC">—</span>
+    </div>
+    <div class="search-row">
+      <div class="sw"><span style="font-size:11px;color:rgba(131,131,139,0.5)">🔍</span><input type="text" placeholder="Buscar rutina, activo…" oninput="filterPM(this.value)"/></div>
+      <select class="form-select" style="width:140px;padding:6px 10px" onchange="filterByEst(this.value)">
+        <option value="">Todos</option>
+        <option value="overdue">Vencidas</option>
+        <option value="soon">Próximas</option>
+        <option value="ok">Programadas</option>
+      </select>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:0 14px 12px" id="pm-content">
+      <div class="loading"><div class="spinner"></div><span>Cargando PM…</span></div>
+    </div>
+
   </div>
-
 </div>
-</div>
-</div>
-
+<div id="toast"></div>
+<div class="modal-overlay hidden" id="modal-overlay"><div class="modal" id="modal-inner"></div></div>
 <script>
-const PM_DATA = [
-  // VENCIDOS
-  {id:"PM-001",nombre:"Cambio aceite y filtros",activo:"Compresor C-101",area:"Línea A",freq:"Mensual",proxima:"2025-04-10",estado:"vencido",resp:"L. García",ext:false,horas:2,prio:"alta"},
-  {id:"PM-002",nombre:"Revisión sello mecánico",activo:"Bomba P-205",area:"Sala Bombas",freq:"Semestral",proxima:"2025-04-05",estado:"vencido",resp:"M. Pérez",ext:false,horas:3,prio:"alta"},
-  {id:"PM-003",nombre:"PM semestral sistema vapor",activo:"Turbina T-01",area:"Planta 2",freq:"Semestral",proxima:"2025-04-15",estado:"vencido",resp:"E. Castro",ext:false,horas:6,prio:"alta"},
-  // PRÓXIMOS
-  {id:"PM-004",nombre:"Limpieza filtros condensador",activo:"Enfriadora CH-3",area:"Sala Frío",freq:"Quincenal",proxima:"2025-04-19",estado:"proximo",resp:"R. Torres",ext:false,horas:1,prio:"media"},
-  {id:"PM-005",nombre:"Lubricación rodamientos",activo:"Motor MO-18",area:"Línea B",freq:"Mensual",proxima:"2025-04-20",estado:"proximo",resp:"L. García",ext:false,horas:1,prio:"media"},
-  {id:"PM-006",nombre:"Análisis de aceite lubricante",activo:"Turbina T-01",area:"Planta 2",freq:"Mensual",proxima:"2025-04-21",estado:"proximo",resp:"E. Castro",ext:false,horas:1,prio:"alta"},
-  {id:"PM-007",nombre:"Revisión válvulas seguridad",activo:"Compresor C-101",area:"Línea A",freq:"Semestral",proxima:"2025-04-23",estado:"proximo",resp:"Externo",ext:true,horas:2,prio:"alta"},
-  // AL DÍA
-  {id:"PM-008",nombre:"Calibración sensores línea A",activo:"Tablero E-01",area:"Sala Control",freq:"Trimestral",proxima:"2025-05-10",estado:"ok",resp:"M. Pérez",ext:false,horas:2,prio:"media"},
-  {id:"PM-009",nombre:"Alineación eje y balance",activo:"Bomba P-205",area:"Sala Bombas",freq:"Trimestral",proxima:"2025-07-10",estado:"ok",resp:"A. Campos",ext:false,horas:4,prio:"media"},
-  {id:"PM-010",nombre:"Medición aislamiento bobinado",activo:"Motor MO-18",area:"Línea B",freq:"Semestral",proxima:"2025-08-15",estado:"ok",resp:"M. Pérez",ext:false,horas:2,prio:"baja"},
-  {id:"PM-011",nombre:"Control carga refrigerante",activo:"Enfriadora CH-3",area:"Sala Frío",freq:"Semestral",proxima:"2025-05-20",estado:"ok",resp:"Frío Industrial SpA",ext:true,horas:3,prio:"media"},
-  {id:"PM-012",nombre:"Inspección termográfica",activo:"Tablero E-01",area:"Sala Control",freq:"Anual",proxima:"2025-08-10",estado:"ok",resp:"Termograf SpA",ext:true,horas:4,prio:"media"},
-  {id:"PM-013",nombre:"Cambio correas transmisión",activo:"Compresor C-101",area:"Línea A",freq:"Trimestral",proxima:"2025-06-20",estado:"ok",resp:"L. García",ext:false,horas:2,prio:"media"},
-  {id:"PM-014",nombre:"Revisión sistema eléctrico",activo:"Tablero E-01",area:"Sala Control",freq:"Anual",proxima:"2025-09-01",estado:"ok",resp:"Eléctricas SpA",ext:true,horas:6,prio:"alta"},
-  {id:"PM-015",nombre:"Lubricación cadena banda",activo:"Banda B-44",area:"Línea A",freq:"Semanal",proxima:"2025-04-25",estado:"ok",resp:"L. García",ext:false,horas:1,prio:"baja"},
-  {id:"PM-016",nombre:"Cambio rodamientos",activo:"Bomba P-205",area:"Sala Bombas",freq:"Anual",proxima:"2025-10-05",estado:"ok",resp:"A. Campos",ext:false,horas:4,prio:"media"},
-  {id:"PM-017",nombre:"Revisión compresor enfriadora",activo:"Enfriadora CH-3",area:"Sala Frío",freq:"Anual",proxima:"2025-11-20",estado:"ok",resp:"Frío Industrial SpA",ext:true,horas:5,prio:"alta"},
-  {id:"PM-018",nombre:"Overhaul completo",activo:"Compresor C-101",area:"Línea A",freq:"Anual",proxima:"2026-01-15",estado:"ok",resp:"Mant. Industrial SA",ext:true,horas:16,prio:"alta"},
-];
 
-const ROLES = {
-  t:{name:"Luis García",  role:"Técnico de Mantenimiento",   color:"#185FA5",tc:"#B5D4F4",initials:"LG",canEdit:false},
-  s:{name:"María Solís",  role:"Supervisora de Mantenimiento",color:"#854F0B",tc:"#FAC775",initials:"MS",canEdit:true},
-  g:{name:"Carlos Reyes", role:"Gerente de Operaciones",      color:"#27500A",tc:"#C0DD97",initials:"CR",canEdit:false}
-};
-
-const NAV = {
-  t:[
-    {sec:"Principal",items:[{i:"▦",l:"Dashboard"},{i:"📋",l:"Órdenes de trabajo",b:"3"}]},
-    {sec:"Mantenimiento",items:[{i:"🔧",l:"Correctivo"},{i:"🔄",l:"Plan preventivo",active:true}]},
-    {sec:"Recursos",items:[{i:"🏭",l:"Activos"},{i:"📦",l:"Inventario"}]},
-    {sec:"Sistema",items:[{i:"🔔",l:"Alertas",b:"2",bt:"w"}]}
-  ],
-  s:[
-    {sec:"Principal",items:[{i:"▦",l:"Dashboard"},{i:"📋",l:"Órdenes de trabajo",b:"7"}]},
-    {sec:"Mantenimiento",items:[{i:"🏢",l:"Contratistas externos",b:"2",bt:"e"},{i:"🔄",l:"Plan preventivo",active:true},{i:"🔧",l:"Correctivo"}]},
-    {sec:"Recursos",items:[{i:"🏭",l:"Activos"},{i:"📦",l:"Inventario",b:"3",bt:"w"},{i:"👷",l:"Personal"},{i:"🤝",l:"Proveedores"}]},
-    {sec:"Análisis",items:[{i:"📊",l:"KPIs"},{i:"💰",l:"Costos"}]},
-    {sec:"Sistema",items:[{i:"🔔",l:"Alertas",b:"5"}]}
-  ],
-  g:[
-    {sec:"Principal",items:[{i:"▦",l:"Dashboard"},{i:"📋",l:"Órdenes de trabajo"}]},
-    {sec:"Operaciones",items:[{i:"🏢",l:"Contratistas externos"},{i:"🔄",l:"Plan preventivo",active:true},{i:"🏭",l:"Activos"}]},
-    {sec:"Análisis",items:[{i:"📊",l:"KPIs"},{i:"💰",l:"Costos"}]},
-    {sec:"Sistema",items:[{i:"🔔",l:"Alertas"},{i:"⚙️",l:"Configuración"}]}
-  ]
-};
-
-let role='s', view='cal', statFilter='todos', searchTerm='', calOffset=0;
-
-// April 2025 base
-const BASE_YEAR=2025, BASE_MONTH=3; // 0-indexed = April
-
-function buildNav(){
-  let h='';
-  NAV[role].forEach(g=>{
-    h+=`<div class="nav-sec">${g.sec}</div>`;
-    g.items.forEach(i=>{
-      const ac=i.active?' active':'';
-      const bc=i.bt==='w'?' w':i.bt==='e'?' e':'';
-      const bd=i.b?`<span class="nav-badge${bc}">${i.b}</span>`:'';
-      h+=`<div class="nav-item${ac}"><span class="nav-icon">${i.i}</span><span class="nav-label">${i.l}</span>${bd}</div>`;
-    });
-  });
-  document.getElementById('sb-nav').innerHTML=h;
-}
-
-function buildUser(){
-  const u=ROLES[role];
-  document.getElementById('sb-user').innerHTML=`<div class="u-av" style="background:${u.color};color:${u.tc}">${u.initials}</div><div><div class="u-name">${u.name}</div><div class="u-role">${u.role}</div></div>`;
-}
-
-function getFilteredPMs(){
-  let list=[...PM_DATA];
-  // role filter: tecnico only sees own
-  if(role==='t') list=list.filter(p=>p.resp==='L. García'||p.ext===false);
-  if(statFilter!=='todos') list=list.filter(p=>p.estado===statFilter);
-  if(searchTerm) list=list.filter(p=>p.nombre.toLowerCase().includes(searchTerm)||p.activo.toLowerCase().includes(searchTerm));
-  return list;
-}
-
-function statusBadge(e){
-  if(e==='vencido') return '<span class="status-badge sb-over">Vencida</span>';
-  if(e==='proximo') return '<span class="status-badge sb-soon">Próxima</span>';
-  if(e==='ok')      return '<span class="status-badge sb-pend">Programada</span>';
-  if(e==='done')    return '<span class="status-badge sb-done">Completada</span>';
-  return '';
-}
-
-function pillClass(e){ return e==='vencido'?'pp-crit':e==='proximo'?'pp-warn':'pp-ok'; }
-
-function renderCalendar(){
-  const d=new Date(BASE_YEAR, BASE_MONTH+calOffset, 1);
-  const year=d.getFullYear(), month=d.getMonth();
-  const monthNames=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-  const today=new Date(2025,3,17); // April 17 2025 demo
-
-  // Build calendar map
-  const pmList=getFilteredPMs();
-  const pmByDay={};
-  pmList.forEach(pm=>{
-    const dt=new Date(pm.proxima+'T00:00:00');
-    if(dt.getFullYear()===year&&dt.getMonth()===month){
-      const day=dt.getDate();
-      if(!pmByDay[day]) pmByDay[day]=[];
-      pmByDay[day].push(pm);
-    }
-  });
-
-  // Compliance for this month
-  const thisMonthPMs=PM_DATA.filter(p=>{
-    const dt=new Date(p.proxima+'T00:00:00');
-    return dt.getFullYear()===year&&dt.getMonth()===month;
-  });
-  const venc=thisMonthPMs.filter(p=>p.estado==='vencido').length;
-  const prox=thisMonthPMs.filter(p=>p.estado==='proximo').length;
-  const ok=thisMonthPMs.filter(p=>p.estado==='ok').length;
-  const total=thisMonthPMs.length||1;
-  const pct=Math.round((ok/(total))*100);
-  const barW=Math.min(100,pct);
-  const barColor=pct>=85?'var(--ok)':pct>=60?'var(--warn)':'var(--crit)';
-
-  // First day of month (Sun=0)
-  let firstDay=new Date(year,month,1).getDay();
-  const daysInMonth=new Date(year,month+1,0).getDate();
-  const prevDays=new Date(year,month,0).getDate();
-
-  let cells='';
-  // prev month filler
-  for(let i=firstDay-1;i>=0;i--){
-    cells+=`<div class="cal-cell other-month"><div class="cal-day-num">${prevDays-i}</div></div>`;
-  }
-  // this month
-  for(let d=1;d<=daysInMonth;d++){
-    const isToday=(d===today.getDate()&&month===today.getMonth()&&year===today.getFullYear());
-    const pms=pmByDay[d]||[];
-    let pills=pms.slice(0,3).map(p=>{
-      const cls=p.ext?'pp-ext':pillClass(p.estado);
-      return `<span class="pm-pill ${cls}" title="${p.nombre} — ${p.activo}">${p.nombre}</span>`;
-    }).join('');
-    if(pms.length>3) pills+=`<span style="font-size:9px;color:rgba(131,131,139,0.5)">+${pms.length-3} más</span>`;
-    cells+=`<div class="cal-cell${isToday?' today':''}"><div class="cal-day-num">${d}</div>${pills}</div>`;
-  }
-  // next month filler
-  const total_cells=Math.ceil((firstDay+daysInMonth)/7)*7;
-  for(let d=1;d<=(total_cells-firstDay-daysInMonth);d++){
-    cells+=`<div class="cal-cell other-month"><div class="cal-day-num">${d}</div></div>`;
-  }
-
-  const days=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
-  const dayHeaders=days.map(d=>`<div class="cal-day-name">${d}</div>`).join('');
-
-  document.getElementById('main-content').innerHTML=`
-    <div class="filters-row">
-      <span class="fchip on" onclick="chipF(this,'todos')">Todos</span>
-      <span class="fchip" onclick="chipF(this,'vencido')">Vencidos</span>
-      <span class="fchip" onclick="chipF(this,'proximo')">Próximos</span>
-      <span class="fchip" onclick="chipF(this,'ok')">Programados</span>
-      <div class="search-wrap">
-        <span style="font-size:11px;color:rgba(131,131,139,0.5)">🔍</span>
-        <input type="text" placeholder="Buscar PM, equipo…" oninput="searchPM(this.value)"/>
-      </div>
-    </div>
-
-    <div class="compliance-bar-wrap">
-      <div class="compliance-header">
-        <span class="compliance-title">Cumplimiento ${monthNames[month]} ${year}</span>
-        <span class="compliance-pct" style="color:${barColor}">${pct}%</span>
-      </div>
-      <div class="bar-track"><div class="bar-fill" style="width:${barW}%;background:${barColor}"></div></div>
-      <div class="bar-segments">
-        <span class="bar-seg"><div class="seg-dot" style="background:var(--crit)"></div>${venc} vencidas</span>
-        <span class="bar-seg"><div class="seg-dot" style="background:var(--warn)"></div>${prox} próximas</span>
-        <span class="bar-seg"><div class="seg-dot" style="background:rgba(127,119,221,0.7)"></div>${ok} programadas</span>
-      </div>
-    </div>
-
-    <div class="calendar-wrap">
-      <div class="cal-header">
-        <div class="cal-nav">
-          <button class="cal-nav-btn" onclick="calNav(-1)">‹</button>
-          <button class="cal-nav-btn" onclick="calNav(1)">›</button>
-        </div>
-        <div class="cal-month">${monthNames[month]} ${year}</div>
-        <div class="cal-legend">
-          <span class="leg"><div class="leg-dot" style="background:rgba(226,75,74,0.6)"></div>Vencida</span>
-          <span class="leg"><div class="leg-dot" style="background:rgba(239,159,39,0.6)"></div>Próxima</span>
-          <span class="leg"><div class="leg-dot" style="background:rgba(127,119,221,0.5)"></div>Programada</span>
-          <span class="leg"><div class="leg-dot" style="background:rgba(29,158,117,0.5)"></div>Externo</span>
-        </div>
-      </div>
-      <div class="cal-grid">${dayHeaders}${cells}</div>
-    </div>
-  `;
-}
-
-function renderList(){
-  const list=getFilteredPMs();
-  const canEdit=ROLES[role].canEdit;
-
-  let rows=list.map(pm=>{
-    const dc=pm.estado==='vencido'?'date-overdue':pm.estado==='proximo'?'date-soon':'date-ok';
-    const dt=new Date(pm.proxima+'T00:00:00');
-    const dateStr=`${dt.getDate().toString().padStart(2,'0')}/${(dt.getMonth()+1).toString().padStart(2,'0')}/${dt.getFullYear()}`;
-    const respColor=pm.ext?'var(--ext)':'rgba(200,210,225,0.6)';
-    const rowCls=pm.estado==='vencido'?' vencido':pm.estado==='proximo'?' proximo':'';
-    const actBtn=canEdit?`<button class="act-btn" onclick="markDone('${pm.id}')">Marcar hecho</button>`:'';
-    return `<tr class="${rowCls}">
-      <td><div class="pm-name">${pm.nombre}</div><div class="pm-asset">${pm.activo} · ${pm.area}</div></td>
-      <td><span class="freq-badge">${pm.freq}</span></td>
-      <td><span class="date-cell ${dc}">${dateStr}</span></td>
-      <td>${statusBadge(pm.estado)}</td>
-      <td><span class="resp-pill"><span class="resp-dot" style="background:${respColor}"></span>${pm.resp}</span></td>
-      <td>${pm.horas}h</td>
-      <td>${actBtn}</td>
-    </tr>`;
-  }).join('');
-
-  if(!rows) rows=`<tr><td colspan="7" style="text-align:center;padding:28px;color:rgba(131,131,139,0.4);font-size:12px">Sin rutinas que coincidan</td></tr>`;
-
-  document.getElementById('main-content').innerHTML=`
-    <div class="filters-row">
-      <span class="fchip on" id="fc-todos" onclick="chipF(this,'todos')">Todos (${PM_DATA.length})</span>
-      <span class="fchip" id="fc-vencido" onclick="chipF(this,'vencido')">Vencidos (${PM_DATA.filter(p=>p.estado==='vencido').length})</span>
-      <span class="fchip" id="fc-proximo" onclick="chipF(this,'proximo')">Próximos (${PM_DATA.filter(p=>p.estado==='proximo').length})</span>
-      <span class="fchip" id="fc-ok" onclick="chipF(this,'ok')">Programados (${PM_DATA.filter(p=>p.estado==='ok').length})</span>
-      <div class="search-wrap">
-        <span style="font-size:11px;color:rgba(131,131,139,0.5)">🔍</span>
-        <input type="text" placeholder="Buscar PM, equipo…" value="${searchTerm}" oninput="searchPM(this.value)"/>
-      </div>
-    </div>
-
-    <div class="compliance-bar-wrap">
-      <div class="compliance-header">
-        <span class="compliance-title">Cumplimiento abril 2025</span>
-        <span class="compliance-pct" style="color:var(--pm-bright)">83%</span>
-      </div>
-      <div class="bar-track"><div class="bar-fill" style="width:83%;background:var(--pm)"></div></div>
-      <div class="bar-segments">
-        <span class="bar-seg"><div class="seg-dot" style="background:var(--crit)"></div>3 vencidas</span>
-        <span class="bar-seg"><div class="seg-dot" style="background:var(--warn)"></div>4 próximas</span>
-        <span class="bar-seg"><div class="seg-dot" style="background:rgba(127,119,221,0.7)"></div>11 programadas</span>
-      </div>
-    </div>
-
-    <div style="background:rgba(255,255,255,0.02);border:0.5px solid var(--border);border-radius:8px;overflow:hidden;">
-      <table class="pm-table">
-        <thead><tr>
-          <th>Tarea PM / Activo</th>
-          <th>Frecuencia</th>
-          <th>Próxima fecha</th>
-          <th>Estado</th>
-          <th>Responsable</th>
-          <th>Duración</th>
-          <th></th>
-        </tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>
-  `;
-}
-
-function render(){
-  if(view==='cal') renderCalendar();
-  else renderList();
-}
-
-function setView(v){
-  view=v;
-  document.getElementById('vbtn-cal').className='vbtn'+(v==='cal'?' on':'');
-  document.getElementById('vbtn-list').className='vbtn'+(v==='list'?' on':'');
-  render();
-}
-
-function calNav(dir){
-  calOffset+=dir;
-  renderCalendar();
-}
-
-function chipF(el,f){
-  document.querySelectorAll('.fchip').forEach(c=>c.classList.remove('on'));
-  el.classList.add('on');
-  statFilter=f;
-  render();
-}
-
-function setStatFilter(f,el){
-  statFilter=f;
-  document.querySelectorAll('.stat').forEach(s=>s.classList.remove('on'));
-  el.classList.add('on');
-  render();
-}
-
-function searchPM(v){ searchTerm=v.toLowerCase(); render(); }
-
-function markDone(id){
-  const pm=PM_DATA.find(p=>p.id===id);
-  if(pm){ pm.estado='done'; render(); }
-}
-
-function openModal(){ document.getElementById('modal-overlay').classList.remove('hidden'); }
-function closeModal(){ document.getElementById('modal-overlay').classList.add('hidden'); }
-
-function savePM(){
-  const nombre=document.getElementById('f-nombre').value.trim();
-  const activo=document.getElementById('f-activo').value;
-  const freq=document.getElementById('f-freq').value;
-  const fecha=document.getElementById('f-fecha').value;
-  if(!nombre||!fecha){ alert('Completa los campos obligatorios'); return; }
-  const nuevo={
-    id:'PM-0'+(PM_DATA.length+1),
-    nombre, activo:activo.split('·')[0].trim(),
-    area:activo.split('·')[1]?.trim()||'Planta 1',
-    freq, proxima:fecha, estado:'ok',
-    resp:document.getElementById('f-resp').value,
-    ext:document.getElementById('f-resp').value.includes('Externo'),
-    horas:parseInt(document.getElementById('f-horas').value)||1,
-    prio:document.getElementById('f-prio').value.toLowerCase()
+const SB_URL='https://aaugeuydymhwlcpklbmt.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhdWdldXlkeW1od2xjcGtsYm10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2NTg5MzksImV4cCI6MjA5MjIzNDkzOX0.Q2GeJKuf7l51Hsv3hUEeaO0NHaFeWXLIBrRUPgkQ0gw';
+let db,USER;
+(function(){
+  const s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+  s.onload=function(){
+    db=window.supabase.createClient(SB_URL,SB_KEY);
+    USER=JSON.parse(localStorage.getItem('qdc_user')||'{}');
+    if(!USER.rol){window.location.href='index.html';return;}
+    buildSidebar();
+    if(USER.rol==='g')document.getElementById('nav-config').style.display='flex';
+    if(typeof pageInit==='function') pageInit();
   };
-  PM_DATA.push(nuevo);
-  closeModal();
-  render();
+  document.head.appendChild(s);
+})();
+function ini(e){const p=(e||'').split('@')[0].split(/[._-]/);return p.slice(0,2).map(x=>x[0]?.toUpperCase()||'').join('')||'QD';}
+function buildSidebar(){
+  const C={t:'#185FA5',s:'#854F0B',g:'#27500A'},T={t:'#B5D4F4',s:'#FAC775',g:'#C0DD97'},R={t:'Técnico de Mantenimiento',s:'Supervisor de Mantenimiento',g:'Gerente de Operaciones'};
+  document.getElementById('sb-user').innerHTML=`<div class="u-av" style="background:${C[USER.rol]};color:${T[USER.rol]}">${ini(USER.email||USER.nombre)}</div><div style="min-width:0;flex:1"><div class="u-name">${USER.nombre||USER.email}</div><div class="u-role">${R[USER.rol]||''}</div></div><button class="u-logout" onclick="doLogout()">⏏</button>`;
+}
+function doLogout(){localStorage.removeItem('qdc_user');window.location.href='index.html';}
+async function audit(tipo,accion,detalle){
+  try{await db.from('auditoria').insert({usuario_id:USER.id,usuario_nombre:USER.nombre||USER.email,tipo,accion,detalle});}catch(e){}
+}
+let _tT;
+function showToast(msg,col){const t=document.getElementById('toast');t.textContent=msg;t.style.borderColor=col||'rgba(33,150,243,0.3)';t.classList.add('show');clearTimeout(_tT);_tT=setTimeout(()=>t.classList.remove('show'),3200);}
+function openModal(html){document.getElementById('modal-inner').innerHTML=html;document.getElementById('modal-overlay').classList.remove('hidden');}
+function closeModal(){document.getElementById('modal-overlay').classList.add('hidden');}
+
+
+let PMS=[], PMS_F=[], EST_F='';
+function pageInit(){
+  if(USER.rol==='s') document.getElementById('btn-nuevo-pm').style.display='block';
+  loadPM();
+}
+async function loadPM(){
+  try{
+    const{data,error}=await db.from('plan_pm').select('*').order('proxima_fecha');
+    if(error) throw error;
+    PMS=data&&data.length?data:demosPM();
+  }catch(e){ PMS=demosPM(); showToast('Mostrando datos demo'); }
+  updateStats(); renderPM(PMS);
+}
+function demosPM(){
+  const hoy=new Date();
+  const f=(d)=>{const x=new Date(hoy);x.setDate(x.getDate()+d);return x.toISOString().split('T')[0];};
+  return[
+    {id:'p1',nombre:'Cambio aceite Compresor C-101',activo:'Compresor C-101',frecuencia:'Mensual',proxima_fecha:f(-12),estado:'overdue',responsable:'Luis García',es_externo:false},
+    {id:'p2',nombre:'Revisión sello mecánico Bomba P-205',activo:'Bomba P-205',frecuencia:'Semestral',proxima_fecha:f(-5),estado:'overdue',responsable:'María Pérez',es_externo:false},
+    {id:'p3',nombre:'Lubricación rodamientos Motor MO-18',activo:'Motor MO-18',frecuencia:'Mensual',proxima_fecha:f(3),estado:'soon',responsable:'Luis García',es_externo:false},
+    {id:'p4',nombre:'Limpieza filtros Enfriadora CH-3',activo:'Enfriadora CH-3',frecuencia:'Quincenal',proxima_fecha:f(5),estado:'soon',responsable:'R. Torres',es_externo:false},
+    {id:'p5',nombre:'Inspección termográfica tableros',activo:'Tablero E-01',frecuencia:'Anual',proxima_fecha:f(290),estado:'ok',responsable:'Termograf SpA',es_externo:true},
+    {id:'p6',nombre:'Calibración sensores Línea A',activo:'Línea A',frecuencia:'Trimestral',proxima_fecha:f(45),estado:'ok',responsable:'E. Castro',es_externo:false},
+    {id:'p7',nombre:'PM semestral sistema vapor Turbina T-01',activo:'Turbina T-01',frecuencia:'Semestral',proxima_fecha:f(-3),estado:'overdue',responsable:'E. Castro',es_externo:false},
+  ];
+}
+function getEst(pm){
+  if(pm.estado) return pm.estado;
+  const d=new Date(pm.proxima_fecha),hoy=new Date();
+  const diff=Math.floor((d-hoy)/(1000*60*60*24));
+  if(diff<0) return 'overdue';
+  if(diff<=7) return 'soon';
+  return 'ok';
+}
+function updateStats(){
+  const total=PMS.length;
+  const venc=PMS.filter(p=>getEst(p)==='overdue').length;
+  const prox=PMS.filter(p=>getEst(p)==='soon').length;
+  const ok=PMS.filter(p=>getEst(p)==='ok').length;
+  const pct=total?Math.round(((total-venc)/total)*100):0;
+  document.getElementById('st-total').textContent=total;
+  document.getElementById('st-venc').textContent=venc;
+  document.getElementById('st-prox').textContent=prox;
+  document.getElementById('st-ok').textContent=ok;
+  document.getElementById('st-pct').textContent=pct+'%';
+  document.getElementById('pm-bar').style.width=pct+'%';
+  document.getElementById('pm-pct-label').textContent=pct+'% cumplimiento mes';
+}
+const EST_COLOR={overdue:'var(--crit)',soon:'var(--warn)',ok:'rgba(131,131,139,0.5)'};
+const EST_LABEL={overdue:'Vencida',soon:'Próxima',ok:'Programada'};
+const EST_BADGE={overdue:'b-crit',soon:'b-warn',ok:'b-pm'};
+function renderPM(list){
+  if(!list.length){document.getElementById('pm-content').innerHTML='<div class="empty"><span style="font-size:32px;opacity:0.2">🔄</span><span>Sin rutinas PM</span></div>';return;}
+  const canEdit=USER.rol==='s';
+  document.getElementById('pm-content').innerHTML=`<table class="data-table">
+    <thead><tr><th>Tarea PM / Activo</th><th>Frecuencia</th><th>Próxima fecha</th><th>Estado</th><th>Responsable</th>${canEdit?'<th></th>':''}</tr></thead>
+    <tbody>${list.map(p=>{
+      const e=getEst(p),fecha=p.proxima_fecha||'—';
+      return`<tr>
+        <td><div style="font-size:12px;font-weight:500;color:var(--white)">${p.nombre}</div><div style="font-size:10px;color:rgba(131,131,139,0.5);margin-top:1px">${p.activo||'—'}</div></td>
+        <td><span class="badge b-pm">${p.frecuencia||'—'}</span></td>
+        <td style="font-size:11px;font-family:monospace;font-weight:500;color:${EST_COLOR[e]}">${fecha}</td>
+        <td><span class="badge ${EST_BADGE[e]}">${EST_LABEL[e]}</span></td>
+        <td style="font-size:11px;color:${p.es_externo?'var(--ext)':'rgba(200,210,225,0.6)'}">${p.responsable||'—'}</td>
+        ${canEdit?`<td><button class="tb-btn" style="font-size:10px;padding:3px 9px;background:rgba(99,153,34,0.1);color:#C0DD97;border:0.5px solid rgba(99,153,34,0.3)" onclick="marcarHecho('${p.id}')">✓ Hecho</button></td>`:''}
+      </tr>`;
+    }).join('')}</tbody>
+  </table>`;
+}
+function filterPM(val){
+  const v=val.toLowerCase();
+  PMS_F=PMS.filter(p=>(p.nombre||'').toLowerCase().includes(v)||(p.activo||'').toLowerCase().includes(v));
+  if(EST_F) PMS_F=PMS_F.filter(p=>getEst(p)===EST_F);
+  renderPM(PMS_F.length||val||EST_F?PMS_F:PMS);
+}
+function filterByEst(v){EST_F=v;filterPM(document.querySelector('.sw input')?.value||'');}
+async function marcarHecho(id){
+  const pm=PMS.find(p=>p.id===id);
+  if(!pm) return;
+  // Calcular próxima fecha según frecuencia
+  const freq={Mensual:30,Quincenal:15,Semestral:180,Anual:365,Trimestral:90};
+  const dias=freq[pm.frecuencia]||30;
+  const nueva=new Date();nueva.setDate(nueva.getDate()+dias);
+  const nuevaFecha=nueva.toISOString().split('T')[0];
+  try{
+    const{error}=await db.from('plan_pm').update({estado:'ok',proxima_fecha:nuevaFecha}).eq('id',id);
+    if(error) throw error;
+    pm.estado='ok'; pm.proxima_fecha=nuevaFecha;
+    await audit('pm',`PM realizado: ${pm.nombre}`,`Próxima: ${nuevaFecha}`);
+    showToast('✓ PM marcado como realizado. Próxima: '+nuevaFecha,'rgba(99,153,34,0.4)');
+    updateStats(); renderPM(PMS);
+  }catch(err){ showToast('✕ Error: '+err.message,'rgba(226,75,74,0.4)'); }
+}
+function openNuevoPM(){
+  openModal(`<div class="modal-header"><div class="modal-title">Nueva rutina PM</div><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div class="form-group"><label class="form-label">Nombre de la tarea *</label><input type="text" class="form-input" id="np-nombre" placeholder="ej: Cambio aceite compresor"/></div>
+    <div class="form-row" style="margin-bottom:12px">
+      <div class="form-group"><label class="form-label">Activo *</label><select class="form-select" id="np-activo"><option>Compresor C-101</option><option>Bomba P-205</option><option>Motor MO-18</option><option>Turbina T-01</option><option>Enfriadora CH-3</option><option>Tablero E-01</option><option>Otro</option></select></div>
+      <div class="form-group"><label class="form-label">Frecuencia</label><select class="form-select" id="np-freq"><option>Mensual</option><option>Quincenal</option><option>Trimestral</option><option>Semestral</option><option>Anual</option></select></div>
+    </div>
+    <div class="form-row" style="margin-bottom:12px">
+      <div class="form-group"><label class="form-label">Próxima fecha *</label><input type="date" class="form-input" id="np-fecha"/></div>
+      <div class="form-group"><label class="form-label">Responsable</label><input type="text" class="form-input" id="np-resp" placeholder="Nombre técnico"/></div>
+    </div>
+    <div class="modal-footer"><button class="btn-cancel" onclick="closeModal()">Cancelar</button><button class="btn-save" onclick="guardarPM()">Crear rutina</button></div>`);
+}
+async function guardarPM(){
+  const nombre=document.getElementById('np-nombre').value.trim();
+  const fecha=document.getElementById('np-fecha').value;
+  if(!nombre||!fecha){showToast('⚠️ Nombre y fecha son obligatorios','rgba(226,75,74,0.4)');return;}
+  const nuevo={nombre,activo:document.getElementById('np-activo').value,frecuencia:document.getElementById('np-freq').value,proxima_fecha:fecha,estado:'ok',responsable:document.getElementById('np-resp').value.trim()||USER.nombre||USER.email,es_externo:false};
+  try{
+    const{data,error}=await db.from('plan_pm').insert(nuevo).select().single();
+    if(error) throw error;
+    PMS.unshift(data);
+    await audit('pm','Creó rutina PM',nombre);
+    closeModal(); showToast('✓ Rutina PM creada','rgba(99,153,34,0.4)'); updateStats(); renderPM(PMS);
+  }catch(err){ showToast('✕ Error: '+err.message,'rgba(226,75,74,0.4)'); }
 }
 
-document.getElementById('modal-overlay').addEventListener('click',function(e){
-  if(e.target===this) closeModal();
-});
-
-function setRole(r){
-  role=r; statFilter='todos';
-  ['t','s','g'].forEach(x=>{
-    document.getElementById('rb-'+x).className='rbtn'+(x===r?` on-${r}`:'');
-  });
-  document.getElementById('btn-new').style.display=r==='s'?'':'none';
-  buildNav(); buildUser(); render();
-}
-
-setRole('s');
 </script>
 </body>
 </html>

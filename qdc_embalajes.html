@@ -7,890 +7,289 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;}
-:root{
-  --navy:#08223D;--mid:#0B2545;--deep:#061C2E;
-  --accent:#2196F3;--white:#EEF4FF;
-  --ok:#97C459;--warn:#EF9F27;--crit:#E24B4A;--ext:#5DCAA5;
-  --emb:#D85A30;--emb-light:#F0997B;--emb-bg:rgba(216,90,48,0.12);
-  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.10);
-  --font:'Barlow',sans-serif;--head:'Barlow Condensed',sans-serif;
-}
-body{font-family:var(--font);background:#050F1C;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;}
-.shell{display:flex;width:100%;max-width:1100px;height:860px;background:var(--mid);border-radius:12px;overflow:hidden;border:1px solid var(--border2);}
 
-/* SIDEBAR */
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--navy:#08223D;--mid:#0B2545;--deep:#061C2E;--accent:#2196F3;--white:#EEF4FF;--ok:#97C459;--warn:#EF9F27;--crit:#E24B4A;--ext:#5DCAA5;--pm:#7F77DD;--emb:#D85A30;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.10);--font:'Barlow',sans-serif;--head:'Barlow Condensed',sans-serif;}
+body{font-family:var(--font);background:#050F1C;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;}
+.shell{display:flex;width:100%;max-width:1100px;min-height:900px;background:var(--mid);border-radius:12px;overflow:hidden;border:1px solid var(--border2);}
 .sidebar{width:210px;flex-shrink:0;background:var(--navy);display:flex;flex-direction:column;border-right:1px solid var(--border);}
 .sb-logo{padding:16px 14px 12px;border-bottom:1px solid var(--border);}
-.sb-logo-mark{font-family:var(--head);font-size:16px;font-weight:700;color:var(--white);letter-spacing:1px;}
+.sb-logo-mark{font-family:var(--head);font-size:15px;font-weight:700;color:var(--white);letter-spacing:1px;}
 .sb-logo-sub{font-size:9px;color:rgba(131,131,139,0.6);margin-top:2px;}
-.sb-logo-line{width:20px;height:2px;background:var(--emb);margin-top:5px;}
-.sb-role{padding:8px 12px;border-bottom:1px solid var(--border);}
-.sb-role-label{font-size:9px;color:rgba(131,131,139,0.5);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px;}
-.role-sw{display:flex;gap:3px;}
-.rbtn{flex:1;padding:5px 0;font-size:10px;font-weight:600;border-radius:3px;border:none;cursor:pointer;background:rgba(255,255,255,0.05);color:rgba(131,131,139,0.7);transition:all .15s;font-family:var(--font);}
-.rbtn.on-t{background:#185FA5;color:#B5D4F4;}
-.rbtn.on-s{background:#854F0B;color:#FAC775;}
-.rbtn.on-g{background:#27500A;color:#C0DD97;}
+.sb-logo-line{width:20px;height:2px;background:var(--accent);margin-top:5px;}
 .sb-nav{flex:1;overflow-y:auto;padding:6px 0;}
 .sb-nav::-webkit-scrollbar{width:2px;}
-.sb-nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);}
 .nav-sec{padding:10px 14px 3px;font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(131,131,139,0.4);}
-.nav-item{display:flex;align-items:center;gap:8px;padding:8px 14px;cursor:pointer;transition:background .1s;border-left:2px solid transparent;}
+.nav-item{display:flex;align-items:center;gap:8px;padding:8px 14px;cursor:pointer;border-left:2px solid transparent;transition:background .1s;text-decoration:none;}
 .nav-item:hover{background:rgba(255,255,255,0.04);}
-.nav-item.active{background:var(--emb-bg);border-left-color:var(--emb);}
+.nav-item.active{background:rgba(33,150,243,0.12);border-left-color:var(--accent);}
 .nav-icon{font-size:13px;width:16px;text-align:center;flex-shrink:0;}
 .nav-label{font-size:12px;color:rgba(200,210,225,0.7);flex:1;}
 .nav-item.active .nav-label{color:var(--white);font-weight:500;}
-.nav-badge{font-size:9px;font-weight:600;padding:1px 5px;border-radius:8px;background:#A32D2D;color:#F7C1C1;}
-.nav-badge.w{background:#854F0B;color:#FAC775;}
-.nav-badge.e{background:#0F6E56;color:#9FE1CB;}
 .sb-user{padding:10px 12px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;}
 .u-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;}
 .u-name{font-size:11px;color:var(--white);font-weight:500;}
 .u-role{font-size:9px;color:rgba(131,131,139,0.6);}
-
-/* MAIN */
+.u-logout{margin-left:auto;background:none;border:none;color:rgba(131,131,139,0.4);cursor:pointer;font-size:11px;padding:3px 6px;border-radius:3px;}
 .main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;}
 .topbar{height:50px;background:var(--mid);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0;}
-.page-title{font-family:var(--head);font-size:16px;font-weight:600;color:var(--white);flex:1;letter-spacing:0.5px;}
+.page-title{font-family:var(--head);font-size:16px;font-weight:600;color:var(--white);flex:1;}
 .tb-btn{padding:6px 13px;border-radius:5px;border:none;font-size:12px;font-weight:500;cursor:pointer;font-family:var(--font);transition:all .15s;}
-.btn-p{background:var(--emb);color:#fff;}
-.btn-p:hover{background:#993C1D;}
+.btn-p{background:var(--accent);color:#fff;}.btn-p:hover{background:#1976D2;}
 .btn-g{background:rgba(255,255,255,0.06);color:rgba(200,210,225,0.8);border:0.5px solid rgba(255,255,255,0.1);}
-.btn-g:hover{background:rgba(255,255,255,0.1);}
-.view-toggle{display:flex;background:rgba(255,255,255,0.05);border-radius:5px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);}
-.vbtn{padding:5px 12px;font-size:11px;font-weight:500;cursor:pointer;border:none;background:transparent;color:rgba(200,210,225,0.5);transition:all .15s;font-family:var(--font);}
-.vbtn.on{background:var(--emb);color:#fff;}
-
-/* STATS */
-.stats-row{display:flex;gap:1px;background:rgba(255,255,255,0.04);border-bottom:1px solid var(--border);flex-shrink:0;}
-.stat{flex:1;padding:10px 14px;text-align:center;}
-.stat-val{font-size:20px;font-weight:500;color:var(--white);}
-.stat-val.emb{color:var(--emb-light);}
-.stat-val.ok{color:var(--ok);}
-.stat-val.warn{color:var(--warn);}
-.stat-label{font-size:10px;color:rgba(131,131,139,0.5);margin-top:2px;}
-
-/* CONTENT */
-.content{flex:1;overflow-y:auto;padding:16px;}
-.content::-webkit-scrollbar{width:3px;}
-.content::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);}
-
-/* SPLIT */
-.split{flex:1;display:flex;overflow:hidden;}
-
-/* LEFT LIST */
-.list-panel{width:260px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
-.lp-header{padding:10px;border-bottom:1px solid var(--border);flex-shrink:0;}
-.lp-search{display:flex;align-items:center;gap:5px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:5px;padding:5px 8px;margin-bottom:7px;}
-.lp-search input{background:none;border:none;outline:none;color:var(--white);font-size:11px;width:100%;font-family:var(--font);}
-.lp-search input::placeholder{color:rgba(131,131,139,0.4);}
-.fchips{display:flex;gap:4px;flex-wrap:wrap;}
-.fchip{padding:3px 9px;border-radius:10px;font-size:10px;cursor:pointer;border:0.5px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:rgba(200,210,225,0.6);transition:all .1s;}
-.fchip:hover{background:rgba(255,255,255,0.08);}
-.fchip.on{background:var(--emb-bg);border-color:var(--emb);color:var(--emb-light);}
-.emb-list{flex:1;overflow-y:auto;padding:6px;}
-.emb-list::-webkit-scrollbar{width:2px;}
-.emb-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);}
-
-/* EMB CARD */
-.emb-card{padding:10px 11px;border-radius:7px;cursor:pointer;transition:background .1s;border:0.5px solid transparent;margin-bottom:3px;}
-.emb-card:hover{background:rgba(255,255,255,0.05);}
-.emb-card.selected{background:var(--emb-bg);border-color:rgba(216,90,48,0.3);}
-.ec-row1{display:flex;align-items:flex-start;gap:8px;margin-bottom:5px;}
-.ec-icon{width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;background:var(--emb-bg);}
-.ec-nv{font-size:12px;font-weight:500;color:var(--white);font-family:monospace;}
-.ec-client{font-size:11px;color:rgba(200,210,225,0.7);margin-top:1px;}
-.ec-row2{display:flex;align-items:center;justify-content:space-between;}
-.ec-cost{font-size:12px;font-weight:600;font-family:var(--head);color:var(--emb-light);}
-.ec-date{font-size:10px;color:rgba(131,131,139,0.5);font-family:monospace;}
-.ec-status{font-size:10px;font-weight:500;padding:2px 7px;border-radius:8px;}
-.es-ok{background:rgba(99,153,34,0.15);color:#C0DD97;}
-.es-pend{background:rgba(216,90,48,0.15);color:var(--emb-light);}
-
-/* DETAIL */
-.detail-panel{flex:1;display:flex;flex-direction:column;overflow:hidden;}
-.det-scroll{flex:1;overflow-y:auto;padding:16px;}
-.det-scroll::-webkit-scrollbar{width:3px;}
-.det-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);}
-.empty-det{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:rgba(131,131,139,0.35);}
-
-/* DETAIL HEADER */
-.det-header{display:flex;gap:12px;margin-bottom:14px;align-items:flex-start;}
-.det-icon-lg{width:56px;height:56px;border-radius:9px;background:var(--emb-bg);border:1px solid rgba(216,90,48,0.25);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;}
-.det-info{flex:1;}
-.det-nv{font-family:var(--head);font-size:18px;font-weight:600;color:var(--white);margin-bottom:2px;}
-.det-client{font-size:12px;color:rgba(200,210,225,0.7);margin-bottom:6px;}
-.det-badges{display:flex;gap:5px;flex-wrap:wrap;}
-.dbadge{font-size:10px;font-weight:500;padding:2px 8px;border-radius:10px;}
-.db-ok{background:rgba(99,153,34,0.15);color:#C0DD97;}
-.db-pend{background:rgba(216,90,48,0.15);color:var(--emb-light);}
-.db-tipo{background:var(--emb-bg);color:var(--emb-light);}
-.db-date{background:rgba(255,255,255,0.07);color:rgba(200,210,225,0.7);}
-
-/* KPIs */
-.kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
-.kpi{background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:7px;padding:10px 12px;}
+.stats-bar{display:flex;gap:1px;background:rgba(255,255,255,0.04);border-bottom:1px solid var(--border);flex-shrink:0;}
+.stat{flex:1;padding:9px 12px;text-align:center;}
+.stat-val{font-size:18px;font-weight:500;color:var(--white);}
+.stat-label{font-size:9px;color:rgba(131,131,139,0.5);margin-top:2px;text-transform:uppercase;}
+.content-pad{flex:1;overflow-y:auto;padding:16px;}
+.content-pad::-webkit-scrollbar{width:3px;}
+.content-pad::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);}
+.data-table{width:100%;border-collapse:collapse;margin-top:10px;}
+.data-table th{font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);padding:7px 10px;text-align:left;border-bottom:1px solid var(--border);}
+.data-table td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,0.03);vertical-align:middle;}
+.data-table tr:hover td{background:rgba(255,255,255,0.03);}
+.badge{font-size:10px;font-weight:500;padding:2px 8px;border-radius:10px;}
+.b-ok{background:rgba(99,153,34,0.15);color:#C0DD97;}
+.b-warn{background:rgba(239,159,39,0.15);color:#FAC775;}
+.b-crit{background:rgba(226,75,74,0.15);color:#F09595;}
+.b-ext{background:rgba(29,158,117,0.15);color:#5DCAA5;}
+.b-info{background:rgba(33,150,243,0.12);color:#85B7EB;}
+.b-pm{background:rgba(127,119,221,0.12);color:#AFA9EC;}
+.card{background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px;margin-bottom:12px;}
+.kpi-grid{display:grid;gap:10px;margin-bottom:14px;}
+.kpi-grid-4{grid-template-columns:repeat(4,1fr);}
+.kpi-grid-3{grid-template-columns:repeat(3,1fr);}
+.kpi{background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:12px 14px;position:relative;overflow:hidden;}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.kpi-blue::before{background:var(--accent);}.kpi-green::before{background:var(--ok);}
+.kpi-warn::before{background:var(--warn);}.kpi-crit::before{background:var(--crit);}
+.kpi-ext::before{background:var(--ext);}.kpi-pm::before{background:var(--pm);}
 .kpi-label{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px;}
-.kpi-val{font-size:20px;font-weight:600;font-family:var(--head);color:var(--white);}
+.kpi-val{font-size:22px;font-weight:600;font-family:var(--head);color:var(--white);}
 .kpi-sub{font-size:9px;color:rgba(131,131,139,0.45);margin-top:3px;}
-
-/* TABS */
-.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:12px;}
-.tab{padding:7px 14px;font-size:12px;cursor:pointer;color:rgba(200,210,225,0.45);border-bottom:2px solid transparent;transition:all .1s;}
-.tab:hover{color:rgba(200,210,225,0.8);}
-.tab.on{color:var(--white);border-bottom-color:var(--emb);font-weight:500;}
-
-/* MATERIALES */
-.sec-title{font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.45);margin-bottom:8px;}
-.mat-table{width:100%;border-collapse:collapse;margin-bottom:10px;}
-.mat-table th{font-size:9px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.4);padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);}
-.mat-table td{padding:8px 8px;border-bottom:1px solid rgba(255,255,255,0.03);font-size:12px;}
-.mat-table tr:last-child td{border-bottom:none;}
-.mat-total{display:flex;justify-content:flex-end;padding:8px 10px;background:var(--emb-bg);border-radius:6px;font-size:13px;font-weight:600;font-family:var(--head);color:var(--emb-light);}
-
-/* FOTOS */
-.foto-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
-.foto-box{background:rgba(255,255,255,0.03);border:1px dashed rgba(216,90,48,0.25);border-radius:8px;height:140px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;cursor:pointer;transition:all .15s;}
-.foto-box:hover{border-color:var(--emb);background:var(--emb-bg);}
-.foto-box.has-foto{border-style:solid;border-color:rgba(216,90,48,0.3);background:rgba(255,255,255,0.02);}
-.foto-label{font-size:11px;color:rgba(131,131,139,0.5);}
-.foto-sub{font-size:10px;color:rgba(131,131,139,0.35);}
-
-/* PDF */
-.pdf-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:7px;background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.06);margin-bottom:12px;cursor:pointer;transition:background .1s;}
-.pdf-row:hover{background:rgba(255,255,255,0.06);}
-.pdf-icon{font-size:20px;flex-shrink:0;}
-.pdf-name{flex:1;font-size:12px;color:var(--white);}
-.pdf-size{font-size:10px;color:rgba(131,131,139,0.5);}
-
-/* FICHA INFO */
-.ficha-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px;}
-.fg{background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px;}
-.fg-label{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px;}
-.fg-val{font-size:12px;color:var(--white);}
-
-/* MODAL */
-.modal-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:100;}
-.modal-overlay.hidden{display:none;}
-.modal{background:#0D2D48;border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;width:560px;max-height:720px;overflow-y:auto;padding:22px;}
-.modal::-webkit-scrollbar{width:3px;}
-.modal::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);}
-.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
-.modal-title{font-family:var(--head);font-size:16px;font-weight:600;color:var(--white);}
-.modal-close{font-size:16px;color:rgba(131,131,139,0.6);cursor:pointer;background:none;border:none;padding:2px 6px;}
-.modal-close:hover{color:var(--white);}
-.modal-sub{font-size:11px;color:rgba(131,131,139,0.5);margin-bottom:18px;}
-.form-section-title{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--emb-light);margin-bottom:10px;margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.06);}
-.form-section-title:first-of-type{border-top:none;padding-top:0;margin-top:0;}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
-.form-row.full{grid-template-columns:1fr;}
-.form-row.three{grid-template-columns:1fr 1fr 1fr;}
-.form-group{display:flex;flex-direction:column;gap:5px;}
-.form-label{font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.6);}
-.req{color:var(--emb-light);}
-.form-input,.form-select{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:var(--white);font-size:12px;font-family:var(--font);padding:8px 10px;outline:none;transition:border-color .1s;}
-.form-input:focus,.form-select:focus{border-color:var(--emb);}
-.form-input::placeholder{color:rgba(131,131,139,0.4);}
+.search-row{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.sw{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:5px;padding:5px 10px;flex:1;}
+.sw input{background:none;border:none;outline:none;color:var(--white);font-size:12px;font-family:var(--font);width:100%;}
+.sw input::placeholder{color:rgba(131,131,139,0.5);}
+.form-group{margin-bottom:12px;}
+.form-label{font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.6);margin-bottom:5px;display:block;}
+.form-input,.form-select,.form-textarea{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:var(--white);font-size:12px;font-family:var(--font);padding:8px 10px;outline:none;width:100%;transition:border-color .1s;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent);}
+.form-input::placeholder,.form-textarea::placeholder{color:rgba(131,131,139,0.4);}
 .form-select option{background:#0D2D48;}
-
-/* PLANTILLA SELECTOR */
-.kit-selector{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
-.kit-btn{padding:10px 8px;border-radius:7px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);cursor:pointer;transition:all .15s;text-align:center;}
-.kit-btn:hover{background:var(--emb-bg);border-color:rgba(216,90,48,0.3);}
-.kit-btn.on{background:var(--emb-bg);border-color:var(--emb);box-shadow:0 0 0 1px rgba(216,90,48,0.2);}
-.kit-icon{font-size:18px;margin-bottom:4px;}
-.kit-name{font-size:11px;font-weight:500;color:var(--white);}
-.kit-desc{font-size:10px;color:rgba(131,131,139,0.5);margin-top:2px;}
-
-/* MATERIALES EDITOR */
-.mat-editor{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;}
-.mat-row{display:grid;grid-template-columns:1fr 80px 90px 24px;gap:8px;align-items:center;}
-.mat-row-input{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:5px;color:var(--white);font-size:11px;font-family:var(--font);padding:6px 8px;outline:none;}
-.mat-row-input:focus{border-color:var(--emb);}
-.mat-row-label{font-size:10px;color:rgba(131,131,139,0.5);text-align:center;}
-.mat-row-cost{font-size:11px;font-family:var(--head);color:var(--emb-light);text-align:right;padding-right:4px;}
-.mat-del{background:none;border:none;color:rgba(226,75,74,0.5);cursor:pointer;font-size:14px;padding:2px;transition:color .1s;}
-.mat-del:hover{color:var(--crit);}
-.add-mat-btn{display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:5px;border:1px dashed rgba(255,255,255,0.1);background:transparent;color:rgba(200,210,225,0.5);cursor:pointer;font-size:11px;font-family:var(--font);transition:all .1s;}
-.add-mat-btn:hover{border-color:var(--emb);color:var(--emb-light);background:var(--emb-bg);}
-.costo-preview{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--emb-bg);border-radius:7px;border:1px solid rgba(216,90,48,0.2);margin-bottom:12px;}
-.cp-label{font-size:11px;color:rgba(200,210,225,0.6);}
-.cp-val{font-family:var(--head);font-size:20px;font-weight:600;color:var(--emb-light);}
-
-/* UPLOAD ZONES */
-.upload-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:4px;}
-.upload-zone{border:1px dashed rgba(216,90,48,0.25);border-radius:6px;padding:12px;text-align:center;cursor:pointer;transition:all .15s;}
-.upload-zone:hover{border-color:var(--emb);background:var(--emb-bg);}
-.uz-icon{font-size:18px;margin-bottom:3px;}
-.uz-label{font-size:11px;color:rgba(131,131,139,0.5);}
-.uz-sub{font-size:9px;color:rgba(131,131,139,0.3);margin-top:1px;}
-.uz-done{border-style:solid;border-color:rgba(216,90,48,0.4);background:rgba(216,90,48,0.04);}
-.uz-done .uz-label{color:var(--emb-light);}
-
+.form-textarea{resize:vertical;min-height:70px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;z-index:500;}
+.modal-overlay.hidden{display:none;}
+.modal{background:#0D2D48;border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;width:500px;max-height:85vh;overflow-y:auto;padding:22px;}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.modal-title{font-family:var(--head);font-size:16px;font-weight:600;color:var(--white);}
+.modal-close{font-size:16px;color:rgba(131,131,139,0.6);cursor:pointer;background:none;border:none;}
 .modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.07);}
 .btn-cancel{padding:7px 14px;border-radius:5px;border:0.5px solid rgba(255,255,255,0.1);background:transparent;color:rgba(200,210,225,0.7);cursor:pointer;font-size:12px;font-family:var(--font);}
-.btn-cancel:hover{background:rgba(255,255,255,0.06);}
-.btn-save{padding:7px 18px;border-radius:5px;border:none;background:var(--emb);color:#fff;cursor:pointer;font-size:12px;font-weight:600;font-family:var(--font);}
-.btn-save:hover{background:#993C1D;}
+.btn-save{padding:7px 18px;border-radius:5px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-size:12px;font-weight:600;font-family:var(--font);}
+.spinner{width:20px;height:20px;border:2px solid rgba(255,255,255,0.1);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading{display:flex;align-items:center;justify-content:center;padding:40px;gap:12px;color:rgba(131,131,139,0.5);}
+.empty{display:flex;align-items:center;justify-content:center;padding:60px;flex-direction:column;gap:12px;color:rgba(131,131,139,0.35);}
+#toast{position:fixed;bottom:24px;right:24px;background:#0D2D48;border:1px solid rgba(33,150,243,0.3);border-radius:8px;padding:12px 16px;font-size:12px;color:var(--white);z-index:9999;transform:translateY(60px);opacity:0;transition:all .3s;max-width:320px;pointer-events:none;}
+#toast.show{transform:translateY(0);opacity:1;}
 
-/* ANALYTICS VIEW */
-.analytics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
-.akpi{background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:12px;position:relative;overflow:hidden;}
-.akpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--emb);}
-.akpi-label{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px;}
-.akpi-val{font-size:22px;font-weight:600;font-family:var(--head);color:var(--emb-light);}
-.akpi-sub{font-size:10px;color:rgba(131,131,139,0.45);margin-top:3px;}
-.chart-card{background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px;}
-.cc-title{font-size:11px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);margin-bottom:12px;}
-.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
-.client-table{width:100%;border-collapse:collapse;}
-.client-table th{font-size:9px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.4);padding:6px 10px;text-align:left;border-bottom:1px solid var(--border);}
-.client-table td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,0.03);font-size:12px;color:var(--white);}
-.client-table tr:hover td{background:rgba(255,255,255,0.03);}
-.shell-wrap{position:relative;width:100%;max-width:1100px;}
+.kpi-emb::before{background:var(--emb);}
 </style>
 </head>
 <body>
-<div class="shell-wrap">
 <div class="shell">
+  <nav class="sidebar">
 
-<!-- SIDEBAR -->
-<nav class="sidebar">
-  <div class="sb-logo">
-    <div class="sb-logo-mark">QDC</div>
-    <div class="sb-logo-sub">Química del Campo S.p.A · CMMS Pro</div>
-    <div class="sb-logo-line"></div>
-  </div>
-  <div class="sb-role">
-    <div class="sb-role-label">Rol activo (demo)</div>
-    <div class="role-sw">
-      <button class="rbtn on-t" id="rb-t" onclick="setRole('t')">Téc.</button>
-      <button class="rbtn" id="rb-s" onclick="setRole('s')">Sup.</button>
-      <button class="rbtn" id="rb-g" onclick="setRole('g')">Ger.</button>
+    <div class="sb-logo">
+      <div class="sb-logo-mark">QDC · CMMS Pro</div>
+      <div class="sb-logo-sub">Química del Campo S.p.A</div>
+      <div class="sb-logo-line"></div>
     </div>
-  </div>
-  <div class="sb-nav" id="sb-nav"></div>
-  <div class="sb-user" id="sb-user"></div>
-</nav>
-
-<!-- MAIN -->
-<div class="main" style="position:relative">
-  <div class="topbar">
-    <div class="page-title">Embalajes</div>
-    <div class="view-toggle">
-      <button class="vbtn on" id="vb-list" onclick="setView('list')">📦 Registros</button>
-      <button class="vbtn" id="vb-analytics" onclick="setView('analytics')">📊 Análisis</button>
+    <div class="sb-nav">
+      <div class="nav-sec">Principal</div>
+      <a class="nav-item" href="qdc_dashboard.html"><span class="nav-icon">▦</span><span class="nav-label">Dashboard</span></a>
+      <a class="nav-item" href="qdc_ot.html"><span class="nav-icon">📋</span><span class="nav-label">Órdenes de trabajo</span></a>
+      <div class="nav-sec">Mantenimiento</div>
+      <a class="nav-item " href="qdc_pm.html"><span class="nav-icon">🔄</span><span class="nav-label">Plan preventivo</span></a>
+      <a class="nav-item " href="qdc_contratistas.html"><span class="nav-icon">🏢</span><span class="nav-label">Contratistas</span></a>
+      <div class="nav-sec">Recursos</div>
+      <a class="nav-item " href="qdc_activos.html"><span class="nav-icon">🏭</span><span class="nav-label">Activos y equipos</span></a>
+      <a class="nav-item" href="qdc_inventario.html"><span class="nav-icon">📦</span><span class="nav-label">Inventario</span></a>
+      <div class="nav-sec">Operaciones</div>
+      <a class="nav-item active" href="qdc_embalajes.html"><span class="nav-icon">📫</span><span class="nav-label">Embalajes</span></a>
+      <div class="nav-sec">Análisis</div>
+      <a class="nav-item " href="qdc_kpis.html"><span class="nav-icon">📊</span><span class="nav-label">KPIs y reportes</span></a>
+      <div class="nav-sec">Sistema</div>
+      <a class="nav-item " href="qdc_alertas.html"><span class="nav-icon">🔔</span><span class="nav-label">Alertas</span></a>
+      <a class="nav-item" id="nav-config" href="qdc_config.html" style="display:none"><span class="nav-icon">⚙️</span><span class="nav-label">Configuración</span></a>
     </div>
-    <button class="tb-btn btn-g">⬇ Exportar</button>
-    <button class="tb-btn btn-p" id="btn-new" onclick="openModal()">+ Nuevo embalaje</button>
-  </div>
+    <div class="sb-user" id="sb-user"></div>
 
-  <!-- STATS -->
-  <div class="stats-row">
-    <div class="stat"><div class="stat-val emb" id="sv-total">0</div><div class="stat-label">Embalajes mes</div></div>
-    <div class="stat"><div class="stat-val emb" id="sv-costo">$0</div><div class="stat-label">Costo total mes</div></div>
-    <div class="stat"><div class="stat-val ok" id="sv-prom">$0</div><div class="stat-label">Costo promedio</div></div>
-    <div class="stat"><div class="stat-val" style="color:#85B7EB" id="sv-clientes">0</div><div class="stat-label">Clientes atendidos</div></div>
-    <div class="stat"><div class="stat-val warn" id="sv-pend">0</div><div class="stat-label">Sin documentos</div></div>
-  </div>
+  </nav>
+  <div class="main">
 
-  <!-- SPLIT VIEW -->
-  <div class="split" id="split-view">
-    <div class="list-panel">
-      <div class="lp-header">
-        <div class="lp-search">
-          <span style="font-size:11px;color:rgba(131,131,139,0.4)">🔍</span>
-          <input type="text" placeholder="NV, cliente…" oninput="filterEmb(this.value)"/>
-        </div>
-        <div class="fchips">
-          <span class="fchip on" onclick="chipF(this,'todos')">Todos</span>
-          <span class="fchip" onclick="chipF(this,'completo')">Completos</span>
-          <span class="fchip" onclick="chipF(this,'pendiente')">Pendientes</span>
-        </div>
-      </div>
-      <div class="emb-list" id="emb-list"></div>
+    <div class="topbar">
+      <div class="page-title">Embalajes</div>
+      <button class="tb-btn btn-g" onclick="loadEmb()">↻ Actualizar</button>
+      <button class="tb-btn" id="btn-nuevo-emb" style="display:none;background:var(--emb);color:#fff" onclick="openNuevoEmb()">+ Nuevo embalaje</button>
+    </div>
+    <div class="stats-bar">
+      <div class="stat"><div class="stat-val" id="st-total" style="color:#F0997B">—</div><div class="stat-label">Embalajes mes</div></div>
+      <div class="stat"><div class="stat-val" id="st-costo" style="color:#F0997B">—</div><div class="stat-label">Costo total</div></div>
+      <div class="stat"><div class="stat-val" id="st-prom" style="color:var(--ok)">—</div><div class="stat-label">Promedio</div></div>
+      <div class="stat"><div class="stat-val" id="st-clientes" style="color:#85B7EB">—</div><div class="stat-label">Clientes</div></div>
+      <div class="stat"><div class="stat-val" id="st-pend" style="color:var(--warn)">—</div><div class="stat-label">Sin documentos</div></div>
+    </div>
+    <div class="search-row">
+      <div class="sw"><span style="font-size:11px;color:rgba(131,131,139,0.5)">🔍</span><input type="text" placeholder="NV, cliente…" oninput="filterEmb(this.value)"/></div>
+      <select class="form-select" style="width:130px;padding:6px 10px" onchange="filterByEst(this.value)">
+        <option value="">Todos</option>
+        <option value="completo">Completos</option>
+        <option value="pendiente">Pendientes</option>
+      </select>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:0 14px 12px" id="emb-content">
+      <div class="loading"><div class="spinner"></div><span>Cargando embalajes…</span></div>
     </div>
 
-    <div class="detail-panel">
-      <div class="empty-det" id="empty-det">
-        <span style="font-size:36px;opacity:0.25">📦</span>
-        <span style="font-size:13px">Selecciona un embalaje para ver su detalle</span>
-      </div>
-      <div class="det-scroll" id="det-content" style="display:none"></div>
-    </div>
   </div>
-
-  <!-- ANALYTICS VIEW -->
-  <div class="content" id="analytics-view" style="display:none"></div>
-
-  <!-- MODAL -->
-  <div class="modal-overlay hidden" id="modal-overlay">
-    <div class="modal">
-      <div class="modal-header">
-        <div class="modal-title">Registrar embalaje</div>
-        <button class="modal-close" onclick="closeModal()">✕</button>
-      </div>
-      <div class="modal-sub">Selecciona una plantilla para precargar los materiales, luego ajusta según el pedido.</div>
-
-      <!-- PLANTILLAS -->
-      <div class="form-section-title">Plantilla base</div>
-      <div class="kit-selector">
-        <div class="kit-btn on" id="kit-0" onclick="selectKit(0)">
-          <div class="kit-icon">📦</div>
-          <div class="kit-name">Cajón pequeño</div>
-          <div class="kit-desc">Hasta 50 kg · ≤0.3m³</div>
-        </div>
-        <div class="kit-btn" id="kit-1" onclick="selectKit(1)">
-          <div class="kit-icon">📫</div>
-          <div class="kit-name">Cajón mediano</div>
-          <div class="kit-desc">50–150 kg · 0.3–1m³</div>
-        </div>
-        <div class="kit-btn" id="kit-2" onclick="selectKit(2)">
-          <div class="kit-icon">🗃️</div>
-          <div class="kit-name">Cajón exportación</div>
-          <div class="kit-desc">>150 kg · reforzado</div>
-        </div>
-      </div>
-
-      <!-- DATOS PEDIDO -->
-      <div class="form-section-title">Datos del pedido</div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Nota de venta <span class="req">*</span></label>
-          <input type="text" class="form-input" placeholder="NV-2025-XXXX" id="f-nv"/>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Cliente <span class="req">*</span></label>
-          <input type="text" class="form-input" placeholder="Razón social o nombre" id="f-cliente"/>
-        </div>
-      </div>
-      <div class="form-row three">
-        <div class="form-group">
-          <label class="form-label">Fecha</label>
-          <input type="date" class="form-input" id="f-fecha" value="2025-04-17"/>
-        </div>
-        <div class="form-group">
-          <label class="form-label">N° cajones</label>
-          <select class="form-select" id="f-ncajones">
-            <option value="1">1 cajón</option>
-            <option value="2">2 cajones</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Destino</label>
-          <input type="text" class="form-input" placeholder="Ciudad / País" id="f-destino"/>
-        </div>
-      </div>
-
-      <!-- MATERIALES -->
-      <div class="form-section-title">Materiales consumidos</div>
-      <div style="display:grid;grid-template-columns:1fr 80px 90px 24px;gap:8px;margin-bottom:4px;">
-        <span class="mat-row-label" style="text-align:left;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.4)">Material</span>
-        <span class="mat-row-label" style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.4)">Cant.</span>
-        <span class="mat-row-label" style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.4);text-align:right">Subtotal</span>
-        <span></span>
-      </div>
-      <div class="mat-editor" id="mat-editor"></div>
-      <button class="add-mat-btn" onclick="addMatRow()">＋ Agregar material</button>
-
-      <div class="costo-preview" style="margin-top:12px">
-        <span class="cp-label">Costo total estimado del embalaje</span>
-        <span class="cp-val" id="costo-preview">$0</span>
-      </div>
-
-      <!-- DOCUMENTOS -->
-      <div class="form-section-title">Documentos y fotos</div>
-      <div class="upload-row">
-        <div class="upload-zone" id="uz-foto1" onclick="fakeUpload('uz-foto1','📷','Foto 1 subida')">
-          <div class="uz-icon">📷</div>
-          <div class="uz-label">Foto 1</div>
-          <div class="uz-sub">JPG / PNG</div>
-        </div>
-        <div class="upload-zone" id="uz-foto2" onclick="fakeUpload('uz-foto2','📷','Foto 2 subida')">
-          <div class="uz-icon">📷</div>
-          <div class="uz-label">Foto 2</div>
-          <div class="uz-sub">JPG / PNG</div>
-        </div>
-        <div class="upload-zone" id="uz-pdf" onclick="fakeUpload('uz-pdf','📄','Nota de pedido.pdf')">
-          <div class="uz-icon">📄</div>
-          <div class="uz-label">Nota de pedido</div>
-          <div class="uz-sub">PDF</div>
-        </div>
-      </div>
-      <div style="font-size:10px;color:rgba(131,131,139,0.4);margin-top:4px;margin-bottom:2px">Máx. 10 MB por archivo · Las fotos son opcionales, el PDF es recomendado</div>
-
-      <div class="modal-footer">
-        <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
-        <button class="btn-save" onclick="saveEmbalaje()">Registrar embalaje</button>
-      </div>
-    </div>
-  </div>
-
 </div>
-</div>
-</div>
-
+<div id="toast"></div>
+<div class="modal-overlay hidden" id="modal-overlay"><div class="modal" id="modal-inner"></div></div>
 <script>
-// ── KITS BASE ──
-const KITS = [
-  { nombre:"Cajón pequeño", materiales:[
-    {mat:"Tablas pino 1\"×6\"×8'",  qty:6,  precio:4200},
-    {mat:"Clavos 3\" (caja 100u)",   qty:1,  precio:3500},
-    {mat:"Zuncho plástico 19mm",     qty:2,  precio:2800},
-    {mat:"Esquineros metálicos",     qty:4,  precio:1200},
-  ]},
-  { nombre:"Cajón mediano", materiales:[
-    {mat:"Tablas pino 1\"×8\"×10'", qty:10, precio:5800},
-    {mat:"Clavos 3\" (caja 100u)",  qty:2,  precio:3500},
-    {mat:"Zuncho metálico 16mm",    qty:3,  precio:4200},
-    {mat:"Esquineros metálicos",    qty:8,  precio:1200},
-    {mat:"Espuma PE 30mm",          qty:2,  precio:6500},
-  ]},
-  { nombre:"Cajón exportación", materiales:[
-    {mat:"Tablas pino 1\"×8\"×12'", qty:16, precio:6800},
-    {mat:"Clavos 4\" (caja 100u)",  qty:3,  precio:4200},
-    {mat:"Zuncho metálico 25mm",    qty:6,  precio:5500},
-    {mat:"Esquineros metálicos",    qty:12, precio:1200},
-    {mat:"Espuma PE 50mm",          qty:4,  precio:8200},
-    {mat:"Etiquetas exportación",   qty:2,  precio:1800},
-  ]},
-];
 
-const EMBALAJES = [
-  {id:"EMB-001",nv:"NV-2025-0412",cliente:"Comercial Andina SpA",fecha:"16/04/2025",tipo:"Cajón mediano",ncajones:1,destino:"Antofagasta",costo:68400,
-   materiales:[{mat:"Tablas pino 1\"×8\"×10'",qty:10,precio:5800},{mat:"Clavos 3\"",qty:2,precio:3500},{mat:"Zuncho metálico 16mm",qty:3,precio:4200},{mat:"Esquineros metálicos",qty:8,precio:1200},{mat:"Espuma PE 30mm",qty:2,precio:6500}],
-   foto1:true,foto2:true,pdf:true,estado:"completo",tecnico:"Luis García"},
-  {id:"EMB-002",nv:"NV-2025-0408",cliente:"Minera del Norte SA",fecha:"14/04/2025",tipo:"Cajón exportación",ncajones:2,destino:"Calama · Exportación",costo:218600,
-   materiales:[{mat:"Tablas pino 1\"×8\"×12'",qty:16,precio:6800},{mat:"Clavos 4\"",qty:3,precio:4200},{mat:"Zuncho metálico 25mm",qty:6,precio:5500},{mat:"Esquineros metálicos",qty:12,precio:1200},{mat:"Espuma PE 50mm",qty:4,precio:8200},{mat:"Etiquetas exportación",qty:2,precio:1800}],
-   foto1:true,foto2:false,pdf:true,estado:"pendiente",tecnico:"Luis García"},
-  {id:"EMB-003",nv:"NV-2025-0401",cliente:"Ferretería Central Ltda.",fecha:"10/04/2025",tipo:"Cajón pequeño",ncajones:1,destino:"Santiago",costo:29700,
-   materiales:[{mat:"Tablas pino 1\"×6\"×8'",qty:6,precio:4200},{mat:"Clavos 3\"",qty:1,precio:3500},{mat:"Zuncho plástico 19mm",qty:2,precio:2800},{mat:"Esquineros metálicos",qty:4,precio:1200}],
-   foto1:true,foto2:true,pdf:true,estado:"completo",tecnico:"Luis García"},
-  {id:"EMB-004",nv:"NV-2025-0395",cliente:"Industrias Pérez Hnos.",fecha:"07/04/2025",tipo:"Cajón mediano",ncajones:1,destino:"Valparaíso",costo:68400,
-   materiales:[{mat:"Tablas pino 1\"×8\"×10'",qty:10,precio:5800},{mat:"Clavos 3\"",qty:2,precio:3500},{mat:"Zuncho metálico 16mm",qty:3,precio:4200},{mat:"Esquineros metálicos",qty:8,precio:1200},{mat:"Espuma PE 30mm",qty:2,precio:6500}],
-   foto1:true,foto2:false,pdf:false,estado:"pendiente",tecnico:"Luis García"},
-  {id:"EMB-005",nv:"NV-2025-0388",cliente:"Comercial Andina SpA",fecha:"02/04/2025",tipo:"Cajón pequeño",ncajones:1,destino:"Antofagasta",costo:29700,
-   materiales:[{mat:"Tablas pino 1\"×6\"×8'",qty:6,precio:4200},{mat:"Clavos 3\"",qty:1,precio:3500},{mat:"Zuncho plástico 19mm",qty:2,precio:2800},{mat:"Esquineros metálicos",qty:4,precio:1200}],
-   foto1:true,foto2:true,pdf:true,estado:"completo",tecnico:"Luis García"},
-];
-
-const ROLES={
-  t:{name:"Luis García",  role:"Técnico de Mantenimiento",   color:"#185FA5",tc:"#B5D4F4",initials:"LG"},
-  s:{name:"María Solís",  role:"Supervisora de Mantenimiento",color:"#854F0B",tc:"#FAC775",initials:"MS"},
-  g:{name:"Carlos Reyes", role:"Gerente de Operaciones",      color:"#27500A",tc:"#C0DD97",initials:"CR"}
-};
-const NAV={
-  t:[
-    {sec:"Principal",items:[{i:"▦",l:"Dashboard"},{i:"📋",l:"Órdenes de trabajo",b:"3"}]},
-    {sec:"Mantenimiento",items:[{i:"🔧",l:"Correctivo"},{i:"🔄",l:"Plan preventivo"}]},
-    {sec:"Recursos",items:[{i:"🏭",l:"Activos"},{i:"📦",l:"Inventario"}]},
-    {sec:"Operaciones",items:[{i:"📫",l:"Embalajes",active:true}]},
-    {sec:"Sistema",items:[{i:"🔔",l:"Alertas",b:"2",bt:"w"}]}
-  ],
-  s:[
-    {sec:"Principal",items:[{i:"▦",l:"Dashboard"},{i:"📋",l:"OT",b:"7"}]},
-    {sec:"Mantenimiento",items:[{i:"🏢",l:"Contratistas",b:"2",bt:"e"},{i:"🔄",l:"Plan preventivo"},{i:"🔧",l:"Correctivo"}]},
-    {sec:"Recursos",items:[{i:"🏭",l:"Activos"},{i:"📦",l:"Inventario",b:"3",bt:"w"}]},
-    {sec:"Operaciones",items:[{i:"📫",l:"Embalajes",active:true}]},
-    {sec:"Análisis",items:[{i:"📊",l:"KPIs"},{i:"💰",l:"Costos"}]},
-    {sec:"Sistema",items:[{i:"🔔",l:"Alertas",b:"5"}]}
-  ],
-  g:[
-    {sec:"Principal",items:[{i:"▦",l:"Dashboard"},{i:"📋",l:"OT"}]},
-    {sec:"Operaciones",items:[{i:"🏢",l:"Contratistas"},{i:"🔄",l:"Plan preventivo"},{i:"🏭",l:"Activos"},{i:"📫",l:"Embalajes",active:true}]},
-    {sec:"Análisis",items:[{i:"📊",l:"KPIs"},{i:"💰",l:"Costos"}]},
-    {sec:"Sistema",items:[{i:"🔔",l:"Alertas"},{i:"⚙️",l:"Configuración"}]}
-  ]
-};
-
-let role='s', view='list', selected=null, detTab='materiales', chipFilter='todos', searchTerm='';
-let currentKit=0, matRows=[], uploadStatus={foto1:false,foto2:false,pdf:false};
-let charts={};
-
-function buildNav(){
-  let h='';
-  NAV[role].forEach(g=>{
-    h+=`<div class="nav-sec">${g.sec}</div>`;
-    g.items.forEach(i=>{
-      const ac=i.active?' active':'';
-      const bc=i.bt==='w'?' w':i.bt==='e'?' e':'';
-      const bd=i.b?`<span class="nav-badge${bc}">${i.b}</span>`:'';
-      h+=`<div class="nav-item${ac}"><span class="nav-icon">${i.i}</span><span class="nav-label">${i.l}</span>${bd}</div>`;
-    });
-  });
-  document.getElementById('sb-nav').innerHTML=h;
-}
-function buildUser(){
-  const u=ROLES[role];
-  document.getElementById('sb-user').innerHTML=`<div class="u-av" style="background:${u.color};color:${u.tc}">${u.initials}</div><div><div class="u-name">${u.name}</div><div class="u-role">${u.role}</div></div>`;
-}
-
-function buildStats(){
-  const list=EMBALAJES;
-  const total=list.length;
-  const costo=list.reduce((a,e)=>a+e.costo,0);
-  const prom=total?Math.round(costo/total):0;
-  const clientes=[...new Set(list.map(e=>e.cliente))].length;
-  const pend=list.filter(e=>e.estado==='pendiente').length;
-  document.getElementById('sv-total').textContent=total;
-  document.getElementById('sv-costo').textContent='$'+Math.round(costo/1000)+'K';
-  document.getElementById('sv-prom').textContent='$'+Math.round(prom/1000)+'K';
-  document.getElementById('sv-clientes').textContent=clientes;
-  document.getElementById('sv-pend').textContent=pend;
-}
-
-function getFiltered(){
-  return EMBALAJES.filter(e=>{
-    const mf=chipFilter==='todos'||e.estado===chipFilter;
-    const ms=!searchTerm||e.nv.toLowerCase().includes(searchTerm)||e.cliente.toLowerCase().includes(searchTerm);
-    return mf&&ms;
-  });
-}
-
-function renderList(){
-  const list=getFiltered();
-  let h='';
-  list.forEach(e=>{
-    const sel=selected&&selected.id===e.id?' selected':'';
-    const stCls=e.estado==='completo'?'es-ok':'es-pend';
-    const stLabel=e.estado==='completo'?'Completo':'Pendiente docs';
-    h+=`<div class="emb-card${sel}" onclick="selectEmb('${e.id}')">
-      <div class="ec-row1">
-        <div class="ec-icon">📦</div>
-        <div style="flex:1;min-width:0">
-          <div class="ec-nv">${e.nv}</div>
-          <div class="ec-client">${e.cliente}</div>
-        </div>
-        <span class="ec-status ${stCls}">${stLabel}</span>
-      </div>
-      <div class="ec-row2">
-        <span class="ec-cost">$${e.costo.toLocaleString('es-CL')}</span>
-        <span class="ec-date">${e.fecha}</span>
-      </div>
-    </div>`;
-  });
-  document.getElementById('emb-list').innerHTML=h||`<div style="padding:16px;text-align:center;font-size:11px;color:rgba(131,131,139,0.4)">Sin resultados</div>`;
-}
-
-function selectEmb(id){
-  selected=EMBALAJES.find(e=>e.id===id);
-  detTab='materiales';
-  renderList();
-  renderDetail();
-}
-
-function renderDetail(){
-  if(!selected){
-    document.getElementById('empty-det').style.display='flex';
-    document.getElementById('det-content').style.display='none';
-    return;
-  }
-  document.getElementById('empty-det').style.display='none';
-  document.getElementById('det-content').style.display='block';
-
-  const e=selected;
-  const canEdit=role==='t'||role==='s';
-  const costoMat=e.materiales.reduce((a,m)=>a+m.qty*m.precio,0);
-
-  const docStatus=`${e.foto1?'📷✓':'📷?'} ${e.foto2?'📷✓':'📷?'} ${e.pdf?'📄✓':'📄?'}`;
-
-  const header=`
-    <div class="det-header">
-      <div class="det-icon-lg">📦</div>
-      <div class="det-info">
-        <div class="det-nv">${e.nv}</div>
-        <div class="det-client">${e.cliente} · ${e.destino}</div>
-        <div class="det-badges">
-          <span class="dbadge ${e.estado==='completo'?'db-ok':'db-pend'}">${e.estado==='completo'?'Completo':'Pendiente docs'}</span>
-          <span class="dbadge db-tipo">${e.tipo}</span>
-          <span class="dbadge db-tipo">${e.ncajones} cajón${e.ncajones>1?'es':''}</span>
-          <span class="dbadge db-date">${e.fecha}</span>
-          <span style="font-size:11px;letter-spacing:1px">${docStatus}</span>
-        </div>
-      </div>
-      ${canEdit?`<button class="tb-btn btn-g" style="font-size:11px;padding:4px 10px;flex-shrink:0">✎ Editar</button>`:''}
-    </div>
-  `;
-
-  const kpis=`
-    <div class="kpi-row">
-      <div class="kpi"><div class="kpi-label">Costo total</div><div class="kpi-val" style="color:var(--emb-light)">$${e.costo.toLocaleString('es-CL')}</div><div class="kpi-sub">Materiales consumidos</div></div>
-      <div class="kpi"><div class="kpi-label">N° materiales</div><div class="kpi-val">${e.materiales.length}</div><div class="kpi-sub">Ítems distintos</div></div>
-      <div class="kpi"><div class="kpi-label">Técnico</div><div class="kpi-val" style="font-size:14px;padding-top:4px">${e.tecnico}</div></div>
-    </div>
-  `;
-
-  const tabs=`
-    <div class="tabs">
-      <div class="tab ${detTab==='materiales'?'on':''}" onclick="setDetTab('materiales')">Materiales</div>
-      <div class="tab ${detTab==='docs'?'on':''}" onclick="setDetTab('docs')">Fotos y documentos</div>
-      <div class="tab ${detTab==='ficha'?'on':''}" onclick="setDetTab('ficha')">Ficha</div>
-    </div>
-  `;
-
-  let body='';
-  if(detTab==='materiales'){
-    const rows=e.materiales.map(m=>`
-      <tr>
-        <td style="color:var(--white)">${m.mat}</td>
-        <td style="color:rgba(200,210,225,0.7);text-align:center">${m.qty}</td>
-        <td style="color:rgba(200,210,225,0.6)">$${m.precio.toLocaleString('es-CL')}</td>
-        <td style="color:var(--emb-light);font-weight:500;text-align:right">$${(m.qty*m.precio).toLocaleString('es-CL')}</td>
-      </tr>
-    `).join('');
-    body=`
-      <div class="sec-title">Detalle de materiales consumidos</div>
-      <table class="mat-table">
-        <thead><tr><th>Material</th><th style="text-align:center">Cant.</th><th>Precio u.</th><th style="text-align:right">Subtotal</th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-      <div class="mat-total">Total embalaje: &nbsp;<strong>$${costoMat.toLocaleString('es-CL')}</strong></div>
-    `;
-  } else if(detTab==='docs'){
-    body=`
-      <div class="sec-title">Registro fotográfico</div>
-      <div class="foto-grid" style="margin-bottom:14px">
-        <div class="foto-box ${e.foto1?'has-foto':''}" onclick="fakeView('foto1')">
-          <span style="font-size:24px">${e.foto1?'🖼️':'📷'}</span>
-          <div class="foto-label">${e.foto1?'Foto 1 — clic para ver':'Sin foto 1'}</div>
-          ${!e.foto1&&canEdit?`<div class="foto-sub">Clic para subir</div>`:''}
-        </div>
-        <div class="foto-box ${e.foto2?'has-foto':''}" onclick="fakeView('foto2')">
-          <span style="font-size:24px">${e.foto2?'🖼️':'📷'}</span>
-          <div class="foto-label">${e.foto2?'Foto 2 — clic para ver':'Sin foto 2'}</div>
-          ${!e.foto2&&canEdit?`<div class="foto-sub">Clic para subir</div>`:''}
-        </div>
-      </div>
-      <div class="sec-title">Nota de pedido (PDF)</div>
-      ${e.pdf
-        ?`<div class="pdf-row"><span class="pdf-icon">📄</span><span class="pdf-name">Nota_pedido_${e.nv}.pdf</span><span class="pdf-size">1.2 MB</span></div>`
-        :canEdit?`<div class="upload-zone" style="margin-bottom:0;border-color:rgba(216,90,48,0.3)" onclick="fakeView('pdf')"><div style="font-size:18px;margin-bottom:3px">📄</div><div style="font-size:12px;color:rgba(131,131,139,0.5)">Adjuntar nota de pedido PDF</div><div style="font-size:10px;color:rgba(131,131,139,0.3);margin-top:2px">Máx. 10 MB</div></div>`
-        :`<div style="padding:14px;text-align:center;font-size:12px;color:rgba(131,131,139,0.4)">Sin PDF adjunto</div>`
-      }
-    `;
-  } else {
-    body=`
-      <div class="sec-title">Datos del embalaje</div>
-      <div class="ficha-grid">
-        <div class="fg"><div class="fg-label">Nota de venta</div><div class="fg-val" style="font-family:monospace">${e.nv}</div></div>
-        <div class="fg"><div class="fg-label">Cliente</div><div class="fg-val">${e.cliente}</div></div>
-        <div class="fg"><div class="fg-label">Fecha</div><div class="fg-val">${e.fecha}</div></div>
-        <div class="fg"><div class="fg-label">Destino</div><div class="fg-val">${e.destino}</div></div>
-        <div class="fg"><div class="fg-label">Tipo de cajón</div><div class="fg-val">${e.tipo}</div></div>
-        <div class="fg"><div class="fg-label">N° cajones</div><div class="fg-val">${e.ncajones}</div></div>
-        <div class="fg"><div class="fg-label">Técnico</div><div class="fg-val">${e.tecnico}</div></div>
-        <div class="fg"><div class="fg-label">Costo total</div><div class="fg-val" style="color:var(--emb-light);font-weight:600">$${e.costo.toLocaleString('es-CL')}</div></div>
-      </div>
-    `;
-  }
-
-  document.getElementById('det-content').innerHTML=header+kpis+tabs+body;
-}
-
-function setDetTab(t){ detTab=t; renderDetail(); }
-function fakeView(type){ alert(`Sistema real: abre visor de ${type==='pdf'?'PDF':'imagen'}.`); }
-
-// ── ANALYTICS ──
-function renderAnalytics(){
-  Object.values(charts).forEach(c=>{try{c.destroy();}catch(e){}});charts={};
-
-  const total=EMBALAJES.reduce((a,e)=>a+e.costo,0);
-  const mes=EMBALAJES.length;
-  const prom=Math.round(total/mes);
-  const clientes=[...new Set(EMBALAJES.map(e=>e.cliente))].length;
-
-  document.getElementById('analytics-view').innerHTML=`
-    <div class="analytics-grid">
-      <div class="akpi"><div class="akpi-label">Costo total mes</div><div class="akpi-val">$${Math.round(total/1000)}K</div><div class="akpi-sub">Abril 2025</div></div>
-      <div class="akpi"><div class="akpi-label">Embalajes realizados</div><div class="akpi-val">${mes}</div><div class="akpi-sub">Este mes</div></div>
-      <div class="akpi"><div class="akpi-label">Costo promedio</div><div class="akpi-val">$${Math.round(prom/1000)}K</div><div class="akpi-sub">Por embalaje</div></div>
-      <div class="akpi"><div class="akpi-label">Clientes atendidos</div><div class="akpi-val">${clientes}</div><div class="akpi-sub">Distintos</div></div>
-    </div>
-
-    <div class="charts-row">
-      <div class="chart-card">
-        <div class="cc-title">Costo embalajes — últimos 6 meses (miles CLP)</div>
-        <div style="height:170px"><canvas id="ch-emb-evol"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <div class="cc-title">Distribución por tipo de cajón</div>
-        <div style="display:flex;align-items:center;gap:14px">
-          <div style="height:150px;width:150px;flex-shrink:0"><canvas id="ch-emb-tipo"></canvas></div>
-          <div style="display:flex;flex-direction:column;gap:6px;flex:1">
-            <div style="display:flex;justify-content:space-between;font-size:11px"><div style="display:flex;align-items:center;gap:5px"><div style="width:8px;height:8px;border-radius:2px;background:rgba(216,90,48,0.7)"></div>Pequeño</div><strong style="color:var(--emb-light)">$59.4K · 2u</strong></div>
-            <div style="display:flex;justify-content:space-between;font-size:11px"><div style="display:flex;align-items:center;gap:5px"><div style="width:8px;height:8px;border-radius:2px;background:rgba(240,153,123,0.7)"></div>Mediano</div><strong style="color:var(--emb-light)">$136.8K · 2u</strong></div>
-            <div style="display:flex;justify-content:space-between;font-size:11px"><div style="display:flex;align-items:center;gap:5px"><div style="width:8px;height:8px;border-radius:2px;background:rgba(153,60,29,0.7)"></div>Exportación</div><strong style="color:var(--emb-light)">$218.6K · 1u</strong></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="chart-card">
-      <div class="cc-title">Costo de embalaje por cliente — acumulado</div>
-      <table class="client-table">
-        <thead><tr><th>#</th><th>Cliente</th><th>Embalajes</th><th>Costo total</th><th>Costo promedio</th><th>Último pedido</th></tr></thead>
-        <tbody>
-          <tr><td style="color:rgba(131,131,139,0.5)">1</td><td>Minera del Norte SA</td><td style="color:var(--emb-light)">1</td><td style="color:var(--emb-light);font-weight:600">$218.600</td><td style="color:rgba(200,210,225,0.6)">$218.600</td><td style="font-family:monospace;font-size:11px;color:rgba(131,131,139,0.5)">14/04/2025</td></tr>
-          <tr><td style="color:rgba(131,131,139,0.5)">2</td><td>Industrias Pérez Hnos.</td><td style="color:var(--emb-light)">1</td><td style="color:var(--emb-light);font-weight:600">$68.400</td><td style="color:rgba(200,210,225,0.6)">$68.400</td><td style="font-family:monospace;font-size:11px;color:rgba(131,131,139,0.5)">07/04/2025</td></tr>
-          <tr><td style="color:rgba(131,131,139,0.5)">3</td><td>Comercial Andina SpA</td><td style="color:var(--emb-light)">2</td><td style="color:var(--emb-light);font-weight:600">$98.100</td><td style="color:rgba(200,210,225,0.6)">$49.050</td><td style="font-family:monospace;font-size:11px;color:rgba(131,131,139,0.5)">16/04/2025</td></tr>
-          <tr><td style="color:rgba(131,131,139,0.5)">4</td><td>Ferretería Central Ltda.</td><td style="color:var(--emb-light)">1</td><td style="color:var(--emb-light);font-weight:600">$29.700</td><td style="color:rgba(200,210,225,0.6)">$29.700</td><td style="font-family:monospace;font-size:11px;color:rgba(131,131,139,0.5)">10/04/2025</td></tr>
-        </tbody>
-      </table>
-    </div>
-  `;
-
-  const gc='rgba(255,255,255,0.05)', tc='rgba(131,131,139,0.6)';
-  setTimeout(()=>{
-    charts.evol=new Chart(document.getElementById('ch-emb-evol'),{
-      type:'bar',
-      data:{labels:['Nov','Dic','Ene','Feb','Mar','Abr'],
-        datasets:[
-          {label:'Pequeño',data:[35,28,32,25,38,59.4],backgroundColor:'rgba(216,90,48,0.55)',borderRadius:3},
-          {label:'Mediano',data:[68,136,68,68,68,136.8],backgroundColor:'rgba(240,153,123,0.6)',borderRadius:3},
-          {label:'Exportación',data:[0,218,0,218,0,218.6],backgroundColor:'rgba(153,60,29,0.65)',borderRadius:3},
-        ]},
-      options:{responsive:true,maintainAspectRatio:false,
-        plugins:{legend:{display:true,position:'top',labels:{color:tc,font:{size:10,family:'Barlow'},boxWidth:10,padding:10}},tooltip:{backgroundColor:'#0D2D48',borderColor:'rgba(255,255,255,0.1)',borderWidth:1,titleColor:'#EEF4FF',bodyColor:'#F0997B'}},
-        scales:{x:{stacked:true,grid:{color:gc},ticks:{color:tc,font:{size:10,family:'Barlow'}}},y:{stacked:true,grid:{color:gc},ticks:{color:tc,font:{size:10,family:'Barlow'}}}}}
-    });
-    charts.tipo=new Chart(document.getElementById('ch-emb-tipo'),{
-      type:'doughnut',
-      data:{labels:['Pequeño','Mediano','Exportación'],datasets:[{data:[59.4,136.8,218.6],backgroundColor:['rgba(216,90,48,0.75)','rgba(240,153,123,0.7)','rgba(153,60,29,0.75)'],borderWidth:0,hoverOffset:4}]},
-      options:{responsive:true,maintainAspectRatio:false,cutout:'70%',plugins:{legend:{display:false},tooltip:{backgroundColor:'#0D2D48',borderColor:'rgba(255,255,255,0.1)',borderWidth:1,titleColor:'#EEF4FF',bodyColor:'#F0997B'}}}
-    });
-  },50);
-}
-
-// ── MODAL ──
-function selectKit(idx){
-  currentKit=idx;
-  [0,1,2].forEach(i=>document.getElementById('kit-'+i).classList.toggle('on',i===idx));
-  matRows=KITS[idx].materiales.map(m=>({...m}));
-  renderMatEditor();
-}
-
-function renderMatEditor(){
-  let h='';
-  matRows.forEach((m,i)=>{
-    const sub=(m.qty*(m.precio)||0).toLocaleString('es-CL');
-    h+=`<div class="mat-row" id="mr-${i}">
-      <input type="text" class="mat-row-input" value="${m.mat}" placeholder="Material" oninput="updMat(${i},'mat',this.value)"/>
-      <input type="number" class="mat-row-input" value="${m.qty}" min="1" style="text-align:center" oninput="updMat(${i},'qty',this.value)"/>
-      <div class="mat-row-cost" id="mrc-${i}">$${sub}</div>
-      <button class="mat-del" onclick="delMat(${i})">✕</button>
-    </div>`;
-  });
-  document.getElementById('mat-editor').innerHTML=h;
-  updateCostoPreview();
-}
-
-function updMat(i,field,val){
-  if(field==='qty') matRows[i].qty=parseInt(val)||0;
-  else matRows[i][field]=val;
-  const sub=(matRows[i].qty*matRows[i].precio)||0;
-  const el=document.getElementById('mrc-'+i);
-  if(el) el.textContent='$'+sub.toLocaleString('es-CL');
-  updateCostoPreview();
-}
-
-function addMatRow(){
-  matRows.push({mat:'',qty:1,precio:0});
-  renderMatEditor();
-}
-
-function delMat(i){
-  matRows.splice(i,1);
-  renderMatEditor();
-}
-
-function updateCostoPreview(){
-  const total=matRows.reduce((a,m)=>a+(m.qty*m.precio)||0,0);
-  document.getElementById('costo-preview').textContent='$'+total.toLocaleString('es-CL');
-}
-
-function fakeUpload(id,icon,label){
-  const el=document.getElementById(id);
-  if(el){
-    el.classList.add('uz-done');
-    el.querySelector('.uz-icon').textContent=icon==='📷'?'✅':'✅';
-    el.querySelector('.uz-label').textContent=label;
-    uploadStatus[id.replace('uz-','')]=true;
-  }
-}
-
-function openModal(){
-  uploadStatus={foto1:false,foto2:false,pdf:false};
-  ['uz-foto1','uz-foto2','uz-pdf'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el){
-      el.classList.remove('uz-done');
-      const icons={'uz-foto1':'📷','uz-foto2':'📷','uz-pdf':'📄'};
-      const labels={'uz-foto1':'Foto 1','uz-foto2':'Foto 2','uz-pdf':'Nota de pedido'};
-      const subs={'uz-foto1':'JPG / PNG','uz-foto2':'JPG / PNG','uz-pdf':'PDF'};
-      el.querySelector('.uz-icon').textContent=icons[id];
-      el.querySelector('.uz-label').textContent=labels[id];
-      if(el.querySelector('.uz-sub')) el.querySelector('.uz-sub').textContent=subs[id];
-    }
-  });
-  selectKit(0);
-  document.getElementById('modal-overlay').classList.remove('hidden');
-}
-
-function closeModal(){ document.getElementById('modal-overlay').classList.add('hidden'); }
-
-function saveEmbalaje(){
-  const nv=document.getElementById('f-nv').value.trim();
-  const cliente=document.getElementById('f-cliente').value.trim();
-  if(!nv||!cliente){alert('Completa nota de venta y cliente');return;}
-  const costo=matRows.reduce((a,m)=>a+(m.qty*m.precio)||0,0);
-  const nuevo={
-    id:'EMB-00'+(EMBALAJES.length+1),
-    nv, cliente,
-    fecha:'17/04/2025',
-    tipo:KITS[currentKit].nombre,
-    ncajones:parseInt(document.getElementById('f-ncajones').value),
-    destino:document.getElementById('f-destino').value||'Sin especificar',
-    costo,
-    materiales:matRows.filter(m=>m.mat),
-    foto1:uploadStatus.foto1,
-    foto2:uploadStatus.foto2,
-    pdf:uploadStatus.pdf,
-    estado:(uploadStatus.foto1||uploadStatus.foto2||uploadStatus.pdf)?'completo':'pendiente',
-    tecnico:ROLES[role].name
+const SB_URL='https://aaugeuydymhwlcpklbmt.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhdWdldXlkeW1od2xjcGtsYm10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2NTg5MzksImV4cCI6MjA5MjIzNDkzOX0.Q2GeJKuf7l51Hsv3hUEeaO0NHaFeWXLIBrRUPgkQ0gw';
+let db,USER;
+(function(){
+  const s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+  s.onload=function(){
+    db=window.supabase.createClient(SB_URL,SB_KEY);
+    USER=JSON.parse(localStorage.getItem('qdc_user')||'{}');
+    if(!USER.rol){window.location.href='index.html';return;}
+    buildSidebar();
+    if(USER.rol==='g')document.getElementById('nav-config').style.display='flex';
+    if(typeof pageInit==='function') pageInit();
   };
-  EMBALAJES.unshift(nuevo);
-  closeModal();
-  buildStats();
-  if(view==='list'){ renderList(); selectEmb(nuevo.id); }
-  else renderAnalytics();
+  document.head.appendChild(s);
+})();
+function ini(e){const p=(e||'').split('@')[0].split(/[._-]/);return p.slice(0,2).map(x=>x[0]?.toUpperCase()||'').join('')||'QD';}
+function buildSidebar(){
+  const C={t:'#185FA5',s:'#854F0B',g:'#27500A'},T={t:'#B5D4F4',s:'#FAC775',g:'#C0DD97'},R={t:'Técnico de Mantenimiento',s:'Supervisor de Mantenimiento',g:'Gerente de Operaciones'};
+  document.getElementById('sb-user').innerHTML=`<div class="u-av" style="background:${C[USER.rol]};color:${T[USER.rol]}">${ini(USER.email||USER.nombre)}</div><div style="min-width:0;flex:1"><div class="u-name">${USER.nombre||USER.email}</div><div class="u-role">${R[USER.rol]||''}</div></div><button class="u-logout" onclick="doLogout()">⏏</button>`;
+}
+function doLogout(){localStorage.removeItem('qdc_user');window.location.href='index.html';}
+async function audit(tipo,accion,detalle){
+  try{await db.from('auditoria').insert({usuario_id:USER.id,usuario_nombre:USER.nombre||USER.email,tipo,accion,detalle});}catch(e){}
+}
+let _tT;
+function showToast(msg,col){const t=document.getElementById('toast');t.textContent=msg;t.style.borderColor=col||'rgba(33,150,243,0.3)';t.classList.add('show');clearTimeout(_tT);_tT=setTimeout(()=>t.classList.remove('show'),3200);}
+function openModal(html){document.getElementById('modal-inner').innerHTML=html;document.getElementById('modal-overlay').classList.remove('hidden');}
+function closeModal(){document.getElementById('modal-overlay').classList.add('hidden');}
+
+
+let EMBS=[], EMB_F_EST='';
+function pageInit(){
+  if(USER.rol!=='g') document.getElementById('btn-nuevo-emb').style.display='block';
+  loadEmb();
+}
+async function loadEmb(){
+  try{
+    const{data,error}=await db.from('embalajes').select('*').order('creado_en',{ascending:false});
+    if(error) throw error;
+    EMBS=data&&data.length?data:demosEmb();
+  }catch(e){ EMBS=demosEmb(); showToast('Mostrando datos demo'); }
+  updateStats(); renderEmb(EMBS);
+}
+function demosEmb(){return[
+  {id:'e1',codigo:'EMB-001',nota_venta:'NV-2025-0412',cliente:'Comercial Andina SpA',tipo_cajon:'Cajón mediano',destino:'Antofagasta',costo_total:68400,foto1_url:'ok',foto2_url:'ok',pdf_url:'ok',estado:'completo',creado_en:new Date().toISOString()},
+  {id:'e2',codigo:'EMB-002',nota_venta:'NV-2025-0408',cliente:'Minera del Norte SA',tipo_cajon:'Cajón exportación',destino:'Calama',costo_total:218600,foto1_url:'ok',foto2_url:null,pdf_url:'ok',estado:'pendiente',creado_en:new Date().toISOString()},
+  {id:'e3',codigo:'EMB-003',nota_venta:'NV-2025-0401',cliente:'Ferretería Central Ltda.',tipo_cajon:'Cajón pequeño',destino:'Santiago',costo_total:29700,foto1_url:'ok',foto2_url:'ok',pdf_url:'ok',estado:'completo',creado_en:new Date().toISOString()},
+];}
+function updateStats(){
+  const total=EMBS.length;
+  const costo=EMBS.reduce((a,e)=>a+(e.costo_total||0),0);
+  const prom=total?Math.round(costo/total):0;
+  const clientes=new Set(EMBS.map(e=>e.cliente)).size;
+  const pend=EMBS.filter(e=>e.estado==='pendiente').length;
+  document.getElementById('st-total').textContent=total;
+  document.getElementById('st-costo').textContent='$'+Math.round(costo/1000)+'K';
+  document.getElementById('st-prom').textContent='$'+Math.round(prom/1000)+'K';
+  document.getElementById('st-clientes').textContent=clientes;
+  document.getElementById('st-pend').textContent=pend;
+}
+function renderEmb(list){
+  if(!list.length){document.getElementById('emb-content').innerHTML='<div class="empty"><span style="font-size:32px;opacity:0.2">📫</span><span>Sin embalajes registrados</span></div>';return;}
+  document.getElementById('emb-content').innerHTML=`<table class="data-table">
+    <thead><tr><th>ID</th><th>NV / Cliente</th><th>Tipo cajón</th><th>Destino</th><th>Costo</th><th>Fotos</th><th>PDF</th><th>Estado</th><th>Fecha</th></tr></thead>
+    <tbody>${list.map(e=>{
+      const fecha=new Date(e.creado_en).toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit'});
+      return`<tr>
+        <td style="font-family:monospace;font-size:11px;color:rgba(131,131,139,0.5)">${e.codigo||e.id.substring(0,8)}</td>
+        <td><div style="font-size:12px;font-weight:500;color:var(--white)">${e.nota_venta||'—'}</div><div style="font-size:10px;color:rgba(131,131,139,0.5)">${e.cliente||'—'}</div></td>
+        <td style="font-size:11px;color:rgba(200,210,225,0.6)">${e.tipo_cajon||'—'}</td>
+        <td style="font-size:11px;color:rgba(200,210,225,0.6)">${e.destino||'—'}</td>
+        <td style="font-family:var(--head);font-size:13px;font-weight:600;color:#F0997B">$${(e.costo_total||0).toLocaleString('es-CL')}</td>
+        <td style="font-size:13px">${e.foto1_url?'📷✓':'📷?'} ${e.foto2_url?'📷✓':'📷?'}</td>
+        <td style="font-size:13px">${e.pdf_url?'📄✓':'<span style="color:var(--warn)">📄?</span>'}</td>
+        <td><span class="badge ${e.estado==='completo'?'b-ok':'b-warn'}">${e.estado==='completo'?'Completo':'Pendiente'}</span></td>
+        <td style="font-size:11px;font-family:monospace;color:rgba(131,131,139,0.5)">${fecha}</td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table>`;
+}
+function filterEmb(val){
+  const v=val.toLowerCase();
+  let list=EMBS.filter(e=>(e.nota_venta||'').toLowerCase().includes(v)||(e.cliente||'').toLowerCase().includes(v));
+  if(EMB_F_EST) list=list.filter(e=>e.estado===EMB_F_EST);
+  renderEmb(list);
+}
+function filterByEst(v){EMB_F_EST=v;filterEmb(document.querySelector('.sw input')?.value||'');}
+function openNuevoEmb(){
+  const kits={pequeño:'Cajón pequeño (≤50kg)',mediano:'Cajón mediano (50-150kg)',exportacion:'Cajón exportación (>150kg)'};
+  openModal(`<div class="modal-header"><div class="modal-title">Registrar embalaje</div><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div style="font-size:11px;color:rgba(131,131,139,0.5);margin-bottom:14px">Selecciona el tipo de cajón para precargar materiales base</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px">
+      ${Object.entries(kits).map(([k,v])=>`<div onclick="selKit('${k}',this)" style="padding:10px 8px;border-radius:7px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);cursor:pointer;text-align:center" id="kit-${k}"><div style="font-size:18px;margin-bottom:4px">${k==='pequeño'?'📦':k==='mediano'?'📫':'🗃️'}</div><div style="font-size:11px;font-weight:500;color:var(--white)">${v.split('(')[0]}</div><div style="font-size:10px;color:rgba(131,131,139,0.5)">${v.match(/\(.*\)/)?.[0]||''}</div></div>`).join('')}
+    </div>
+    <div class="form-row" style="margin-bottom:12px">
+      <div class="form-group"><label class="form-label">Nota de venta *</label><input type="text" class="form-input" id="ne-nv" placeholder="NV-2025-XXXX"/></div>
+      <div class="form-group"><label class="form-label">Cliente *</label><input type="text" class="form-input" id="ne-cliente" placeholder="Razón social"/></div>
+    </div>
+    <div class="form-row" style="margin-bottom:12px">
+      <div class="form-group"><label class="form-label">Destino</label><input type="text" class="form-input" id="ne-destino" placeholder="Ciudad / País"/></div>
+      <div class="form-group"><label class="form-label">Costo total (CLP) *</label><input type="number" class="form-input" id="ne-costo" placeholder="0" min="0"/></div>
+    </div>
+    <input type="hidden" id="ne-kit" value="mediano"/>
+    <div class="modal-footer"><button class="btn-cancel" onclick="closeModal()">Cancelar</button><button class="btn-save" style="background:var(--emb)" onclick="guardarEmb()">Registrar embalaje</button></div>`);
+  setTimeout(()=>selKit('mediano',document.getElementById('kit-mediano')),50);
+}
+function selKit(k,el){
+  document.querySelectorAll('[id^="kit-"]').forEach(x=>{x.style.background='rgba(255,255,255,0.04)';x.style.borderColor='rgba(255,255,255,0.1)';});
+  el.style.background='rgba(216,90,48,0.12)';el.style.borderColor='var(--emb)';
+  document.getElementById('ne-kit').value=k;
+  const costos={pequeño:29700,mediano:68400,exportacion:218600};
+  document.getElementById('ne-costo').value=costos[k]||0;
+}
+async function guardarEmb(){
+  const nv=document.getElementById('ne-nv').value.trim();
+  const cliente=document.getElementById('ne-cliente').value.trim();
+  const costo=parseInt(document.getElementById('ne-costo').value)||0;
+  if(!nv||!cliente){showToast('⚠️ NV y cliente son obligatorios','rgba(226,75,74,0.4)');return;}
+  const codigo='EMB-'+Date.now().toString().slice(-6);
+  const nuevo={codigo,nota_venta:nv,cliente,tipo_cajon:document.getElementById('ne-kit').value,destino:document.getElementById('ne-destino').value.trim(),costo_total:costo,estado:'pendiente',tecnico_id:USER.id};
+  try{
+    const{data,error}=await db.from('embalajes').insert(nuevo).select().single();
+    if(error) throw error;
+    EMBS.unshift(data);
+    await audit('emb','Registró embalaje '+codigo,nv+' · '+cliente+' · $'+costo.toLocaleString('es-CL'));
+    closeModal(); showToast('✓ Embalaje '+codigo+' registrado','rgba(99,153,34,0.4)'); updateStats(); renderEmb(EMBS);
+  }catch(err){ showToast('✕ Error: '+err.message,'rgba(226,75,74,0.4)'); }
 }
 
-function filterEmb(v){ searchTerm=v.toLowerCase(); renderList(); }
-function chipF(el,f){ document.querySelectorAll('.fchip').forEach(c=>c.classList.remove('on')); el.classList.add('on'); chipFilter=f; renderList(); }
-
-function setView(v){
-  view=v;
-  document.getElementById('vb-list').className='vbtn'+(v==='list'?' on':'');
-  document.getElementById('vb-analytics').className='vbtn'+(v==='analytics'?' on':'');
-  document.getElementById('split-view').style.display=v==='list'?'flex':'none';
-  document.getElementById('analytics-view').style.display=v==='analytics'?'block':'none';
-  if(v==='analytics') renderAnalytics();
-}
-
-document.getElementById('modal-overlay').addEventListener('click',function(e){if(e.target===this)closeModal();});
-
-function setRole(r){
-  role=r;
-  ['t','s','g'].forEach(x=>{document.getElementById('rb-'+x).className='rbtn'+(x===r?` on-${r}`:'');});
-  document.getElementById('btn-new').style.display=(r==='t'||r==='s')?'':'none';
-  buildNav(); buildUser(); buildStats(); renderList();
-  if(view==='analytics') renderAnalytics();
-}
-
-setRole('s');
-selectEmb('EMB-001');
 </script>
 </body>
 </html>
