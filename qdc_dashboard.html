@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -210,10 +211,31 @@ body{font-family:var(--font);background:#050F1C;min-height:100vh;display:flex;al
 </div>
 
 <script>
+// Leer usuario real desde localStorage (guardado por index.html al hacer login)
+const _qdc = JSON.parse(localStorage.getItem('qdc_user') || '{}');
+const _rol = _qdc.rol || 's';
+const _nombre = _qdc.nombre || _qdc.email || 'Usuario';
+const _email = _qdc.email || '';
+
+// Colores y etiquetas por rol
+const ROL_CONFIG = {
+  t:{color:"#185FA5",tc:"#B5D4F4",label:"Técnico de Mantenimiento"},
+  s:{color:"#854F0B",tc:"#FAC775",label:"Supervisor de Mantenimiento"},
+  g:{color:"#27500A",tc:"#C0DD97",label:"Gerente de Operaciones"},
+};
+const _cfg = ROL_CONFIG[_rol] || ROL_CONFIG.s;
+
+// Iniciales desde el email (ej: gfalfan@qdc.cl → GF)
+function getInitials(email){
+  const parts = email.split('@')[0].split(/[._-]/);
+  return parts.slice(0,2).map(p=>p[0]?.toUpperCase()||'').join('') || 'QD';
+}
+const _initials = getInitials(_email || _nombre);
+
 const ROLES={
-  t:{name:"Luis García",  role:"Técnico de Mantenimiento",   color:"#185FA5",tc:"#B5D4F4",initials:"LG",label:"Técnico"},
-  s:{name:"María Solís",  role:"Supervisora de Mantenimiento",color:"#854F0B",tc:"#FAC775",initials:"MS",label:"Supervisor"},
-  g:{name:"Carlos Reyes", role:"Gerente de Operaciones",      color:"#27500A",tc:"#C0DD97",initials:"CR",label:"Gerencia"}
+  t:{name:_rol==='t'?_nombre:"Técnico",  role:"Técnico de Mantenimiento",   color:"#185FA5",tc:"#B5D4F4",initials:_rol==='t'?_initials:"TC",label:"Técnico"},
+  s:{name:_rol==='s'?_nombre:"Supervisor",  role:"Supervisor de Mantenimiento",color:"#854F0B",tc:"#FAC775",initials:_rol==='s'?_initials:"SP",label:"Supervisor"},
+  g:{name:_rol==='g'?_nombre:"Gerencia", role:"Gerente de Operaciones",      color:"#27500A",tc:"#C0DD97",initials:_rol==='g'?_initials:"GR",label:"Gerencia"}
 };
 const NAV={
   t:[
@@ -254,7 +276,7 @@ function buildNav(){
 }
 function buildUser(){
   const u=ROLES[role];
-  document.getElementById('sb-user').innerHTML=`<div class="u-av" style="background:${u.color};color:${u.tc}">${u.initials}</div><div><div class="u-name">${u.name}</div><div class="u-role">${u.role}</div></div>`;
+  document.getElementById('sb-user').innerHTML=`<div class="u-av" style="background:${u.color};color:${u.tc}">${u.initials}</div><div style="min-width:0;flex:1"><div class="u-name">${u.name}</div><div class="u-role">${u.role}</div></div><button onclick="doLogout()" style="background:none;border:none;color:rgba(131,131,139,0.5);cursor:pointer;font-size:11px;padding:3px 6px;border-radius:3px" title="Cerrar sesión">⏏</button>`;
   const av=document.getElementById('topbar-avatar');
   av.textContent=u.initials; av.style.background=u.color; av.style.color=u.tc;
 }
@@ -486,6 +508,12 @@ function renderGerencia(){
   },50);
 }
 
+
+function doLogout(){
+  localStorage.removeItem('qdc_user');
+  window.location.href='index.html';
+}
+
 function setRole(r){
   role=r;
   ['t','s','g'].forEach(x=>{ document.getElementById('rb-'+x).className='rbtn'+(x===r?` on-${r}`:''); });
@@ -496,7 +524,15 @@ function setRole(r){
   else renderGerencia();
 }
 
-setRole('s');
+// Usar rol real desde localStorage, ocultar botones demo
+['t','s','g'].forEach(x=>{
+  const el=document.getElementById('rb-'+x);
+  if(el) el.style.display='none';
+});
+const _roleLabel=document.querySelector('.sb-role-label');
+if(_roleLabel) _roleLabel.textContent='Usuario activo';
+
+setRole(_rol);
 </script>
 </body>
 </html>
