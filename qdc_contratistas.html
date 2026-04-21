@@ -199,13 +199,8 @@ async function loadCont(){
   // Cargar OTs externas para stats
   updateStats(); renderCont(CONTS);
 }
-function demosCont(){return[
-  {id:'c1',nombre:'Eléctricas SpA',rut:'76.543.210-5',especialidad:'Eléctrica industrial',contacto:'Jorge Muñoz',telefono:'+56 9 8765 4321',email:'jmunoz@electricas.cl',tarifa_hora:85000,activo:true},
-  {id:'c2',nombre:'AutoControl Ltda.',rut:'78.321.654-2',especialidad:'Automatización / PLC',contacto:'Ana Torres',telefono:'+56 9 7654 3210',email:'atorres@autocontrol.cl',tarifa_hora:95000,activo:true},
-  {id:'c3',nombre:'Mant. Industrial SA',rut:'77.890.123-4',especialidad:'Mecánica industrial',contacto:'Pedro Rojas',telefono:'+56 9 6543 2109',email:'projas@mantind.cl',tarifa_hora:75000,activo:true},
-  {id:'c4',nombre:'Termograf SpA',rut:'76.112.334-8',especialidad:'Termografía predictiva',contacto:'Claudia Vera',telefono:'+56 9 5432 1098',email:'cvera@termograf.cl',tarifa_hora:110000,activo:true},
-  {id:'c5',nombre:'Frío Industrial SpA',rut:'79.445.221-3',especialidad:'HVAC / Refrigeración',contacto:'Mario Soto',telefono:'+56 9 4321 0987',email:'msoto@frio.cl',tarifa_hora:80000,activo:true},
-];}
+function demosCont(){return[];}
+
 function updateStats(){
   document.getElementById('st-total').textContent=CONTS.length;
   document.getElementById('st-activos').textContent=CONTS.filter(c=>c.activo).length;

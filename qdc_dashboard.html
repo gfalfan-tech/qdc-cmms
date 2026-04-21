@@ -200,7 +200,7 @@ body{font-family:var(--font);background:#050F1C;min-height:100vh;display:flex;al
 <div class="main">
   <div class="topbar">
     <div class="page-title">Dashboard</div>
-    <span class="tb-date">Jueves 17 abril 2025 · Turno mañana</span>
+    <span class="tb-date" id="topbar-date"></span>
     <div class="bell-btn">🔔<div class="bell-dot"></div></div>
     <div class="avatar-btn" id="topbar-avatar" style="background:#185FA5;color:#B5D4F4">LG</div>
   </div>
@@ -210,6 +210,12 @@ body{font-family:var(--font);background:#050F1C;min-height:100vh;display:flex;al
 </div>
 
 <script>
+// Load Supabase for dashboard
+(function(){
+  const s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+  document.head.appendChild(s);
+})();
 // Leer usuario real desde localStorage (guardado por index.html al hacer login)
 const _qdc = JSON.parse(localStorage.getItem('qdc_user') || '{}');
 const _rol = _qdc.rol || 's';
@@ -290,237 +296,253 @@ const gridColor='rgba(255,255,255,0.05)';
 const tickColor='rgba(131,131,139,0.6)';
 
 // ── TÉCNICO ──
-function renderTecnico(){
-  const u=ROLES[role];
-  document.getElementById('dashboard-content').innerHTML=`
-    <div class="welcome">
-      <div><div class="welcome-text">Buenos días, ${_nombre}</div><div class="welcome-sub">Jueves 17 de abril · Turno mañana · 3 OT pendientes</div></div>
-      <div class="welcome-actions"><button class="wb wb-p">+ Nueva OT</button></div>
-    </div>
 
-    <div class="kpi-grid kpi-grid-3" style="margin-bottom:12px">
-      <div class="kpi-card kc-blue"><div class="kpi-label">Mis OT abiertas</div><div class="kpi-val blue">3</div><div class="kpi-delta dr">1 urgente — OT-0898</div></div>
-      <div class="kpi-card kc-green"><div class="kpi-label">Completadas hoy</div><div class="kpi-val green">2</div><div class="kpi-delta dg">▲ Buen ritmo</div></div>
-      <div class="kpi-card kc-warn"><div class="kpi-label">PM a realizar</div><div class="kpi-val warn">2</div><div class="kpi-delta dn">Esta semana</div></div>
-    </div>
+// ═══════════════════════════════════════
+// DASHBOARD — Datos reales desde Supabase
+// ═══════════════════════════════════════
+const SB_URL_D = 'https://aaugeuydymhwlcpklbmt.supabase.co';
+const SB_KEY_D = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhdWdldXlkeW1od2xjcGtsYm10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2NTg5MzksImV4cCI6MjA5MjIzNDkzOX0.Q2GeJKuf7l51Hsv3hUEeaO0NHaFeWXLIBrRUPgkQ0gw';
+let _db = null;
+function getDB(){
+  if(!_db) _db = window.supabase ? window.supabase.createClient(SB_URL_D, SB_KEY_D) : null;
+  return _db;
+}
 
-    <div class="main-grid">
-      <div class="ot-panel" style="height:300px">
-        <div class="ot-panel-hdr">
-          <span class="ot-panel-title">Mis órdenes de trabajo</span>
-          <span style="font-size:10px;color:rgba(131,131,139,0.5)">Solo asignadas a ti</span>
-        </div>
-        <div class="ot-list">
-          <div class="ot-item"><div class="ot-dot" style="background:var(--crit)"></div><div class="ot-info"><div class="ot-title">Sobrecalentamiento Compresor C-101</div><div class="ot-meta">OT-0898 · Línea A · Alta prioridad</div></div><span class="ot-badge ob-prog">En proceso</span></div>
-          <div class="ot-item"><div class="ot-dot" style="background:var(--warn)"></div><div class="ot-info"><div class="ot-title">Cambio rodamiento Bomba P-205</div><div class="ot-meta">OT-0891 · Sala Bombas</div></div><span class="ot-badge ob-open">Abierta</span></div>
-          <div class="ot-item"><div class="ot-dot" style="background:rgba(131,131,139,0.4)"></div><div class="ot-info"><div class="ot-title">Revisión filtros compresor</div><div class="ot-meta">OT-0889 · Línea A</div></div><span class="ot-badge ob-open">Abierta</span></div>
-          <div class="ot-item"><div class="ot-dot" style="background:var(--ok)"></div><div class="ot-info"><div class="ot-title">PM mensual motor MO-18</div><div class="ot-meta">PM-005 · Línea B · Esta semana</div></div><span class="ot-badge" style="background:rgba(127,119,221,0.12);color:#AFA9EC">PM</span></div>
-        </div>
+async function loadDashboardData(){
+  const db = getDB();
+  if(!db) return {ots:[], inv:[], pms:[], embs:[]};
+  try{
+    const [r1,r2,r3,r4] = await Promise.all([
+      db.from('ots').select('id,codigo,descripcion,activo,prioridad,estado,asignado_nombre,es_externo,pdf_url,creado_en').order('creado_en',{ascending:false}).limit(20),
+      db.from('inventario').select('sku,descripcion,stock,stock_minimo').order('stock'),
+      db.from('plan_pm').select('id,nombre,activo,proxima_fecha,es_externo').order('proxima_fecha').limit(10),
+      db.from('embalajes').select('id,codigo,cliente,costo_total,creado_en').order('creado_en',{ascending:false}).limit(10),
+    ]);
+    return {
+      ots:  r1.data||[],
+      inv:  r2.data||[],
+      pms:  r3.data||[],
+      embs: r4.data||[],
+    };
+  }catch(e){ return {ots:[],inv:[],pms:[],embs:[]}; }
+}
+
+function calcEstPM(fecha){
+  if(!fecha) return 'ok';
+  const d=new Date(fecha), h=new Date(); h.setHours(0,0,0,0); d.setHours(0,0,0,0);
+  const diff=Math.floor((d-h)/86400000);
+  return diff<0?'overdue':diff<=14?'soon':'ok';
+}
+
+const PRIO_COL = {crit:'var(--crit)',alta:'var(--warn)',med:'var(--accent)',baja:'rgba(131,131,139,0.5)'};
+const PRIO_LBL = {crit:'Crítica',alta:'Alta',med:'Media',baja:'Baja'};
+const EST_BADGE_OT = {
+  open: '<span class="badge badge-info">Abierta</span>',
+  prog: '<span class="badge badge-warn">En proceso</span>',
+  ext:  '<span class="badge badge-ext">Externo</span>',
+  done: '<span class="badge badge-ok">Completada</span>',
+};
+
+function emptyCard(icon, msg){
+  return `<div style="padding:20px;text-align:center;color:rgba(131,131,139,0.35)">
+    <div style="font-size:28px;margin-bottom:8px;opacity:0.4">${icon}</div>
+    <div style="font-size:12px">${msg}</div>
+  </div>`;
+}
+
+async function renderTecnico(){
+  const {ots, pms} = await loadDashboardData();
+  const misOTs  = ots.filter(o => !o.es_externo);
+  const urgentes = misOTs.filter(o => o.prioridad==='crit' && o.estado!=='done');
+  const abiertas = misOTs.filter(o => o.estado!=='done');
+  const pmVenc  = pms.filter(p => calcEstPM(p.proxima_fecha)==='overdue');
+  const pmProx  = pms.filter(p => calcEstPM(p.proxima_fecha)==='soon');
+  const today   = new Date().toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long'});
+
+  const otRow = o => `<div style="display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:6px;background:rgba(255,255,255,0.03);margin-bottom:4px;cursor:pointer" onclick="window.location.href='qdc_ot.html'">
+    <div style="width:7px;height:7px;border-radius:50%;flex-shrink:0;background:${PRIO_COL[o.prioridad]||'gray'}"></div>
+    <div style="flex:1;min-width:0"><div style="font-size:11px;font-weight:500;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${o.descripcion}</div><div style="font-size:10px;color:rgba(131,131,139,0.5)">${o.codigo||'OT'} · ${o.activo||'—'}</div></div>
+    ${EST_BADGE_OT[o.estado]||''}
+  </div>`;
+
+  const pmRow = p => `<div style="display:flex;gap:7px;align-items:flex-start;font-size:11px;margin-bottom:5px;line-height:1.4">
+    <span style="color:${calcEstPM(p.proxima_fecha)==='overdue'?'var(--crit)':'var(--warn)'};flex-shrink:0">⚡</span>
+    <span style="color:rgba(200,210,225,0.7)">${p.nombre} — ${p.proxima_fecha||'—'}</span>
+  </div>`;
+
+  document.getElementById('dashboard-content').innerHTML = `<div style="padding:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div>
+        <div style="font-family:var(--head);font-size:20px;font-weight:700;color:var(--white)">Bienvenido, ${_nombre} 👋</div>
+        <div style="font-size:12px;color:rgba(131,131,139,0.6);margin-top:2px">${today}</div>
       </div>
+      <button onclick="window.location.href='qdc_ot.html'" style="padding:7px 14px;border-radius:5px;border:none;background:var(--accent);color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font)">+ Registrar OT</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px">
+      <div style="background:rgba(226,75,74,0.08);border:0.5px solid rgba(226,75,74,0.2);border-radius:8px;padding:12px 14px;border-top:2px solid var(--crit);cursor:pointer" onclick="window.location.href='qdc_ot.html'">
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px">OT Urgentes</div>
+        <div style="font-size:24px;font-weight:600;font-family:var(--head);color:var(--crit)">${urgentes.length}</div>
+        <div style="font-size:10px;color:rgba(131,131,139,0.45);margin-top:3px">${urgentes.length?'Requieren atención inmediata':'Sin urgencias activas'}</div>
+      </div>
+      <div style="background:rgba(33,150,243,0.06);border:0.5px solid rgba(33,150,243,0.15);border-radius:8px;padding:12px 14px;border-top:2px solid var(--accent);cursor:pointer" onclick="window.location.href='qdc_ot.html'">
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px">Mis OT abiertas</div>
+        <div style="font-size:24px;font-weight:600;font-family:var(--head);color:#85B7EB">${abiertas.length}</div>
+        <div style="font-size:10px;color:rgba(131,131,139,0.45);margin-top:3px">${abiertas.length?'Pendientes de cierre':'Todo al día'}</div>
+      </div>
+      <div style="background:rgba(127,119,221,0.08);border:0.5px solid rgba(127,119,221,0.2);border-radius:8px;padding:12px 14px;border-top:2px solid var(--pm);cursor:pointer" onclick="window.location.href='qdc_pm.html'">
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px">PM pendientes</div>
+        <div style="font-size:24px;font-weight:600;font-family:var(--head);color:#AFA9EC">${pmVenc.length + pmProx.length}</div>
+        <div style="font-size:10px;color:rgba(131,131,139,0.45);margin-top:3px">${pmVenc.length} vencidos · ${pmProx.length} próximos</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div style="background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px">
+        <div style="font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);margin-bottom:10px">Mis órdenes de trabajo</div>
+        ${misOTs.length ? misOTs.slice(0,4).map(otRow).join('') : emptyCard('📋','Sin OT asignadas — usa el botón de arriba para registrar la primera')}
+      </div>
+      <div style="background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px">
+        <div style="font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);margin-bottom:10px">PM vencidos y próximos</div>
+        ${(pmVenc.length||pmProx.length) ? [...pmVenc,...pmProx].slice(0,5).map(pmRow).join('') : emptyCard('🔄','Plan preventivo al día')}
+      </div>
+    </div>
+  </div>`;
+}
 
+async function renderSupervisor(){
+  const {ots, inv, pms, embs} = await loadDashboardData();
+  const extSinPDF = ots.filter(o=>o.es_externo&&!o.pdf_url&&o.estado!=='open').length;
+  const stockCrit = inv.filter(i=>i.stock===0).length;
+  const stockBajo = inv.filter(i=>i.stock>0&&i.stock<=i.stock_minimo).length;
+  const pmVenc    = pms.filter(p=>calcEstPM(p.proxima_fecha)==='overdue').length;
+  const costoEmb  = embs.reduce((a,e)=>a+(e.costo_total||0),0);
+  const today     = new Date().toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+  const otRow = o => `<div style="display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:6px;background:rgba(255,255,255,0.03);${o.es_externo?'border-left:2px solid rgba(29,158,117,0.5)':''};margin-bottom:4px;cursor:pointer" onclick="window.location.href='qdc_ot.html'">
+    <div style="width:7px;height:7px;border-radius:50%;flex-shrink:0;background:${o.es_externo?'var(--ext)':PRIO_COL[o.prioridad]||'gray'}"></div>
+    <div style="flex:1;min-width:0"><div style="font-size:11px;font-weight:500;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${o.descripcion}</div><div style="font-size:10px;color:rgba(131,131,139,0.5)">${o.codigo||'OT'} · ${o.asignado_nombre||'—'}</div></div>
+    ${EST_BADGE_OT[o.estado]||''}
+  </div>`;
+
+  document.getElementById('dashboard-content').innerHTML = `<div style="padding:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div>
+        <div style="font-family:var(--head);font-size:20px;font-weight:700;color:var(--white)">Buenos días, ${_nombre}</div>
+        <div style="font-size:12px;color:rgba(131,131,139,0.6);margin-top:2px">${today} · ${ots.length} OT activas</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button onclick="window.location.href='qdc_ot.html'" style="padding:7px 14px;border-radius:5px;border:none;background:var(--accent);color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font)">+ Nueva OT</button>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px">
+      <div style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:12px 14px;border-top:2px solid var(--accent);cursor:pointer" onclick="window.location.href='qdc_ot.html'">
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px">OT activas</div>
+        <div style="font-size:24px;font-weight:600;font-family:var(--head);color:#85B7EB">${ots.filter(o=>o.estado!=='done').length}</div>
+        <div style="font-size:10px;color:rgba(131,131,139,0.45);margin-top:3px">${ots.filter(o=>o.es_externo).length} externas</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:12px 14px;border-top:2px solid var(--ext);cursor:pointer" onclick="window.location.href='qdc_contratistas.html'">
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px">PDF pendientes</div>
+        <div style="font-size:24px;font-weight:600;font-family:var(--head);color:var(--ext)">${extSinPDF}</div>
+        <div style="font-size:10px;color:${extSinPDF?'var(--warn)':'rgba(131,131,139,0.45)'};margin-top:3px">${extSinPDF?'Requieren acción':'Todo al día'}</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:12px 14px;border-top:2px solid var(--pm);cursor:pointer" onclick="window.location.href='qdc_pm.html'">
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px">PM vencidos</div>
+        <div style="font-size:24px;font-weight:600;font-family:var(--head);color:${pmVenc?'var(--crit)':'#AFA9EC'}">${pmVenc}</div>
+        <div style="font-size:10px;color:rgba(131,131,139,0.45);margin-top:3px">${pmVenc?'Programar urgente':'Plan al día'}</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:12px 14px;border-top:2px solid var(--warn);cursor:pointer" onclick="window.location.href='qdc_inventario.html'">
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px">Stock critico</div>
+        <div style="font-size:24px;font-weight:600;font-family:var(--head);color:${stockCrit?'var(--crit)':stockBajo?'var(--warn)':'var(--ok)'}">${stockCrit+stockBajo}</div>
+        <div style="font-size:10px;color:rgba(131,131,139,0.45);margin-top:3px">${stockCrit} agotados · ${stockBajo} bajo mín.</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 300px;gap:12px">
+      <div style="background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px">
+        <div style="font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);margin-bottom:10px">OT recientes <span style="color:var(--ext);font-weight:400;text-transform:none;letter-spacing:0">· verde = externo</span></div>
+        ${ots.length ? ots.slice(0,5).map(otRow).join('') : emptyCard('📋','Sin órdenes de trabajo — crea la primera desde el módulo OT')}
+      </div>
       <div style="display:flex;flex-direction:column;gap:10px">
-        <div class="alert-mini">
-          <div class="am-header"><span class="am-title">Alertas para ti</span><span class="am-count">2</span></div>
-          <div class="am-list">
-            <div class="am-item"><div class="am-dot" style="background:var(--crit)"></div><div class="am-text">OT-0898 marcada urgente por supervisora</div></div>
-            <div class="am-item"><div class="am-dot" style="background:var(--warn)"></div><div class="am-text">PM vence hoy: Revisión filtros Línea B</div></div>
+        <div style="background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px;cursor:pointer" onclick="window.location.href='qdc_embalajes.html'">
+          <div style="font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);margin-bottom:8px">Embalajes del mes</div>
+          ${embs.length ? `<div style="font-family:var(--head);font-size:20px;font-weight:600;color:#F0997B;margin-bottom:4px">${embs.length}</div><div style="font-size:11px;color:rgba(200,210,225,0.6)">Total: $${Math.round(costoEmb/1000)}K</div>` : emptyCard('📫','Sin embalajes registrados este mes')}
+        </div>
+        <div style="background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px;cursor:pointer" onclick="window.location.href='qdc_alertas.html'">
+          <div style="font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);margin-bottom:8px">Alertas activas</div>
+          <div style="font-size:11px;color:rgba(200,210,225,0.6)">
+            ${extSinPDF?`<div style="color:var(--warn);margin-bottom:4px">⚠️ ${extSinPDF} PDF externo pendiente</div>`:''}
+            ${stockCrit?`<div style="color:var(--crit);margin-bottom:4px">🔴 ${stockCrit} item(s) sin stock</div>`:''}
+            ${pmVenc?`<div style="color:var(--crit);margin-bottom:4px">🔴 ${pmVenc} PM vencido(s)</div>`:''}
+            ${!extSinPDF&&!stockCrit&&!pmVenc?'<div style="color:rgba(131,131,139,0.4)">Sin alertas activas</div>':''}
           </div>
         </div>
-        <div class="pm-status">
-          <div class="ps-header"><span class="ps-title">Mis PM este mes</span><span class="ps-pct">3/4</span></div>
-          <div class="pm-bar"><div class="pm-bar-fill" style="width:75%"></div></div>
-          <div class="pm-rows">
-            <div class="pm-row"><div class="pm-row-label"><div class="pm-row-dot" style="background:var(--ok)"></div>Completados</div><div class="pm-row-val" style="color:var(--ok)">3</div></div>
-            <div class="pm-row"><div class="pm-row-label"><div class="pm-row-dot" style="background:var(--warn)"></div>Pendientes</div><div class="pm-row-val" style="color:var(--warn)">1</div></div>
-          </div>
-        </div>
       </div>
     </div>
-  `;
+  </div>`;
 }
 
-// ── SUPERVISOR ──
-function renderSupervisor(){
-  document.getElementById('dashboard-content').innerHTML=`
-    <div class="welcome">
-      <div><div class="welcome-text">Buenos días, ${_nombre}</div><div class="welcome-sub">Jueves 17 de abril 2025 · 12 OT activas · 2 alertas críticas</div></div>
-      <div class="welcome-actions"><button class="wb wb-g">⬇ Exportar</button><button class="wb wb-p">+ Nueva OT</button></div>
-    </div>
+async function renderGerencia(){
+  const {ots, pms, embs} = await loadDashboardData();
+  const costoEmb = embs.reduce((a,e)=>a+(e.costo_total||0),0);
+  const pmVenc   = pms.filter(p=>calcEstPM(p.proxima_fecha)==='overdue').length;
+  const pmTotal  = pms.length;
+  const pctPM    = pmTotal ? Math.round(((pmTotal-pmVenc)/pmTotal)*100) : 100;
+  const today    = new Date().toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 
-    <div class="kpi-grid kpi-grid-4" style="margin-bottom:12px">
-      <div class="kpi-card kc-blue"><div class="kpi-label">OT totales activas</div><div class="kpi-val blue">12</div><div class="kpi-delta dn">7 internas · 5 externas</div></div>
-      <div class="kpi-card kc-ext"><div class="kpi-label">Servicios externos</div><div class="kpi-val ext">5</div><div class="kpi-delta dr">2 sin informe PDF</div></div>
-      <div class="kpi-card kc-warn"><div class="kpi-label">PM vencidos</div><div class="kpi-val warn">3</div><div class="kpi-delta dr">▲ Requieren acción</div></div>
-      <div class="kpi-card kc-crit"><div class="kpi-label">Alertas críticas</div><div class="kpi-val crit">2</div><div class="kpi-delta dr">Atención inmediata</div></div>
-    </div>
-
-    <div class="main-grid">
-      <div class="chart-card">
-        <div class="cc-header">
-          <span class="cc-title">OT completadas — últimos 7 meses</span>
-          <span class="cc-badge" style="background:rgba(29,158,117,0.12);color:var(--ext)">Ext destacado</span>
-        </div>
-        <div class="cw" style="height:170px"><canvas id="ch-ot-sup"></canvas></div>
-      </div>
-
-      <div class="ot-panel">
-        <div class="ot-panel-hdr">
-          <span class="ot-panel-title">OT recientes</span>
-          <span style="font-size:10px;color:var(--ext)">Verde = externo</span>
-        </div>
-        <div class="ot-list">
-          <div class="ot-item ext-ot"><div class="ot-dot" style="background:var(--ext)"></div><div class="ot-info"><div class="ot-title">Mantención tablero eléctrico</div><div class="ot-meta">OT-0897 · Eléctricas SpA · Sin PDF</div></div><span class="ot-badge ob-ext">Externo</span></div>
-          <div class="ot-item"><div class="ot-dot" style="background:var(--crit)"></div><div class="ot-info"><div class="ot-title">Sobrecalentamiento C-101</div><div class="ot-meta">OT-0898 · L. García · Urgente</div></div><span class="ot-badge ob-prog">En proceso</span></div>
-          <div class="ot-item ext-ot"><div class="ot-dot" style="background:var(--ext)"></div><div class="ot-info"><div class="ot-title">Instalación sensor nivel T-03</div><div class="ot-meta">OT-0892 · AutoControl Ltda · Sin PDF</div></div><span class="ot-badge ob-ext">Externo</span></div>
-          <div class="ot-item"><div class="ot-dot" style="background:var(--warn)"></div><div class="ot-info"><div class="ot-title">Vibración rodamiento P-205</div><div class="ot-meta">OT-0896 · M. Pérez</div></div><span class="ot-badge ob-open">Abierta</span></div>
-        </div>
+  document.getElementById('dashboard-content').innerHTML = `<div style="padding:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div>
+        <div style="font-family:var(--head);font-size:20px;font-weight:700;color:var(--white)">Buenos días, ${_nombre}</div>
+        <div style="font-size:12px;color:rgba(131,131,139,0.6);margin-top:2px">${today} · Vista ejecutiva</div>
       </div>
     </div>
-
-    <div class="bottom-grid">
-      <div class="alert-mini">
-        <div class="am-header"><span class="am-title">Alertas activas</span><span class="am-count">5</span></div>
-        <div class="am-list">
-          <div class="am-item"><div class="am-dot" style="background:var(--crit)"></div><div class="am-text">C-101 temperatura 94°C — crítica</div></div>
-          <div class="am-item"><div class="am-dot" style="background:var(--crit)"></div><div class="am-text">Aceite Mobil DTE 100 agotado</div></div>
-          <div class="am-item"><div class="am-dot" style="background:var(--warn)"></div><div class="am-text">OT-0892 sin PDF (Mant. Industrial)</div></div>
-          <div class="am-item"><div class="am-dot" style="background:var(--warn)"></div><div class="am-text">PM vencido — Sello Bomba P-205</div></div>
-        </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px">
+      <div style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:12px 14px;border-top:2px solid var(--accent);cursor:pointer" onclick="window.location.href='qdc_ot.html'">
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px">OT activas</div>
+        <div style="font-size:24px;font-weight:600;font-family:var(--head);color:#85B7EB">${ots.filter(o=>o.estado!=='done').length}</div>
+        <div style="font-size:10px;color:rgba(131,131,139,0.45);margin-top:3px">${ots.filter(o=>o.es_externo).length} externas</div>
       </div>
-      <div class="pm-status">
-        <div class="ps-header"><span class="ps-title">Cumplimiento PM</span><span class="ps-pct">83%</span></div>
-        <div class="pm-bar"><div class="pm-bar-fill" style="width:83%"></div></div>
-        <div class="pm-rows">
-          <div class="pm-row"><div class="pm-row-label"><div class="pm-row-dot" style="background:var(--ok)"></div>Programadas</div><div class="pm-row-val" style="color:var(--ok)">11</div></div>
-          <div class="pm-row"><div class="pm-row-label"><div class="pm-row-dot" style="background:var(--warn)"></div>Próximas 7d</div><div class="pm-row-val" style="color:var(--warn)">4</div></div>
-          <div class="pm-row"><div class="pm-row-label"><div class="pm-row-dot" style="background:var(--crit)"></div>Vencidas</div><div class="pm-row-val" style="color:var(--crit)">3</div></div>
-        </div>
+      <div style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:12px 14px;border-top:2px solid var(--pm);cursor:pointer" onclick="window.location.href='qdc_pm.html'">
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px">Cumplimiento PM</div>
+        <div style="font-size:24px;font-weight:600;font-family:var(--head);color:#AFA9EC">${pctPM}%</div>
+        <div style="font-size:10px;color:rgba(131,131,139,0.45);margin-top:3px">${pmVenc} vencidos</div>
       </div>
-      <div class="ext-mini">
-        <div class="em-header"><span class="em-title">Servicios externos</span><span class="em-count">5 OT</span></div>
-        <div class="em-list">
-          <div class="em-item"><div class="em-dot"></div><div class="em-text">Eléctricas SpA — OT-0897</div><span class="em-pdf" style="color:var(--warn)">📄?</span></div>
-          <div class="em-item"><div class="em-dot"></div><div class="em-text">AutoControl — OT-0892</div><span class="em-pdf" style="color:var(--warn)">📄?</span></div>
-          <div class="em-item"><div class="em-dot"></div><div class="em-text">Mant. Industrial — OT-0876</div><span class="em-pdf" style="color:var(--ext)">📄✓</span></div>
-          <div class="em-item"><div class="em-dot"></div><div class="em-text">Termograf SpA — OT-0870</div><span class="em-pdf" style="color:var(--ext)">📄✓</span></div>
-        </div>
+      <div style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:12px 14px;border-top:2px solid #F0997B;cursor:pointer" onclick="window.location.href='qdc_embalajes.html'">
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px">Embalajes mes</div>
+        <div style="font-size:24px;font-weight:600;font-family:var(--head);color:#F0997B">${embs.length}</div>
+        <div style="font-size:10px;color:rgba(131,131,139,0.45);margin-top:3px">$${Math.round(costoEmb/1000)}K total</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:12px 14px;border-top:2px solid var(--ok);cursor:pointer" onclick="window.location.href='qdc_activos.html'">
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px">Activos planta</div>
+        <div style="font-size:24px;font-weight:600;font-family:var(--head);color:var(--ok)">22</div>
+        <div style="font-size:10px;color:rgba(131,131,139,0.45);margin-top:3px">Equipos registrados</div>
       </div>
     </div>
-  `;
-
-  setTimeout(()=>{
-    destroyCharts();
-    charts.otSup=new Chart(document.getElementById('ch-ot-sup'),{
-      type:'bar',
-      data:{labels:MONTHS,datasets:[
-        {label:'Interno',data:[15,17,14,16,18,15,17],backgroundColor:'rgba(127,119,221,0.55)',borderRadius:3},
-        {label:'Externo',data:[2,1,3,2,2,3,5],backgroundColor:'rgba(93,202,165,0.7)',borderRadius:3},
-      ]},
-      options:{responsive:true,maintainAspectRatio:false,
-        plugins:{legend:{display:true,position:'top',labels:{color:tickColor,font:{size:10,family:'Barlow'},boxWidth:10,padding:10}},tooltip:{backgroundColor:'#0D2D48',borderColor:'rgba(255,255,255,0.1)',borderWidth:1,titleColor:'#EEF4FF',bodyColor:'#B5D4F4'}},
-        scales:{x:{stacked:true,grid:{color:gridColor},ticks:{color:tickColor,font:{size:10,family:'Barlow'}}},y:{stacked:true,grid:{color:gridColor},ticks:{color:tickColor,font:{size:10,family:'Barlow'}}}}}
-    });
-  },50);
-}
-
-// ── GERENCIA ──
-function renderGerencia(){
-  document.getElementById('dashboard-content').innerHTML=`
-    <div class="welcome">
-      <div><div class="welcome-text">Buenos días, ${_nombre}</div><div class="welcome-sub">Jueves 17 de abril 2025 · Vista ejecutiva</div></div>
-      <div class="welcome-actions"><button class="wb wb-g">⬇ Reporte PDF</button></div>
-    </div>
-
-    <div class="kpi-grid kpi-grid-4" style="margin-bottom:12px">
-      <div class="kpi-card kc-blue"><div class="kpi-label">Disponibilidad planta</div><div class="kpi-val blue">94.2%</div><div class="kpi-delta dg">▲ +1.8% vs anterior</div></div>
-      <div class="kpi-card kc-ext"><div class="kpi-label">Costo servicios externos</div><div class="kpi-val ext">$18.2M</div><div class="kpi-delta dr">38.6% del total mtto</div></div>
-      <div class="kpi-card kc-green"><div class="kpi-label">OEE planta</div><div class="kpi-val green">78.4%</div><div class="kpi-delta dg">▲ +2.1% vs anterior</div></div>
-      <div class="kpi-card kc-warn"><div class="kpi-label">MTTR promedio</div><div class="kpi-val warn">3.2h</div><div class="kpi-delta dg">▼ −0.4h mejora</div></div>
-    </div>
-
-    <div class="main-grid">
-      <div class="chart-card">
-        <div class="cc-header">
-          <span class="cc-title">Costo mantenimiento — interno vs externo (M CLP)</span>
-        </div>
-        <div class="cw" style="height:170px"><canvas id="ch-cost-ger"></canvas></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+      <div style="background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px;cursor:pointer" onclick="window.location.href='qdc_ot.html'">
+        <div style="font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);margin-bottom:10px">Ultimas OT</div>
+        ${ots.length ? ots.slice(0,3).map(o=>`<div style="font-size:11px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04);color:rgba(200,210,225,0.7)">${o.descripcion?.substring(0,40)||'—'}</div>`).join('') : emptyCard('📋','Sin OT registradas')}
       </div>
-
-      <div style="display:flex;flex-direction:column;gap:10px">
-        <div class="kpi-card kc-pm" style="flex:1">
-          <div class="kpi-label">Cumplimiento PM mensual</div>
-          <div class="kpi-val pm">83%</div>
-          <div style="height:4px;background:rgba(255,255,255,0.08);border-radius:2px;margin-top:8px;overflow:hidden"><div style="height:100%;width:83%;background:var(--pm);border-radius:2px"></div></div>
-          <div class="kpi-delta dn" style="margin-top:6px">18 rutinas activas · 3 vencidas</div>
-        </div>
-        <div class="kpi-card kc-crit" style="flex:1">
-          <div class="kpi-label">Fallas no planificadas</div>
-          <div class="kpi-val crit">6</div>
-          <div class="kpi-delta dr">▲ +2 vs mes anterior</div>
-          <div class="kpi-delta dn">Compresor C-101: 3 fallas</div>
-        </div>
+      <div style="background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px;cursor:pointer" onclick="window.location.href='qdc_pm.html'">
+        <div style="font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);margin-bottom:8px">Cumplimiento PM</div>
+        <div style="font-size:32px;font-weight:700;font-family:var(--head);color:#AFA9EC;margin-bottom:8px">${pctPM}%</div>
+        <div style="height:5px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden"><div style="height:100%;width:${pctPM}%;background:var(--pm)"></div></div>
+        <div style="font-size:10px;color:rgba(131,131,139,0.45);margin-top:6px">${pmVenc} PM vencidos · ${pms.filter(p=>calcEstPM(p.proxima_fecha)==='soon').length} próximos</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px;cursor:pointer" onclick="window.location.href='qdc_embalajes.html'">
+        <div style="font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);margin-bottom:10px">Embalajes recientes</div>
+        ${embs.length ? embs.slice(0,4).map(e=>`<div style="display:flex;justify-content:space-between;font-size:11px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04)"><span style="color:rgba(200,210,225,0.7);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px">${e.cliente||'—'}</span><span style="color:#F0997B;font-weight:500;flex-shrink:0">$${Math.round((e.costo_total||0)/1000)}K</span></div>`).join('') : emptyCard('📫','Sin embalajes registrados')}
       </div>
     </div>
-
-    <div class="bottom-grid">
-      <div class="chart-card">
-        <div class="cc-header"><span class="cc-title" style="font-size:10px">Disponibilidad por activo</span></div>
-        <div class="cw" style="height:130px"><canvas id="ch-disp-ger"></canvas></div>
-      </div>
-      <div class="ext-mini">
-        <div class="em-header"><span class="em-title">Gasto por contratista 2025</span><span style="font-family:var(--head);font-size:18px;font-weight:600;color:var(--ext)">$4.9M</span></div>
-        <div class="em-list">
-          <div class="em-item"><div class="em-dot"></div><div class="em-text">Eléctricas SpA</div><span style="font-size:11px;font-weight:500;color:var(--ext)">$2.1M</span></div>
-          <div class="em-item"><div class="em-dot"></div><div class="em-text">AutoControl Ltda.</div><span style="font-size:11px;font-weight:500;color:var(--ext)">$1.4M</span></div>
-          <div class="em-item"><div class="em-dot"></div><div class="em-text">Mant. Industrial SA</div><span style="font-size:11px;color:rgba(200,210,225,0.6)">$890K</span></div>
-          <div class="em-item"><div class="em-dot"></div><div class="em-text">Otros</div><span style="font-size:11px;color:rgba(200,210,225,0.6)">$500K</span></div>
-        </div>
-      </div>
-      <div class="alert-mini">
-        <div class="am-header"><span class="am-title">Alertas ejecutivas</span><span class="am-count" style="color:var(--warn);font-size:18px">3</span></div>
-        <div class="am-list">
-          <div class="am-item"><div class="am-dot" style="background:var(--crit)"></div><div class="am-text">Compresor C-101 — disponibilidad 72% (meta 95%)</div></div>
-          <div class="am-item"><div class="am-dot" style="background:var(--warn)"></div><div class="am-text">Costo externo supera 38% del total</div></div>
-          <div class="am-item"><div class="am-dot" style="background:var(--warn)"></div><div class="am-text">3 PM vencidos sin programar</div></div>
-        </div>
-      </div>
-    </div>
-  `;
-
-  setTimeout(()=>{
-    destroyCharts();
-    charts.costGer=new Chart(document.getElementById('ch-cost-ger'),{
-      type:'line',
-      data:{labels:MONTHS,datasets:[
-        {label:'Total',data:[52,49,55,51,48,53,47.1],borderColor:'#EEF4FF',backgroundColor:'rgba(238,244,255,0.05)',borderWidth:2,tension:0.3,fill:true,pointBackgroundColor:'#EEF4FF',pointRadius:3},
-        {label:'Externo',data:[18,15,22,19,17,21,18.2],borderColor:'#5DCAA5',backgroundColor:'rgba(93,202,165,0.06)',borderWidth:1.5,tension:0.3,borderDash:[4,3],pointBackgroundColor:'#5DCAA5',pointRadius:3},
-      ]},
-      options:{responsive:true,maintainAspectRatio:false,
-        plugins:{legend:{display:true,position:'top',labels:{color:tickColor,font:{size:10,family:'Barlow'},boxWidth:10,padding:10}},tooltip:{backgroundColor:'#0D2D48',borderColor:'rgba(255,255,255,0.1)',borderWidth:1,titleColor:'#EEF4FF',bodyColor:'#B5D4F4'}},
-        scales:{x:{grid:{color:gridColor},ticks:{color:tickColor,font:{size:10,family:'Barlow'}}},y:{grid:{color:gridColor},ticks:{color:tickColor,font:{size:10,family:'Barlow'}}}}}
-    });
-    charts.dispGer=new Chart(document.getElementById('ch-disp-ger'),{
-      type:'bar',
-      data:{labels:['C-101','P-205','MO-18','CH-3','T-01'],
-        datasets:[{data:[72,94,98,96,99],backgroundColor:(ctx)=>{const v=ctx.raw;return v>=95?'rgba(151,196,89,0.7)':v>=80?'rgba(33,150,243,0.6)':'rgba(226,75,74,0.7)';},borderRadius:4}]},
-      options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
-        plugins:{legend:{display:false},tooltip:{backgroundColor:'#0D2D48',borderColor:'rgba(255,255,255,0.1)',borderWidth:1,titleColor:'#EEF4FF',bodyColor:'#B5D4F4',callbacks:{label:(c)=>`${c.raw}%`}}},
-        scales:{x:{max:100,grid:{color:gridColor},ticks:{color:tickColor,font:{size:9,family:'Barlow'},callback:(v)=>`${v}%`}},y:{grid:{display:false},ticks:{color:tickColor,font:{size:10,family:'Barlow'}}}}}
-    });
-  },50);
-}
-
-
-function doLogout(){
-  localStorage.removeItem('qdc_user');
-  window.location.href='index.html';
+  </div>`;
 }
 
 function setRole(r){
   role=r;
-  ['t','s','g'].forEach(x=>{ document.getElementById('rb-'+x).className='rbtn'+(x===r?` on-${r}`:''); });
+  ['t','s','g'].forEach(x=>{ const el=document.getElementById('rb-'+x); if(el) el.className='rbtn'+(x===r?` on-${r}`:''); });
   buildNav(); buildUser();
   destroyCharts();
+  // Show loading state
+  const dc=document.getElementById('dashboard-content');
+  if(dc) dc.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:200px;gap:12px;color:rgba(131,131,139,0.5)"><div style="width:20px;height:20px;border:2px solid rgba(255,255,255,0.1);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite"></div><span>Cargando datos...</span></div>';
   if(r==='t') renderTecnico();
   else if(r==='s') renderSupervisor();
   else renderGerencia();
@@ -534,6 +556,9 @@ function setRole(r){
 const _roleLabel=document.querySelector('.sb-role-label');
 if(_roleLabel) _roleLabel.textContent='Usuario activo';
 
+// Update topbar date dynamically
+const _dtEl = document.getElementById('topbar-date');
+if(_dtEl) _dtEl.textContent = new Date().toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 setRole(_rol);
 </script>
 </body>

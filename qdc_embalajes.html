@@ -204,11 +204,8 @@ async function loadEmb(){
   }catch(e){ EMBS=demosEmb(); showToast('Mostrando datos demo'); }
   updateStats(); renderEmb(EMBS);
 }
-function demosEmb(){return[
-  {id:'e1',codigo:'EMB-001',nota_venta:'NV-2025-0412',cliente:'Comercial Andina SpA',tipo_cajon:'Cajón mediano',destino:'Antofagasta',costo_total:68400,foto1_url:'ok',foto2_url:'ok',pdf_url:'ok',estado:'completo',creado_en:new Date().toISOString()},
-  {id:'e2',codigo:'EMB-002',nota_venta:'NV-2025-0408',cliente:'Minera del Norte SA',tipo_cajon:'Cajón exportación',destino:'Calama',costo_total:218600,foto1_url:'ok',foto2_url:null,pdf_url:'ok',estado:'pendiente',creado_en:new Date().toISOString()},
-  {id:'e3',codigo:'EMB-003',nota_venta:'NV-2025-0401',cliente:'Ferretería Central Ltda.',tipo_cajon:'Cajón pequeño',destino:'Santiago',costo_total:29700,foto1_url:'ok',foto2_url:'ok',pdf_url:'ok',estado:'completo',creado_en:new Date().toISOString()},
-];}
+function demosEmb(){return[];}
+
 function updateStats(){
   const total=EMBS.length;
   const costo=EMBS.reduce((a,e)=>a+(e.costo_total||0),0);

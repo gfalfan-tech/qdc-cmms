@@ -187,14 +187,14 @@ tr.ext-row td{border-left:2px solid rgba(29,158,117,0.4);}
           <div class="qf-label">Activo / Equipo <span style="color:var(--accent)">*</span></div>
           <select class="qf-select" id="q-activo">
             <option value="">Seleccionar…</option>
-            <option>Compresor C-101</option>
-            <option>Bomba P-205</option>
-            <option>Motor MO-18</option>
-            <option>Turbina T-01</option>
-            <option>Enfriadora CH-3</option>
-            <option>Tablero E-01</option>
-            <option>Banda B-44</option>
-            <option>Tanque T-03</option>
+            <option>Balanzas</option>
+            <option>Generador Vielco / ATS</option>
+            <option>Portones eléctricos</option>
+            <option>Vehículos de planta</option>
+            <option>Climatización</option>
+            <option>Tableros eléctricos</option>
+            <option>Máquinas de fabricación</option>
+            <option>Grúas horquillas</option>
             <option>Otro equipo</option>
           </select>
         </div>
@@ -378,13 +378,7 @@ async function loadOTs(){
 }
 
 // Datos demo como fallback
-function getDemoOTs(){
-  return [
-    {id:'demo-1',codigo:'OT-0001',descripcion:'Sobrecalentamiento compresor C-101',activo:'Compresor C-101',tipo:'Correctivo',prioridad:'crit',estado:'prog',asignado_id:null,asignado_nombre:USER.nombre,es_externo:false,contratista:null,pdf_url:null,creado_en:new Date().toISOString()},
-    {id:'demo-2',codigo:'OT-0002',descripcion:'Mantención tablero eléctrico principal',activo:'Tablero E-01',tipo:'Externo',prioridad:'alta',estado:'ext',asignado_id:null,asignado_nombre:'Eléctricas SpA',es_externo:true,contratista:'Eléctricas SpA',pdf_url:null,creado_en:new Date().toISOString()},
-    {id:'demo-3',codigo:'OT-0003',descripcion:'Cambio aceite y filtros bomba P-205',activo:'Bomba P-205',tipo:'Preventivo',prioridad:'med',estado:'open',asignado_id:null,asignado_nombre:USER.nombre,es_externo:false,contratista:null,pdf_url:null,creado_en:new Date().toISOString()},
-  ];
-}
+function getDemoOTs(){return[];}
 
 function updateStats(){
   const t = OTS_DATA.length;

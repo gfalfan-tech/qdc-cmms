@@ -215,13 +215,8 @@ async function loadAlerts(){
   // Filtrar por rol
   updateStats(); renderAlerts(ALERTS);
 }
-function demosAlerts(){return[
-  {id:'a1',prio:'critica',cat:'activo',icon:'🏭',titulo:'Compresor C-101 — temperatura crítica',desc:'94°C en cabezal. Límite operativo: 80°C. OT-0898 generada.',mod:'qdc_ot.html',tiempo:'Hace 12 min'},
-  {id:'a2',prio:'critica',cat:'inv',icon:'📦',titulo:'Aceite Mobil DTE 100 — stock agotado',desc:'0 unidades disponibles. Generar OC urgente.',mod:'qdc_inventario.html',tiempo:'Hace 35 min'},
-  {id:'a3',prio:'advertencia',cat:'pm',icon:'🔄',titulo:'PM vencido — Sello mecánico Bomba P-205',desc:'Rutina semestral vencida. Programar intervención.',mod:'qdc_pm.html',tiempo:'Hace 3h'},
-  {id:'a4',prio:'advertencia',cat:'ot',icon:'🏢',titulo:'OT externa sin PDF (Eléctricas SpA)',desc:'Informe obligatorio para cierre de OT.',mod:'qdc_ot.html',tiempo:'Hace 4h'},
-  {id:'a5',prio:'informativa',cat:'pm',icon:'🔄',titulo:'PM próximo — Filtros Enfriadora CH-3',desc:'Rutina quincenal en 2 días.',mod:'qdc_pm.html',tiempo:'Hace 10h'},
-];}
+function demosAlerts(){return[];}
+
 function updateStats(){
   document.getElementById('st-total').textContent=ALERTS.length;
   document.getElementById('st-crit').textContent=ALERTS.filter(a=>a.prio==='critica').length;

@@ -197,16 +197,7 @@ async function loadItems(){
   updateStats();renderList();
 }
 
-function getDemo(){return[
-  {id:'d1',sku:'SKF-6205',descripcion:'Rodamiento SKF 6205-2Z',categoria:'Rodamientos',stock:2,stock_minimo:5,stock_maximo:20,precio_unitario:28000,unidad:'Unidad',proveedor:'SKF Chile'},
-  {id:'d2',sku:'MOB-DTE100',descripcion:'Aceite Mobil DTE 10 Excel',categoria:'Lubricantes',stock:0,stock_minimo:8,stock_maximo:30,precio_unitario:45000,unidad:'Litro',proveedor:'Mobil Industrial'},
-  {id:'d3',sku:'FLT-AIR-G12',descripcion:'Filtro aire G1/2',categoria:'Filtros',stock:14,stock_minimo:5,stock_maximo:20,precio_unitario:15000,unidad:'Unidad',proveedor:'Filtrex'},
-  {id:'d4',sku:'PLC-DO-24V',descripcion:'Módulo salidas digitales 24VDC',categoria:'Eléctrico',stock:0,stock_minimo:2,stock_maximo:6,precio_unitario:420000,unidad:'Unidad',proveedor:'Siemens'},
-  {id:'d5',sku:'ROD-SKF-6308',descripcion:'Rodamiento SKF 6308-2RS',categoria:'Rodamientos',stock:4,stock_minimo:4,stock_maximo:12,precio_unitario:38000,unidad:'Unidad',proveedor:'SKF Chile'},
-  {id:'d6',sku:'MOB-PEGASUS',descripcion:'Aceite Mobil Pegasus 705',categoria:'Lubricantes',stock:12,stock_minimo:6,stock_maximo:24,precio_unitario:52000,unidad:'Litro',proveedor:'Mobil Industrial'},
-  {id:'d7',sku:'SEL-VIT-25',descripcion:'Sello mecánico Viton 25mm',categoria:'Sellos',stock:7,stock_minimo:3,stock_maximo:12,precio_unitario:62000,unidad:'Unidad',proveedor:'Parker'},
-  {id:'d8',sku:'LIM-IND-500',descripcion:'Limpiador industrial 500ml',categoria:'Consumibles',stock:22,stock_minimo:10,stock_maximo:40,precio_unitario:5500,unidad:'Frasco',proveedor:'3M Chile'},
-];}
+function getDemo(){return[];}
 
 function updateStats(){
   document.getElementById('st-total').textContent=ITEMS.length;
