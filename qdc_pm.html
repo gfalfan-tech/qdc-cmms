@@ -236,13 +236,16 @@ function demosPM(){
   ];
 }
 function getEst(pm){
-  // Always calculate from proxima_fecha — never trust stored estado
-  if(!pm.proxima_fecha) return pm.estado||'ok';
-  const d=new Date(pm.proxima_fecha),hoy=new Date();
+  // ALWAYS calculate from date — stored estado is ignored
+  const fecha = pm.proxima_fecha;
+  if(!fecha) return 'ok';
+  const d = new Date(fecha);
+  const hoy = new Date();
   hoy.setHours(0,0,0,0);
-  const diff=Math.floor((d-hoy)/(1000*60*60*24));
-  if(diff<0) return 'overdue';
-  if(diff<=7) return 'soon';
+  d.setHours(0,0,0,0);
+  const diff = Math.floor((d - hoy) / (1000*60*60*24));
+  if(diff < 0)  return 'overdue';
+  if(diff <= 14) return 'soon';
   return 'ok';
 }
 function updateStats(){
@@ -290,18 +293,20 @@ function filterByEst(v){EST_F=v;filterPM(document.querySelector('.sw input')?.va
 async function marcarHecho(id){
   const pm=PMS.find(p=>p.id===id);
   if(!pm) return;
-  // Calcular próxima fecha según frecuencia
-  const freq={Mensual:30,Quincenal:15,Semestral:180,Anual:365,Trimestral:90};
+  const freq={Mensual:30,Quincenal:15,Semestral:180,Anual:365,Trimestral:90,Cuatrimestral:120};
   const dias=freq[pm.frecuencia]||30;
-  const nueva=new Date();nueva.setDate(nueva.getDate()+dias);
+  const nueva=new Date();
+  nueva.setDate(nueva.getDate()+dias);
   const nuevaFecha=nueva.toISOString().split('T')[0];
   try{
     const{error}=await db.from('plan_pm').update({estado:'ok',proxima_fecha:nuevaFecha}).eq('id',id);
     if(error) throw error;
-    pm.estado='ok'; pm.proxima_fecha=nuevaFecha;
-    await audit('pm',`PM realizado: ${pm.nombre}`,`Próxima: ${nuevaFecha}`);
-    showToast('✓ PM marcado como realizado. Próxima: '+nuevaFecha,'rgba(99,153,34,0.4)');
-    updateStats(); renderPM(PMS);
+    pm.proxima_fecha=nuevaFecha;
+    pm.estado='ok';
+    await audit('pm','PM realizado: '+pm.nombre,'Próxima: '+nuevaFecha);
+    showToast('✓ Realizado. Próxima fecha: '+nuevaFecha,'rgba(99,153,34,0.4)');
+    updateStats();
+    renderPM(PMS);
   }catch(err){ showToast('✕ Error: '+err.message,'rgba(226,75,74,0.4)'); }
 }
 function openNuevoPM(){
