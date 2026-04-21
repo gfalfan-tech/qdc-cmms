@@ -294,7 +294,7 @@ function renderTecnico(){
   const u=ROLES[role];
   document.getElementById('dashboard-content').innerHTML=`
     <div class="welcome">
-      <div><div class="welcome-text">Buenos días, Luis</div><div class="welcome-sub">Jueves 17 de abril · Turno mañana · 3 OT pendientes</div></div>
+      <div><div class="welcome-text">Buenos días, ${_nombre}</div><div class="welcome-sub">Jueves 17 de abril · Turno mañana · 3 OT pendientes</div></div>
       <div class="welcome-actions"><button class="wb wb-p">+ Nueva OT</button></div>
     </div>
 
@@ -343,7 +343,7 @@ function renderTecnico(){
 function renderSupervisor(){
   document.getElementById('dashboard-content').innerHTML=`
     <div class="welcome">
-      <div><div class="welcome-text">Buenos días, María</div><div class="welcome-sub">Jueves 17 de abril 2025 · 12 OT activas · 2 alertas críticas</div></div>
+      <div><div class="welcome-text">Buenos días, ${_nombre}</div><div class="welcome-sub">Jueves 17 de abril 2025 · 12 OT activas · 2 alertas críticas</div></div>
       <div class="welcome-actions"><button class="wb wb-g">⬇ Exportar</button><button class="wb wb-p">+ Nueva OT</button></div>
     </div>
 
@@ -427,7 +427,7 @@ function renderSupervisor(){
 function renderGerencia(){
   document.getElementById('dashboard-content').innerHTML=`
     <div class="welcome">
-      <div><div class="welcome-text">Buenos días, Carlos</div><div class="welcome-sub">Jueves 17 de abril 2025 · Vista ejecutiva</div></div>
+      <div><div class="welcome-text">Buenos días, ${_nombre}</div><div class="welcome-sub">Jueves 17 de abril 2025 · Vista ejecutiva</div></div>
       <div class="welcome-actions"><button class="wb wb-g">⬇ Reporte PDF</button></div>
     </div>
 
