@@ -238,23 +238,25 @@ const ROLES={
 };
 const NAV={
   t:[
-    {sec:"Principal",items:[{i:"▦",l:"Dashboard",active:true},{i:"📋",l:"Órdenes de trabajo",b:"3"}]},
-    {sec:"Mantenimiento",items:[{i:"🔧",l:"Correctivo"},{i:"🔄",l:"Plan preventivo"}]},
-    {sec:"Recursos",items:[{i:"🏭",l:"Activos"},{i:"📦",l:"Inventario"}]},
-    {sec:"Sistema",items:[{i:"🔔",l:"Alertas",b:"2",bt:"w"}]}
+    {sec:"Principal",items:[{i:"▦",l:"Dashboard",u:"qdc_dashboard.html",active:true},{i:"📋",l:"Órdenes de trabajo",u:"qdc_ot.html",b:"3"}]},
+    {sec:"Mantenimiento",items:[{i:"🔧",l:"Correctivo",u:"qdc_ot.html"},{i:"🔄",l:"Plan preventivo",u:"qdc_pm.html"}]},
+    {sec:"Recursos",items:[{i:"🏭",l:"Activos",u:"qdc_activos.html"},{i:"📦",l:"Inventario",u:"qdc_inventario.html"}]},
+    {sec:"Operaciones",items:[{i:"📫",l:"Embalajes",u:"qdc_embalajes.html"}]},
+    {sec:"Sistema",items:[{i:"🔔",l:"Alertas",u:"qdc_alertas.html",b:"2",bt:"w"}]}
   ],
   s:[
-    {sec:"Principal",items:[{i:"▦",l:"Dashboard",active:true},{i:"📋",l:"Órdenes de trabajo",b:"7"}]},
-    {sec:"Mantenimiento",items:[{i:"🏢",l:"Contratistas externos",b:"2",bt:"e"},{i:"🔄",l:"Plan preventivo"},{i:"🔧",l:"Correctivo"}]},
-    {sec:"Recursos",items:[{i:"🏭",l:"Activos"},{i:"📦",l:"Inventario",b:"3",bt:"w"},{i:"👷",l:"Personal"},{i:"🤝",l:"Proveedores"}]},
-    {sec:"Análisis",items:[{i:"📊",l:"KPIs"},{i:"💰",l:"Costos"}]},
-    {sec:"Sistema",items:[{i:"🔔",l:"Alertas",b:"5"}]}
+    {sec:"Principal",items:[{i:"▦",l:"Dashboard",u:"qdc_dashboard.html",active:true},{i:"📋",l:"Órdenes de trabajo",u:"qdc_ot.html",b:"7"}]},
+    {sec:"Mantenimiento",items:[{i:"🏢",l:"Contratistas",u:"qdc_contratistas.html",b:"2",bt:"e"},{i:"🔄",l:"Plan preventivo",u:"qdc_pm.html"},{i:"🔧",l:"Correctivo",u:"qdc_ot.html"}]},
+    {sec:"Recursos",items:[{i:"🏭",l:"Activos",u:"qdc_activos.html"},{i:"📦",l:"Inventario",u:"qdc_inventario.html",b:"3",bt:"w"}]},
+    {sec:"Operaciones",items:[{i:"📫",l:"Embalajes",u:"qdc_embalajes.html"}]},
+    {sec:"Análisis",items:[{i:"📊",l:"KPIs",u:"qdc_kpis.html"},{i:"💰",l:"Costos",u:"qdc_kpis.html"}]},
+    {sec:"Sistema",items:[{i:"🔔",l:"Alertas",u:"qdc_alertas.html",b:"5"}]}
   ],
   g:[
-    {sec:"Principal",items:[{i:"▦",l:"Dashboard",active:true},{i:"📋",l:"OT"}]},
-    {sec:"Operaciones",items:[{i:"🏢",l:"Contratistas externos"},{i:"🔄",l:"Plan preventivo"},{i:"🏭",l:"Activos"}]},
-    {sec:"Análisis",items:[{i:"📊",l:"KPIs"},{i:"💰",l:"Costos"}]},
-    {sec:"Sistema",items:[{i:"🔔",l:"Alertas"},{i:"⚙️",l:"Configuración"}]}
+    {sec:"Principal",items:[{i:"▦",l:"Dashboard",u:"qdc_dashboard.html",active:true},{i:"📋",l:"OT",u:"qdc_ot.html"}]},
+    {sec:"Operaciones",items:[{i:"🏢",l:"Contratistas",u:"qdc_contratistas.html"},{i:"🔄",l:"Plan preventivo",u:"qdc_pm.html"},{i:"🏭",l:"Activos",u:"qdc_activos.html"},{i:"📫",l:"Embalajes",u:"qdc_embalajes.html"}]},
+    {sec:"Análisis",items:[{i:"📊",l:"KPIs",u:"qdc_kpis.html"},{i:"💰",l:"Costos",u:"qdc_kpis.html"}]},
+    {sec:"Sistema",items:[{i:"🔔",l:"Alertas",u:"qdc_alertas.html"},{i:"⚙️",l:"Configuración",u:"qdc_config.html"}]}
   ]
 };
 
@@ -268,7 +270,8 @@ function buildNav(){
       const ac=i.active?' active':'';
       const bc=i.bt==='w'?' w':i.bt==='e'?' e':'';
       const bd=i.b?`<span class="nav-badge${bc}">${i.b}</span>`:'';
-      h+=`<div class="nav-item${ac}"><span class="nav-icon">${i.i}</span><span class="nav-label">${i.l}</span>${bd}</div>`;
+      const url=i.u||'#';
+      h+=`<a class="nav-item${ac}" href="${url}" style="text-decoration:none"><span class="nav-icon">${i.i}</span><span class="nav-label">${i.l}</span>${bd}</a>`;
     });
   });
   document.getElementById('sb-nav').innerHTML=h;
