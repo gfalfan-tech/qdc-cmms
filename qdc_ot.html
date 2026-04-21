@@ -123,6 +123,11 @@ tr.ext-row td{border-left:2px solid rgba(29,158,117,0.4);}
 .form-select option{background:#0D2D48;}
 .form-textarea{resize:vertical;min-height:70px;}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+.activo-opt{padding:9px 12px;font-size:12px;color:rgba(200,210,225,0.85);cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);transition:background .1s;}
+.activo-opt:hover,.activo-opt.selected{background:rgba(33,150,243,0.15);color:var(--white);}
+.activo-opt strong{color:var(--accent);}
+.activo-opt:last-child{border-bottom:none;}
 </style>
 </head>
 <body>
@@ -185,18 +190,16 @@ tr.ext-row td{border-left:2px solid rgba(29,158,117,0.4);}
         </div>
         <div>
           <div class="qf-label">Activo / Equipo <span style="color:var(--accent)">*</span></div>
-          <select class="qf-select" id="q-activo">
-            <option value="">Seleccionar…</option>
-            <option>Balanzas</option>
-            <option>Generador Vielco / ATS</option>
-            <option>Portones eléctricos</option>
-            <option>Vehículos de planta</option>
-            <option>Climatización</option>
-            <option>Tableros eléctricos</option>
-            <option>Máquinas de fabricación</option>
-            <option>Grúas horquillas</option>
-            <option>Otro equipo</option>
-          </select>
+          <div style="position:relative" id="activo-wrap">
+            <input type="text" class="qf-input" id="q-activo" 
+              placeholder="Escribe el nombre del equipo…" 
+              autocomplete="off"
+              oninput="activoSearch(this.value)"
+              onkeydown="activoKeyNav(event)"
+              onfocus="if(this.value) activoSearch(this.value)"
+            />
+            <div id="activo-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#0D2D48;border:1px solid rgba(33,150,243,0.3);border-radius:0 0 6px 6px;z-index:100;max-height:200px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.4)"></div>
+          </div>
         </div>
         <div>
           <div class="qf-label">Prioridad <span style="color:var(--accent)">*</span></div>
@@ -310,6 +313,7 @@ function init(){
   }
 
   loadOTs();
+  loadActivosForSearch();
 }
 
 function buildSidebar(){
@@ -449,7 +453,7 @@ function toggleOpts(){
 
 async function registrarOT(){
   const desc   = document.getElementById('q-desc').value.trim();
-  const activo = document.getElementById('q-activo').value;
+  const activo = document.getElementById('q-activo').value.trim();
   const prio   = document.getElementById('q-prio').value;
   const tipo   = document.getElementById('q-tipo')?.value || 'Correctivo';
   const resp   = document.getElementById('q-resp')?.value.trim() || USER.nombre || USER.email;
@@ -636,6 +640,117 @@ document.addEventListener('keydown', e => {
     registrarOT();
   }
 });
+
+// ── BÚSQUEDA PREDICTIVA DE ACTIVOS ──
+const ACTIVOS_QDC = [
+  'Balanzas',
+  'Generador Vielco / ATS',
+  'Portones eléctricos',
+  'Vehículos de planta',
+  'Cerco eléctrico',
+  'Sistema agua potable',
+  'Iluminación interior',
+  'Sensores de movimiento',
+  'Cámaras de seguridad',
+  'Cierres magnéticos',
+  'Duchas de emergencia',
+  'Sistema de regadío',
+  'Climatización',
+  'Ventilación (extractores)',
+  'Sistema aguas servidas',
+  'Racks almacenamiento',
+  'Extintores',
+  'Sistema detección incendios',
+  'Tableros eléctricos',
+  'Luminarias',
+  'Máquinas de fabricación',
+  'Grúas horquillas',
+  'Otro equipo',
+];
+
+// Cargar activos reales desde Supabase al iniciar
+async function loadActivosForSearch(){
+  try{
+    const{data}=await db.from('activos').select('nombre').order('nombre');
+    if(data&&data.length){
+      ACTIVOS_QDC.length=0;
+      data.forEach(a=>ACTIVOS_QDC.push(a.nombre));
+      ACTIVOS_QDC.push('Otro equipo');
+    }
+  }catch(e){}
+}
+
+let _activoSel = -1;
+
+function activoSearch(val){
+  const dd = document.getElementById('activo-dropdown');
+  if(!val||val.length<1){ dd.style.display='none'; return; }
+  
+  const q = val.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const matches = ACTIVOS_QDC.filter(a => {
+    const an = a.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    return an.includes(q);
+  });
+
+  if(!matches.length){ dd.style.display='none'; return; }
+
+  _activoSel = -1;
+  dd.innerHTML = matches.map((a,i) => {
+    // Highlight matching text
+    const reg = new RegExp('(' + val.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'gi');
+    const highlighted = a.replace(reg, '<strong>$1</strong>');
+    return `<div class="activo-opt" data-idx="${i}" data-val="${a}" 
+      onmousedown="selectActivo('${a.replace(/'/g,"\'")}')">
+      ${highlighted}
+    </div>`;
+  }).join('');
+  dd.style.display = 'block';
+}
+
+function selectActivo(val){
+  document.getElementById('q-activo').value = val;
+  document.getElementById('activo-dropdown').style.display = 'none';
+  _activoSel = -1;
+}
+
+function activoKeyNav(e){
+  const dd = document.getElementById('activo-dropdown');
+  const opts = dd.querySelectorAll('.activo-opt');
+  if(!opts.length) return;
+
+  if(e.key === 'ArrowDown'){
+    e.preventDefault();
+    _activoSel = Math.min(_activoSel+1, opts.length-1);
+    opts.forEach((o,i) => o.classList.toggle('selected', i===_activoSel));
+    if(opts[_activoSel]) opts[_activoSel].scrollIntoView({block:'nearest'});
+  } else if(e.key === 'ArrowUp'){
+    e.preventDefault();
+    _activoSel = Math.max(_activoSel-1, 0);
+    opts.forEach((o,i) => o.classList.toggle('selected', i===_activoSel));
+    if(opts[_activoSel]) opts[_activoSel].scrollIntoView({block:'nearest'});
+  } else if(e.key === 'Enter'){
+    e.preventDefault();
+    if(_activoSel>=0 && opts[_activoSel]){
+      selectActivo(opts[_activoSel].dataset.val);
+    } else if(opts.length===1){
+      selectActivo(opts[0].dataset.val);
+    }
+  } else if(e.key === 'Escape'){
+    dd.style.display = 'none';
+  }
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', e=>{
+  if(!document.getElementById('activo-wrap')?.contains(e.target)){
+    const dd=document.getElementById('activo-dropdown');
+    if(dd) dd.style.display='none';
+  }
+});
+
+// Override registrarOT to validate activo from input (not select)
+const _origRegOT = registrarOT;
+
 </script>
 </body>
 </html>
