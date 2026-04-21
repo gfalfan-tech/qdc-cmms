@@ -199,12 +199,28 @@ async function loadActivos(){
   renderActivos(ACTS);
 }
 function demosActivos(){return[
-  {id:'a1',nombre:'Compresor C-101',codigo:'AST-021',ubicacion:'Línea A',categoria:'Compresor',estado:'crit',salud:38,icono:'⚙️'},
-  {id:'a2',nombre:'Bomba P-205',codigo:'AST-033',ubicacion:'Sala Bombas',categoria:'Bomba',estado:'warn',salud:74,icono:'💧'},
-  {id:'a3',nombre:'Turbina T-01',codigo:'AST-005',ubicacion:'Planta 2',categoria:'Turbina',estado:'ok',salud:96,icono:'🌀'},
-  {id:'a4',nombre:'Motor MO-18',codigo:'AST-018',ubicacion:'Línea B',categoria:'Motor',estado:'ok',salud:91,icono:'⚡'},
-  {id:'a5',nombre:'Enfriadora CH-3',codigo:'AST-009',ubicacion:'Sala Frío',categoria:'HVAC',estado:'ok',salud:88,icono:'❄️'},
-  {id:'a6',nombre:'Tablero E-01',codigo:'AST-044',ubicacion:'Sala Control',categoria:'Eléctrico',estado:'ok',salud:85,icono:'🖥️'},
+  {id:'d1',nombre:'Balanzas',codigo:'ACT-001',ubicacion:'Planta',categoria:'Medición',estado:'ok',salud:95,icono:'⚖️'},
+  {id:'d2',nombre:'Generador Vielco / ATS',codigo:'ACT-002',ubicacion:'Sala Generador',categoria:'Energía',estado:'ok',salud:90,icono:'⚡'},
+  {id:'d3',nombre:'Portones eléctricos',codigo:'ACT-003',ubicacion:'Perímetro',categoria:'Seguridad',estado:'ok',salud:88,icono:'🚪'},
+  {id:'d4',nombre:'Vehículos de planta',codigo:'ACT-004',ubicacion:'Patio',categoria:'Transporte',estado:'ok',salud:85,icono:'🚗'},
+  {id:'d5',nombre:'Cerco eléctrico',codigo:'ACT-005',ubicacion:'Perímetro',categoria:'Seguridad',estado:'ok',salud:90,icono:'🔌'},
+  {id:'d6',nombre:'Sistema agua potable',codigo:'ACT-006',ubicacion:'Planta',categoria:'Instalaciones',estado:'ok',salud:92,icono:'💧'},
+  {id:'d7',nombre:'Iluminación interior',codigo:'ACT-007',ubicacion:'Planta',categoria:'Instalaciones',estado:'ok',salud:88,icono:'💡'},
+  {id:'d8',nombre:'Sensores de movimiento',codigo:'ACT-008',ubicacion:'Perímetro/Planta',categoria:'Seguridad',estado:'ok',salud:91,icono:'📡'},
+  {id:'d9',nombre:'Cámaras de seguridad',codigo:'ACT-009',ubicacion:'Perímetro/Planta',categoria:'Seguridad',estado:'ok',salud:87,icono:'📷'},
+  {id:'d10',nombre:'Cierres magnéticos',codigo:'ACT-010',ubicacion:'Accesos',categoria:'Seguridad',estado:'ok',salud:93,icono:'🔒'},
+  {id:'d11',nombre:'Duchas de emergencia',codigo:'ACT-011',ubicacion:'Planta',categoria:'Seguridad',estado:'ok',salud:95,icono:'🚿'},
+  {id:'d12',nombre:'Sistema de regadío',codigo:'ACT-012',ubicacion:'Exterior',categoria:'Instalaciones',estado:'ok',salud:89,icono:'🌱'},
+  {id:'d13',nombre:'Climatización',codigo:'ACT-013',ubicacion:'Planta',categoria:'HVAC',estado:'ok',salud:86,icono:'❄️'},
+  {id:'d14',nombre:'Ventilación (extractores)',codigo:'ACT-014',ubicacion:'Techo/Planta',categoria:'HVAC',estado:'ok',salud:88,icono:'💨'},
+  {id:'d15',nombre:'Sistema aguas servidas',codigo:'ACT-015',ubicacion:'Planta',categoria:'Instalaciones',estado:'ok',salud:84,icono:'🚰'},
+  {id:'d16',nombre:'Racks almacenamiento',codigo:'ACT-016',ubicacion:'Bodega',categoria:'Infraestructura',estado:'ok',salud:95,icono:'📦'},
+  {id:'d17',nombre:'Extintores',codigo:'ACT-017',ubicacion:'Planta',categoria:'Seguridad',estado:'ok',salud:90,icono:'🧯'},
+  {id:'d18',nombre:'Sistema detección incendios',codigo:'ACT-018',ubicacion:'Planta',categoria:'Seguridad',estado:'ok',salud:92,icono:'🔥'},
+  {id:'d19',nombre:'Tableros eléctricos',codigo:'ACT-019',ubicacion:'Sala Control',categoria:'Eléctrico',estado:'ok',salud:88,icono:'🖥️'},
+  {id:'d20',nombre:'Luminarias',codigo:'ACT-020',ubicacion:'Planta',categoria:'Instalaciones',estado:'ok',salud:87,icono:'💡'},
+  {id:'d21',nombre:'Máquinas de fabricación',codigo:'ACT-021',ubicacion:'Planta',categoria:'Producción',estado:'ok',salud:85,icono:'⚙️'},
+  {id:'d22',nombre:'Grúas horquillas',codigo:'ACT-022',ubicacion:'Patio/Bodega',categoria:'Transporte',estado:'ok',salud:83,icono:'🏗️'},
 ];}
 function getColor(est,salud){
   if(est==='crit'||salud<60) return 'var(--crit)';
@@ -213,7 +229,8 @@ function getColor(est,salud){
 }
 function renderActivos(list){
   if(!list.length){document.getElementById('act-content').innerHTML='<div class="empty"><span style="font-size:32px;opacity:0.2">🏭</span><span>Sin activos registrados</span></div>';return;}
-  document.getElementById('act-content').innerHTML=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">${list.map(a=>{
+  const cols = list.length > 6 ? 'repeat(4,1fr)' : 'repeat(3,1fr)';
+  document.getElementById('act-content').innerHTML=`<div style="display:grid;grid-template-columns:${cols};gap:10px">${list.map(a=>{
     const c=getColor(a.estado,a.salud||85);
     return`<div class="kpi" style="border-left:3px solid ${c};cursor:pointer" onclick="verActivo('${a.id}')">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
