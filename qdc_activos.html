@@ -5,20 +5,17 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>QDC CMMS — Activos y Equipos</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-
 *{box-sizing:border-box;margin:0;padding:0;}
-:root{--navy:#08223D;--mid:#0B2545;--deep:#061C2E;--accent:#2196F3;--white:#EEF4FF;--ok:#97C459;--warn:#EF9F27;--crit:#E24B4A;--ext:#5DCAA5;--pm:#7F77DD;--emb:#D85A30;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.10);--font:'Barlow',sans-serif;--head:'Barlow Condensed',sans-serif;}
+:root{--navy:#08223D;--mid:#0B2545;--accent:#2196F3;--white:#EEF4FF;--ok:#97C459;--warn:#EF9F27;--crit:#E24B4A;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.10);--font:'Barlow',sans-serif;--head:'Barlow Condensed',sans-serif;}
 body{font-family:var(--font);background:#050F1C;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;}
-.shell{display:flex;width:100%;max-width:1100px;min-height:900px;background:var(--mid);border-radius:12px;overflow:hidden;border:1px solid var(--border2);}
+.shell{display:flex;width:100%;max-width:1200px;height:920px;background:var(--mid);border-radius:12px;overflow:hidden;border:1px solid var(--border2);}
 .sidebar{width:210px;flex-shrink:0;background:var(--navy);display:flex;flex-direction:column;border-right:1px solid var(--border);}
 .sb-logo{padding:16px 14px 12px;border-bottom:1px solid var(--border);}
 .sb-logo-mark{font-family:var(--head);font-size:15px;font-weight:700;color:var(--white);letter-spacing:1px;}
 .sb-logo-sub{font-size:9px;color:rgba(131,131,139,0.6);margin-top:2px;}
 .sb-logo-line{width:20px;height:2px;background:var(--accent);margin-top:5px;}
 .sb-nav{flex:1;overflow-y:auto;padding:6px 0;}
-.sb-nav::-webkit-scrollbar{width:2px;}
 .nav-sec{padding:10px 14px 3px;font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(131,131,139,0.4);}
 .nav-item{display:flex;align-items:center;gap:8px;padding:8px 14px;cursor:pointer;border-left:2px solid transparent;transition:background .1s;text-decoration:none;}
 .nav-item:hover{background:rgba(255,255,255,0.04);}
@@ -35,50 +32,29 @@ body{font-family:var(--font);background:#050F1C;min-height:100vh;display:flex;al
 .topbar{height:50px;background:var(--mid);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0;}
 .page-title{font-family:var(--head);font-size:16px;font-weight:600;color:var(--white);flex:1;}
 .tb-btn{padding:6px 13px;border-radius:5px;border:none;font-size:12px;font-weight:500;cursor:pointer;font-family:var(--font);transition:all .15s;}
-.btn-p{background:var(--accent);color:#fff;}.btn-p:hover{background:#1976D2;}
+.btn-p{background:var(--accent);color:#fff;}
 .btn-g{background:rgba(255,255,255,0.06);color:rgba(200,210,225,0.8);border:0.5px solid rgba(255,255,255,0.1);}
-.stats-bar{display:flex;gap:1px;background:rgba(255,255,255,0.04);border-bottom:1px solid var(--border);flex-shrink:0;}
-.stat{flex:1;padding:9px 12px;text-align:center;}
-.stat-val{font-size:18px;font-weight:500;color:var(--white);}
-.stat-label{font-size:9px;color:rgba(131,131,139,0.5);margin-top:2px;text-transform:uppercase;}
-.content-pad{flex:1;overflow-y:auto;padding:16px;}
+.toolbar{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.sw{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:5px;padding:5px 10px;flex:1;}
+.sw input{background:none;border:none;outline:none;color:var(--white);font-size:12px;font-family:var(--font);width:100%;}
+.sw input::placeholder{color:rgba(131,131,139,0.5);}
+.f-sel{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:5px;color:rgba(200,210,225,0.7);font-size:11px;font-family:var(--font);padding:6px 10px;outline:none;}
+.f-sel option{background:#0D2D48;}
+.content-pad{flex:1;overflow-y:auto;padding:14px;}
 .content-pad::-webkit-scrollbar{width:3px;}
-.content-pad::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);}
-.data-table{width:100%;border-collapse:collapse;margin-top:10px;}
-.data-table th{font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);padding:7px 10px;text-align:left;border-bottom:1px solid var(--border);}
-.data-table td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,0.03);vertical-align:middle;}
-.data-table tr:hover td{background:rgba(255,255,255,0.03);}
 .badge{font-size:10px;font-weight:500;padding:2px 8px;border-radius:10px;}
 .b-ok{background:rgba(99,153,34,0.15);color:#C0DD97;}
 .b-warn{background:rgba(239,159,39,0.15);color:#FAC775;}
 .b-crit{background:rgba(226,75,74,0.15);color:#F09595;}
-.b-ext{background:rgba(29,158,117,0.15);color:#5DCAA5;}
-.b-info{background:rgba(33,150,243,0.12);color:#85B7EB;}
-.b-pm{background:rgba(127,119,221,0.12);color:#AFA9EC;}
-.card{background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px;margin-bottom:12px;}
-.kpi-grid{display:grid;gap:10px;margin-bottom:14px;}
-.kpi-grid-4{grid-template-columns:repeat(4,1fr);}
-.kpi-grid-3{grid-template-columns:repeat(3,1fr);}
-.kpi{background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:12px 14px;position:relative;overflow:hidden;}
-.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
-.kpi-blue::before{background:var(--accent);}.kpi-green::before{background:var(--ok);}
-.kpi-warn::before{background:var(--warn);}.kpi-crit::before{background:var(--crit);}
-.kpi-ext::before{background:var(--ext);}.kpi-pm::before{background:var(--pm);}
-.kpi-label{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px;}
-.kpi-val{font-size:22px;font-weight:600;font-family:var(--head);color:var(--white);}
-.kpi-sub{font-size:9px;color:rgba(131,131,139,0.45);margin-top:3px;}
-.search-row{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);flex-shrink:0;}
-.sw{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:5px;padding:5px 10px;flex:1;}
-.sw input{background:none;border:none;outline:none;color:var(--white);font-size:12px;font-family:var(--font);width:100%;}
-.sw input::placeholder{color:rgba(131,131,139,0.5);}
-.form-group{margin-bottom:12px;}
-.form-label{font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.6);margin-bottom:5px;display:block;}
-.form-input,.form-select,.form-textarea{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:var(--white);font-size:12px;font-family:var(--font);padding:8px 10px;outline:none;width:100%;transition:border-color .1s;}
-.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent);}
-.form-input::placeholder,.form-textarea::placeholder{color:rgba(131,131,139,0.4);}
-.form-select option{background:#0D2D48;}
-.form-textarea{resize:vertical;min-height:70px;}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.kpi-grid{display:grid;gap:10px;}
+.kpi{background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:12px 14px;position:relative;overflow:hidden;cursor:pointer;transition:background .15s;}
+.kpi:hover{background:rgba(255,255,255,0.07);}
+.loading{display:flex;align-items:center;justify-content:center;padding:40px;gap:12px;color:rgba(131,131,139,0.5);}
+.spinner{width:20px;height:20px;border:2px solid rgba(255,255,255,0.1);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{display:flex;align-items:center;justify-content:center;padding:60px;flex-direction:column;gap:12px;color:rgba(131,131,139,0.35);}
+#toast{position:fixed;bottom:24px;right:24px;background:#0D2D48;border:1px solid rgba(33,150,243,0.3);border-radius:8px;padding:12px 16px;font-size:12px;color:var(--white);z-index:999;transform:translateY(60px);opacity:0;transition:all .3s;max-width:320px;pointer-events:none;}
+#toast.show{transform:translateY(0);opacity:1;}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;z-index:500;}
 .modal-overlay.hidden{display:none;}
 .modal{background:#0D2D48;border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;width:500px;max-height:85vh;overflow-y:auto;padding:22px;}
@@ -88,206 +64,343 @@ body{font-family:var(--font);background:#050F1C;min-height:100vh;display:flex;al
 .modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.07);}
 .btn-cancel{padding:7px 14px;border-radius:5px;border:0.5px solid rgba(255,255,255,0.1);background:transparent;color:rgba(200,210,225,0.7);cursor:pointer;font-size:12px;font-family:var(--font);}
 .btn-save{padding:7px 18px;border-radius:5px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-size:12px;font-weight:600;font-family:var(--font);}
-.spinner{width:20px;height:20px;border:2px solid rgba(255,255,255,0.1);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;}
-@keyframes spin{to{transform:rotate(360deg)}}
-.loading{display:flex;align-items:center;justify-content:center;padding:40px;gap:12px;color:rgba(131,131,139,0.5);}
-.empty{display:flex;align-items:center;justify-content:center;padding:60px;flex-direction:column;gap:12px;color:rgba(131,131,139,0.35);}
-#toast{position:fixed;bottom:24px;right:24px;background:#0D2D48;border:1px solid rgba(33,150,243,0.3);border-radius:8px;padding:12px 16px;font-size:12px;color:var(--white);z-index:9999;transform:translateY(60px);opacity:0;transition:all .3s;max-width:320px;pointer-events:none;}
-#toast.show{transform:translateY(0);opacity:1;}
-
-
+.form-group{margin-bottom:12px;}
+.form-label{font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.6);margin-bottom:5px;display:block;}
+.form-input,.form-select{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:var(--white);font-size:12px;font-family:var(--font);padding:8px 10px;outline:none;width:100%;transition:border-color .1s;}
+.form-input:focus,.form-select:focus{border-color:var(--accent);}
+.form-input::placeholder{color:rgba(131,131,139,0.4);}
+.form-select option{background:#0D2D48;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.cat-manager{background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px;margin-bottom:14px;}
+.cat-list{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;min-height:32px;}
+.cat-tag{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:12px;background:rgba(33,150,243,0.1);border:0.5px solid rgba(33,150,243,0.3);font-size:11px;color:#85B7EB;}
+.cat-tag-del{cursor:pointer;color:rgba(131,131,139,0.5);font-size:12px;}
+.cat-tag-del:hover{color:var(--crit);}
+.cat-add-row{display:flex;gap:6px;}
+.cat-input{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:5px;color:var(--white);font-size:12px;font-family:var(--font);padding:6px 10px;outline:none;flex:1;}
+.cat-input:focus{border-color:var(--accent);}
+.btn-cat-add{padding:6px 12px;border-radius:5px;border:none;background:rgba(33,150,243,0.2);color:#85B7EB;cursor:pointer;font-size:12px;font-family:var(--font);}
 </style>
 </head>
 <body>
 <div class="shell">
   <nav class="sidebar">
-
     <div class="sb-logo">
       <div class="sb-logo-mark">QDC · CMMS Pro</div>
-      <div class="sb-logo-sub">Química del Campo S.p.A</div>
+      <div class="sb-logo-sub">Quimica del Campo S.p.A</div>
       <div class="sb-logo-line"></div>
     </div>
     <div class="sb-nav">
       <div class="nav-sec">Principal</div>
       <a class="nav-item" href="qdc_dashboard.html"><span class="nav-icon">▦</span><span class="nav-label">Dashboard</span></a>
-      <a class="nav-item" href="qdc_ot.html"><span class="nav-icon">📋</span><span class="nav-label">Órdenes de trabajo</span></a>
+      <a class="nav-item" href="qdc_ot.html"><span class="nav-icon">📋</span><span class="nav-label">Ordenes de trabajo</span></a>
       <div class="nav-sec">Mantenimiento</div>
-      <a class="nav-item " href="qdc_pm.html"><span class="nav-icon">🔄</span><span class="nav-label">Plan preventivo</span></a>
-      <a class="nav-item " href="qdc_contratistas.html"><span class="nav-icon">🏢</span><span class="nav-label">Contratistas</span></a>
+      <a class="nav-item" href="qdc_pm.html"><span class="nav-icon">🔄</span><span class="nav-label">Plan preventivo</span></a>
+      <a class="nav-item" href="qdc_contratistas.html"><span class="nav-icon">🏢</span><span class="nav-label">Contratistas</span></a>
       <div class="nav-sec">Recursos</div>
       <a class="nav-item active" href="qdc_activos.html"><span class="nav-icon">🏭</span><span class="nav-label">Activos y equipos</span></a>
       <a class="nav-item" href="qdc_inventario.html"><span class="nav-icon">📦</span><span class="nav-label">Inventario</span></a>
       <div class="nav-sec">Operaciones</div>
-      <a class="nav-item " href="qdc_embalajes.html"><span class="nav-icon">📫</span><span class="nav-label">Embalajes</span></a>
-      <div class="nav-sec">Análisis</div>
-      <a class="nav-item " href="qdc_kpis.html"><span class="nav-icon">📊</span><span class="nav-label">KPIs y reportes</span></a>
+      <a class="nav-item" href="qdc_embalajes.html"><span class="nav-icon">📫</span><span class="nav-label">Embalajes</span></a>
+      <div class="nav-sec">Analisis</div>
+      <a class="nav-item" href="qdc_kpis.html"><span class="nav-icon">📊</span><span class="nav-label">KPIs y reportes</span></a>
       <div class="nav-sec">Sistema</div>
-      <a class="nav-item " href="qdc_alertas.html"><span class="nav-icon">🔔</span><span class="nav-label">Alertas</span></a>
-      <a class="nav-item" id="nav-config" href="qdc_config.html" style="display:none"><span class="nav-icon">⚙️</span><span class="nav-label">Configuración</span></a>
+      <a class="nav-item" href="qdc_alertas.html"><span class="nav-icon">🔔</span><span class="nav-label">Alertas</span></a>
+      <a class="nav-item" id="nav-config" href="qdc_config.html" style="display:none"><span class="nav-icon">⚙️</span><span class="nav-label">Configuracion</span></a>
     </div>
     <div class="sb-user" id="sb-user"></div>
-
   </nav>
-  <div class="main">
 
+  <div class="main">
     <div class="topbar">
       <div class="page-title">Activos y Equipos</div>
       <button class="tb-btn btn-g" onclick="loadActivos()">↻ Actualizar</button>
-      <button class="tb-btn btn-p" id="btn-nuevo-act" style="display:none" onclick="openNuevoActivo()">+ Nuevo activo</button>
+      <button class="tb-btn" style="background:rgba(33,150,243,0.15);color:#85B7EB;border:0.5px solid rgba(33,150,243,0.3)" onclick="openCategorias()">🏷 Categorias</button>
+      <button class="tb-btn btn-p" id="btn-nuevo" style="display:none" onclick="openNuevoActivo()">+ Nuevo activo</button>
     </div>
-    <div class="search-row">
-      <div class="sw"><span style="font-size:11px;color:rgba(131,131,139,0.5)">🔍</span><input type="text" placeholder="Buscar activo, código, ubicación…" oninput="filterActivos(this.value)"/></div>
-      <select class="form-select" style="width:130px;padding:6px 10px" onchange="filterByEst(this.value)">
-        <option value="">Todos</option>
-        <option value="crit">Críticos</option>
-        <option value="warn">Alerta</option>
+    <div class="toolbar">
+      <div class="sw"><span style="font-size:11px;color:rgba(131,131,139,0.5)">🔍</span><input type="text" placeholder="Buscar activo, codigo, ubicacion..." oninput="applyFilters()"/></div>
+      <select class="f-sel" id="f-cat" onchange="applyFilters()">
+        <option value="">Todas las categorias</option>
+      </select>
+      <select class="f-sel" id="f-est" onchange="applyFilters()">
+        <option value="">Todos los estados</option>
         <option value="ok">Operativos</option>
+        <option value="warn">Alerta</option>
+        <option value="crit">Criticos</option>
       </select>
     </div>
     <div class="content-pad" id="act-content">
-      <div class="loading"><div class="spinner"></div><span>Cargando activos…</span></div>
+      <div class="loading"><div class="spinner"></div><span>Cargando activos...</span></div>
     </div>
-
   </div>
 </div>
-<div id="toast"></div>
-<div class="modal-overlay hidden" id="modal-overlay"><div class="modal" id="modal-inner"></div></div>
-<script>
 
-const SB_URL='https://aaugeuydymhwlcpklbmt.supabase.co';
-const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhdWdldXlkeW1od2xjcGtsYm10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2NTg5MzksImV4cCI6MjA5MjIzNDkzOX0.Q2GeJKuf7l51Hsv3hUEeaO0NHaFeWXLIBrRUPgkQ0gw';
-let db,USER;
-(function(){
-  const s=document.createElement('script');
-  s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
-  s.onload=function(){
-    db=window.supabase.createClient(SB_URL,SB_KEY);
-    USER=JSON.parse(localStorage.getItem('qdc_user')||'{}');
-    if(!USER.rol){window.location.href='index.html';return;}
-    buildSidebar();
-    if(USER.rol==='g')document.getElementById('nav-config').style.display='flex';
-    if(typeof pageInit==='function') pageInit();
-  };
-  document.head.appendChild(s);
-})();
-function ini(e){const p=(e||'').split('@')[0].split(/[._-]/);return p.slice(0,2).map(x=>x[0]?.toUpperCase()||'').join('')||'QD';}
+<div id="toast"></div>
+<div class="modal-overlay hidden" id="modal-overlay">
+  <div class="modal" id="modal-inner"></div>
+</div>
+
+<script>
+const SB_URL = 'https://aaugeuydymhwlcpklbmt.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhdWdldXlkeW1od2xjcGtsYm10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2NTg5MzksImV4cCI6MjA5MjIzNDkzOX0.Q2GeJKuf7l51Hsv3hUEeaO0NHaFeWXLIBrRUPgkQ0gw';
+
+let db, USER, ACTS = [];
+
+// Categorias personalizables — compartidas con PM
+let CATEGORIAS = JSON.parse(localStorage.getItem('qdc_cats') || 'null') || [
+  'Medicion y Control',
+  'Energia e Instalaciones',
+  'Seguridad',
+  'HVAC y Clima',
+  'Transporte y Almacenamiento',
+  'Produccion',
+  'Infraestructura'
+];
+
+const _sc = document.createElement('script');
+_sc.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+_sc.onload = function(){
+  db = window.supabase.createClient(SB_URL, SB_KEY);
+  USER = JSON.parse(localStorage.getItem('qdc_user') || '{}');
+  if(!USER.rol){ window.location.href='index.html'; return; }
+  buildSidebar();
+  if(USER.rol==='g') document.getElementById('nav-config').style.display='flex';
+  if(USER.rol==='s') document.getElementById('btn-nuevo').style.display='block';
+  buildCatFilter();
+  loadActivos();
+};
+document.head.appendChild(_sc);
+
+function ini(e){ const p=(e||'').split('@')[0].split(/[._-]/); return p.slice(0,2).map(x=>x[0]?.toUpperCase()||'').join('')||'QD'; }
 function buildSidebar(){
-  const C={t:'#185FA5',s:'#854F0B',g:'#27500A'},T={t:'#B5D4F4',s:'#FAC775',g:'#C0DD97'},R={t:'Técnico de Mantenimiento',s:'Supervisor de Mantenimiento',g:'Gerente de Operaciones'};
+  const C={t:'#185FA5',s:'#854F0B',g:'#27500A'},T={t:'#B5D4F4',s:'#FAC775',g:'#C0DD97'},R={t:'Tecnico',s:'Supervisor',g:'Gerente'};
   document.getElementById('sb-user').innerHTML=`<div class="u-av" style="background:${C[USER.rol]};color:${T[USER.rol]}">${ini(USER.email||USER.nombre)}</div><div style="min-width:0;flex:1"><div class="u-name">${USER.nombre||USER.email}</div><div class="u-role">${R[USER.rol]||''}</div></div><button class="u-logout" onclick="doLogout()">⏏</button>`;
 }
-function doLogout(){localStorage.removeItem('qdc_user');window.location.href='index.html';}
-async function audit(tipo,accion,detalle){
-  try{await db.from('auditoria').insert({usuario_id:USER.id,usuario_nombre:USER.nombre||USER.email,tipo,accion,detalle});}catch(e){}
-}
-let _tT;
-function showToast(msg,col){const t=document.getElementById('toast');t.textContent=msg;t.style.borderColor=col||'rgba(33,150,243,0.3)';t.classList.add('show');clearTimeout(_tT);_tT=setTimeout(()=>t.classList.remove('show'),3200);}
-function openModal(html){document.getElementById('modal-inner').innerHTML=html;document.getElementById('modal-overlay').classList.remove('hidden');}
-function closeModal(){document.getElementById('modal-overlay').classList.add('hidden');}
+function doLogout(){ localStorage.removeItem('qdc_user'); window.location.href='index.html'; }
 
-
-let ACTS=[], ACT_F='';
-function pageInit(){
-  if(USER.rol==='s') document.getElementById('btn-nuevo-act').style.display='block';
-  loadActivos();
+function buildCatFilter(){
+  const sel = document.getElementById('f-cat');
+  sel.innerHTML = '<option value="">Todas las categorias</option>';
+  CATEGORIAS.forEach(c => { const o=document.createElement('option'); o.value=c; o.textContent=c; sel.appendChild(o); });
 }
+
 async function loadActivos(){
+  document.getElementById('act-content').innerHTML = '<div class="loading"><div class="spinner"></div><span>Cargando...</span></div>';
   try{
     const{data,error}=await db.from('activos').select('*').order('nombre');
     if(error) throw error;
-    ACTS=data&&data.length?data:demosActivos();
-  }catch(e){ ACTS=demosActivos(); showToast('Mostrando datos demo'); }
-  renderActivos(ACTS);
+    ACTS = data && data.length ? data : getDemoActivos();
+  }catch(e){ ACTS=getDemoActivos(); showToast('Mostrando datos demo'); }
+  applyFilters();
 }
-function demosActivos(){return[
-  {id:'d1',nombre:'Balanzas',codigo:'ACT-001',ubicacion:'Planta',categoria:'Medición',estado:'ok',salud:95,icono:'⚖️'},
-  {id:'d2',nombre:'Generador Vielco / ATS',codigo:'ACT-002',ubicacion:'Sala Generador',categoria:'Energía',estado:'ok',salud:90,icono:'⚡'},
-  {id:'d3',nombre:'Portones eléctricos',codigo:'ACT-003',ubicacion:'Perímetro',categoria:'Seguridad',estado:'ok',salud:88,icono:'🚪'},
-  {id:'d4',nombre:'Vehículos de planta',codigo:'ACT-004',ubicacion:'Patio',categoria:'Transporte',estado:'ok',salud:85,icono:'🚗'},
-  {id:'d5',nombre:'Cerco eléctrico',codigo:'ACT-005',ubicacion:'Perímetro',categoria:'Seguridad',estado:'ok',salud:90,icono:'🔌'},
-  {id:'d6',nombre:'Sistema agua potable',codigo:'ACT-006',ubicacion:'Planta',categoria:'Instalaciones',estado:'ok',salud:92,icono:'💧'},
-  {id:'d7',nombre:'Iluminación interior',codigo:'ACT-007',ubicacion:'Planta',categoria:'Instalaciones',estado:'ok',salud:88,icono:'💡'},
-  {id:'d8',nombre:'Sensores de movimiento',codigo:'ACT-008',ubicacion:'Perímetro/Planta',categoria:'Seguridad',estado:'ok',salud:91,icono:'📡'},
-  {id:'d9',nombre:'Cámaras de seguridad',codigo:'ACT-009',ubicacion:'Perímetro/Planta',categoria:'Seguridad',estado:'ok',salud:87,icono:'📷'},
-  {id:'d10',nombre:'Cierres magnéticos',codigo:'ACT-010',ubicacion:'Accesos',categoria:'Seguridad',estado:'ok',salud:93,icono:'🔒'},
-  {id:'d11',nombre:'Duchas de emergencia',codigo:'ACT-011',ubicacion:'Planta',categoria:'Seguridad',estado:'ok',salud:95,icono:'🚿'},
-  {id:'d12',nombre:'Sistema de regadío',codigo:'ACT-012',ubicacion:'Exterior',categoria:'Instalaciones',estado:'ok',salud:89,icono:'🌱'},
-  {id:'d13',nombre:'Climatización',codigo:'ACT-013',ubicacion:'Planta',categoria:'HVAC',estado:'ok',salud:86,icono:'❄️'},
-  {id:'d14',nombre:'Ventilación (extractores)',codigo:'ACT-014',ubicacion:'Techo/Planta',categoria:'HVAC',estado:'ok',salud:88,icono:'💨'},
-  {id:'d15',nombre:'Sistema aguas servidas',codigo:'ACT-015',ubicacion:'Planta',categoria:'Instalaciones',estado:'ok',salud:84,icono:'🚰'},
-  {id:'d16',nombre:'Racks almacenamiento',codigo:'ACT-016',ubicacion:'Bodega',categoria:'Infraestructura',estado:'ok',salud:95,icono:'📦'},
-  {id:'d17',nombre:'Extintores',codigo:'ACT-017',ubicacion:'Planta',categoria:'Seguridad',estado:'ok',salud:90,icono:'🧯'},
-  {id:'d18',nombre:'Sistema detección incendios',codigo:'ACT-018',ubicacion:'Planta',categoria:'Seguridad',estado:'ok',salud:92,icono:'🔥'},
-  {id:'d19',nombre:'Tableros eléctricos',codigo:'ACT-019',ubicacion:'Sala Control',categoria:'Eléctrico',estado:'ok',salud:88,icono:'🖥️'},
-  {id:'d20',nombre:'Luminarias',codigo:'ACT-020',ubicacion:'Planta',categoria:'Instalaciones',estado:'ok',salud:87,icono:'💡'},
-  {id:'d21',nombre:'Máquinas de fabricación',codigo:'ACT-021',ubicacion:'Planta',categoria:'Producción',estado:'ok',salud:85,icono:'⚙️'},
-  {id:'d22',nombre:'Grúas horquillas',codigo:'ACT-022',ubicacion:'Patio/Bodega',categoria:'Transporte',estado:'ok',salud:83,icono:'🏗️'},
+
+function getDemoActivos(){return[
+  {id:'d1', nombre:'Balanzas',                  codigo:'ACT-001', ubicacion:'Planta',           categoria:'Medicion y Control',         estado:'ok',  salud:95, icono:'⚖️'},
+  {id:'d2', nombre:'Generador Vielco / ATS',    codigo:'ACT-002', ubicacion:'Sala Generador',   categoria:'Energia e Instalaciones',    estado:'ok',  salud:90, icono:'⚡'},
+  {id:'d3', nombre:'Portones electricos',        codigo:'ACT-003', ubicacion:'Perimetro',        categoria:'Seguridad',                  estado:'ok',  salud:88, icono:'🚪'},
+  {id:'d4', nombre:'Vehiculos de planta',        codigo:'ACT-004', ubicacion:'Patio',            categoria:'Transporte y Almacenamiento',estado:'ok',  salud:85, icono:'🚗'},
+  {id:'d5', nombre:'Cerco electrico',            codigo:'ACT-005', ubicacion:'Perimetro',        categoria:'Seguridad',                  estado:'ok',  salud:90, icono:'🔌'},
+  {id:'d6', nombre:'Sistema agua potable',       codigo:'ACT-006', ubicacion:'Planta',           categoria:'Energia e Instalaciones',    estado:'ok',  salud:92, icono:'💧'},
+  {id:'d7', nombre:'Iluminacion interior',       codigo:'ACT-007', ubicacion:'Planta',           categoria:'Energia e Instalaciones',    estado:'ok',  salud:88, icono:'💡'},
+  {id:'d8', nombre:'Sensores de movimiento',     codigo:'ACT-008', ubicacion:'Perimetro/Planta', categoria:'Medicion y Control',         estado:'ok',  salud:91, icono:'📡'},
+  {id:'d9', nombre:'Camaras de seguridad',       codigo:'ACT-009', ubicacion:'Perimetro/Planta', categoria:'Seguridad',                  estado:'ok',  salud:87, icono:'📷'},
+  {id:'d10',nombre:'Cierres magneticos',         codigo:'ACT-010', ubicacion:'Accesos',          categoria:'Seguridad',                  estado:'ok',  salud:93, icono:'🔒'},
+  {id:'d11',nombre:'Duchas de emergencia',       codigo:'ACT-011', ubicacion:'Planta',           categoria:'Seguridad',                  estado:'ok',  salud:95, icono:'🚿'},
+  {id:'d12',nombre:'Sistema de regadio',         codigo:'ACT-012', ubicacion:'Exterior',         categoria:'Energia e Instalaciones',    estado:'ok',  salud:89, icono:'🌱'},
+  {id:'d13',nombre:'Climatizacion',              codigo:'ACT-013', ubicacion:'Planta',           categoria:'HVAC y Clima',               estado:'ok',  salud:86, icono:'❄️'},
+  {id:'d14',nombre:'Ventilacion (extractores)',  codigo:'ACT-014', ubicacion:'Techo/Planta',     categoria:'HVAC y Clima',               estado:'ok',  salud:88, icono:'💨'},
+  {id:'d15',nombre:'Sistema aguas servidas',     codigo:'ACT-015', ubicacion:'Planta',           categoria:'Energia e Instalaciones',    estado:'ok',  salud:84, icono:'🚰'},
+  {id:'d16',nombre:'Racks almacenamiento',       codigo:'ACT-016', ubicacion:'Bodega',           categoria:'Infraestructura',            estado:'ok',  salud:95, icono:'📦'},
+  {id:'d17',nombre:'Extintores',                 codigo:'ACT-017', ubicacion:'Planta',           categoria:'Seguridad',                  estado:'ok',  salud:90, icono:'🧯'},
+  {id:'d18',nombre:'Sistema deteccion incendios',codigo:'ACT-018', ubicacion:'Planta',           categoria:'Seguridad',                  estado:'ok',  salud:92, icono:'🔥'},
+  {id:'d19',nombre:'Tableros electricos',        codigo:'ACT-019', ubicacion:'Sala Control',     categoria:'Energia e Instalaciones',    estado:'ok',  salud:88, icono:'🖥️'},
+  {id:'d20',nombre:'Luminarias',                 codigo:'ACT-020', ubicacion:'Planta',           categoria:'Energia e Instalaciones',    estado:'ok',  salud:87, icono:'💡'},
+  {id:'d21',nombre:'Maquinas de fabricacion',    codigo:'ACT-021', ubicacion:'Planta',           categoria:'Produccion',                 estado:'ok',  salud:85, icono:'⚙️'},
+  {id:'d22',nombre:'Gruas horquillas',           codigo:'ACT-022', ubicacion:'Patio/Bodega',     categoria:'Transporte y Almacenamiento',estado:'ok',  salud:83, icono:'🏗️'},
 ];}
-function getColor(est,salud){
-  if(est==='crit'||salud<60) return 'var(--crit)';
-  if(est==='warn'||salud<85) return 'var(--warn)';
+
+function applyFilters(){
+  const txt  = (document.querySelector('.sw input')?.value || '').toLowerCase();
+  const fcat = document.getElementById('f-cat')?.value || '';
+  const fest = document.getElementById('f-est')?.value || '';
+  let list = ACTS.filter(a => {
+    const matchTxt = !txt || (a.nombre||'').toLowerCase().includes(txt) || (a.codigo||'').toLowerCase().includes(txt) || (a.ubicacion||'').toLowerCase().includes(txt);
+    const matchCat = !fcat || (a.categoria||'') === fcat;
+    const matchEst = !fest || (a.estado||'ok') === fest;
+    return matchTxt && matchCat && matchEst;
+  });
+  renderActivos(list);
+}
+
+function getColor(a){
+  const s=a.salud||90;
+  if(a.estado==='crit'||s<60) return 'var(--crit)';
+  if(a.estado==='warn'||s<85) return 'var(--warn)';
   return 'var(--ok)';
 }
+
 function renderActivos(list){
-  if(!list.length){document.getElementById('act-content').innerHTML='<div class="empty"><span style="font-size:32px;opacity:0.2">🏭</span><span>Sin activos registrados</span></div>';return;}
-  const cols = list.length > 6 ? 'repeat(4,1fr)' : 'repeat(3,1fr)';
-  document.getElementById('act-content').innerHTML=`<div style="display:grid;grid-template-columns:${cols};gap:10px">${list.map(a=>{
-    const c=getColor(a.estado,a.salud||85);
-    return`<div class="kpi" style="border-left:3px solid ${c};cursor:pointer" onclick="verActivo('${a.id}')">
+  if(!list.length){ document.getElementById('act-content').innerHTML='<div class="empty"><span style="font-size:32px;opacity:0.2">🏭</span><span>Sin activos para los filtros aplicados</span></div>'; return; }
+  const cols = list.length > 9 ? 'repeat(4,1fr)' : list.length > 4 ? 'repeat(3,1fr)' : 'repeat(2,1fr)';
+  document.getElementById('act-content').innerHTML=`<div class="kpi-grid" style="grid-template-columns:${cols}">${list.map(a=>{
+    const c=getColor(a);
+    const s=a.salud||90;
+    return`<div class="kpi" style="border-left:3px solid ${c}" onclick="verActivo('${a.id}')">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-        <div style="font-size:24px">${a.icono||'🏭'}</div>
-        <div><div style="font-family:var(--head);font-size:14px;font-weight:600;color:var(--white)">${a.nombre}</div><div style="font-size:10px;font-family:monospace;color:rgba(131,131,139,0.5)">${a.codigo||'—'} · ${a.ubicacion||'—'}</div></div>
+        <div style="font-size:22px">${a.icono||'🏭'}</div>
+        <div style="min-width:0">
+          <div style="font-family:var(--head);font-size:13px;font-weight:600;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.nombre}</div>
+          <div style="font-size:9px;font-family:monospace;color:rgba(131,131,139,0.5)">${a.codigo||'—'} · ${a.ubicacion||'—'}</div>
+        </div>
       </div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5)">Salud</span><span style="font-family:var(--head);font-size:16px;font-weight:600;color:${c}">${a.salud||85}%</span></div>
-      <div style="height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;margin-bottom:6px"><div style="height:100%;width:${a.salud||85}%;background:${c};border-radius:2px"></div></div>
-      <span class="badge ${a.estado==='ok'||!a.estado?'b-ok':a.estado==='warn'?'b-warn':'b-crit'}">${a.estado==='ok'||!a.estado?'Operativo':a.estado==='warn'?'Alerta':'Crítico'}</span>
+      <div style="font-size:9px;color:rgba(131,131,139,0.4);margin-bottom:5px;padding:2px 6px;background:rgba(255,255,255,0.04);border-radius:4px;display:inline-block">${a.categoria||'General'}</div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+        <span style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5)">Salud</span>
+        <span style="font-family:var(--head);font-size:15px;font-weight:600;color:${c}">${s}%</span>
+      </div>
+      <div style="height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;margin-bottom:6px">
+        <div style="height:100%;width:${s}%;background:${c};border-radius:2px;transition:width .4s"></div>
+      </div>
+      <span class="badge ${a.estado==='crit'?'b-crit':a.estado==='warn'?'b-warn':'b-ok'}">${a.estado==='crit'?'Critico':a.estado==='warn'?'Alerta':'Operativo'}</span>
     </div>`;
   }).join('')}</div>`;
 }
-function filterActivos(val){
-  const v=val.toLowerCase();
-  let list=ACTS.filter(a=>(a.nombre||'').toLowerCase().includes(v)||(a.codigo||'').toLowerCase().includes(v)||(a.ubicacion||'').toLowerCase().includes(v));
-  if(ACT_F) list=list.filter(a=>a.estado===ACT_F||(ACT_F==='ok'&&!a.estado));
-  renderActivos(list);
-}
-function filterByEst(v){ACT_F=v;filterActivos(document.querySelector('.sw input')?.value||'');}
+
 function verActivo(id){
-  const a=ACTS.find(x=>x.id===id);if(!a) return;
-  const c=getColor(a.estado,a.salud||85);
-  openModal(`<div class="modal-header"><div class="modal-title">${a.icono||'🏭'} ${a.nombre}</div><button class="modal-close" onclick="closeModal()">✕</button></div>
+  const a=ACTS.find(x=>x.id===id); if(!a) return;
+  const c=getColor(a);
+  document.getElementById('modal-inner').innerHTML=`
+    <div class="modal-header"><div class="modal-title">${a.icono||'🏭'} ${a.nombre}</div><button class="modal-close" onclick="closeModal()">✕</button></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px">
-      <div class="card" style="padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;color:rgba(131,131,139,0.4);margin-bottom:3px">Código</div><div style="font-size:12px;font-family:monospace;color:var(--white)">${a.codigo||'—'}</div></div>
-      <div class="card" style="padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;color:rgba(131,131,139,0.4);margin-bottom:3px">Ubicación</div><div style="font-size:12px;color:var(--white)">${a.ubicacion||'—'}</div></div>
-      <div class="card" style="padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;color:rgba(131,131,139,0.4);margin-bottom:3px">Categoría</div><div style="font-size:12px;color:var(--white)">${a.categoria||'—'}</div></div>
-      <div class="card" style="padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;color:rgba(131,131,139,0.4);margin-bottom:3px">Salud</div><div style="font-size:16px;font-weight:700;font-family:var(--head);color:${c}">${a.salud||85}%</div></div>
+      <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;color:rgba(131,131,139,0.4);margin-bottom:3px">Codigo</div><div style="font-size:12px;font-family:monospace;color:var(--white)">${a.codigo||'—'}</div></div>
+      <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;color:rgba(131,131,139,0.4);margin-bottom:3px">Ubicacion</div><div style="font-size:12px;color:var(--white)">${a.ubicacion||'—'}</div></div>
+      <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;color:rgba(131,131,139,0.4);margin-bottom:3px">Categoria</div><div style="font-size:12px;color:var(--white)">${a.categoria||'General'}</div></div>
+      <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;color:rgba(131,131,139,0.4);margin-bottom:3px">Salud</div><div style="font-size:16px;font-weight:700;font-family:var(--head);color:${c}">${a.salud||90}%</div></div>
     </div>
-    <div style="height:6px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden;margin-bottom:14px"><div style="height:100%;width:${a.salud||85}%;background:${c}"></div></div>
-    <div class="modal-footer"><button class="btn-cancel" onclick="closeModal()">Cerrar</button></div>`);
+    <div style="height:6px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden;margin-bottom:14px"><div style="height:100%;width:${a.salud||90}%;background:${c}"></div></div>
+    <div class="modal-footer"><button class="btn-cancel" onclick="closeModal()">Cerrar</button></div>`;
+  document.getElementById('modal-overlay').classList.remove('hidden');
 }
+
+// ── CATEGORIAS ──
+function openCategorias(){
+  renderCatModal();
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+
+function renderCatModal(){
+  document.getElementById('modal-inner').innerHTML=`
+    <div class="modal-header"><div class="modal-title">🏷 Gestionar categorias</div><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div style="font-size:12px;color:rgba(131,131,139,0.6);margin-bottom:14px">Define las categorias para clasificar tus activos. Se comparten con el modulo PM.</div>
+    <div class="cat-manager">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:8px">Categorias activas (${CATEGORIAS.length})</div>
+      <div class="cat-list" id="cat-list">${CATEGORIAS.map((c,i)=>`<div class="cat-tag">${c}<span class="cat-tag-del" onclick="delCat(${i})">✕</span></div>`).join('')}</div>
+      <div class="cat-add-row">
+        <input type="text" class="cat-input" id="new-cat-input" placeholder="ej: Quimica / Ambiental / Calderas..." onkeydown="if(event.key==='Enter')addCat()"/>
+        <button class="btn-cat-add" onclick="addCat()">+ Agregar</button>
+      </div>
+    </div>
+    <div style="font-size:11px;color:rgba(131,131,139,0.45);margin-bottom:14px">Las categorias se guardan en este dispositivo y estan disponibles al crear nuevos activos.</div>
+    <div class="modal-footer"><button class="btn-cancel" onclick="closeModal()">Cerrar</button></div>`;
+}
+
+function addCat(){
+  const val=document.getElementById('new-cat-input').value.trim();
+  if(!val) return;
+  if(CATEGORIAS.includes(val)){showToast('Esa categoria ya existe');return;}
+  CATEGORIAS.push(val);
+  localStorage.setItem('qdc_cats',JSON.stringify(CATEGORIAS));
+  buildCatFilter();
+  renderCatModal();
+  showToast('Categoria "'+val+'" agregada','rgba(33,150,243,0.4)');
+}
+
+function delCat(i){
+  const n=CATEGORIAS[i];
+  CATEGORIAS.splice(i,1);
+  localStorage.setItem('qdc_cats',JSON.stringify(CATEGORIAS));
+  buildCatFilter();
+  renderCatModal();
+  showToast('Categoria "'+n+'" eliminada');
+}
+
+// ── NUEVO ACTIVO ──
 function openNuevoActivo(){
-  openModal(`<div class="modal-header"><div class="modal-title">Nuevo activo</div><button class="modal-close" onclick="closeModal()">✕</button></div>
+  document.getElementById('modal-inner').innerHTML=`
+    <div class="modal-header"><div class="modal-title">Nuevo activo</div><button class="modal-close" onclick="closeModal()">✕</button></div>
     <div class="form-row" style="margin-bottom:12px">
       <div class="form-group"><label class="form-label">Nombre *</label><input type="text" class="form-input" id="na-nombre" placeholder="ej: Compresor C-102"/></div>
-      <div class="form-group"><label class="form-label">Código</label><input type="text" class="form-input" id="na-codigo" placeholder="AST-XXX"/></div>
+      <div class="form-group"><label class="form-label">Codigo</label><input type="text" class="form-input" id="na-codigo" placeholder="ACT-XXX"/></div>
     </div>
     <div class="form-row" style="margin-bottom:12px">
-      <div class="form-group"><label class="form-label">Ubicación</label><input type="text" class="form-input" id="na-ubic" placeholder="ej: Línea A"/></div>
-      <div class="form-group"><label class="form-label">Categoría</label><select class="form-select" id="na-cat"><option>Compresor</option><option>Bomba</option><option>Motor</option><option>Turbina</option><option>HVAC</option><option>Eléctrico</option><option>Otro</option></select></div>
+      <div class="form-group"><label class="form-label">Ubicacion</label><input type="text" class="form-input" id="na-ubic" placeholder="ej: Linea A, Bodega"/></div>
+      <div class="form-group">
+        <label class="form-label">Categoria</label>
+        <select class="form-select" id="na-cat">
+          ${CATEGORIAS.map(c=>`<option>${c}</option>`).join('')}
+          <option>General</option>
+        </select>
+      </div>
     </div>
-    <div class="modal-footer"><button class="btn-cancel" onclick="closeModal()">Cancelar</button><button class="btn-save" onclick="guardarActivo()">Crear activo</button></div>`);
+    <div class="form-row" style="margin-bottom:12px">
+      <div class="form-group">
+        <label class="form-label">Estado inicial</label>
+        <select class="form-select" id="na-est">
+          <option value="ok">Operativo</option>
+          <option value="warn">Alerta</option>
+          <option value="crit">Critico</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Salud inicial (%)</label><input type="number" class="form-input" id="na-salud" placeholder="90" min="0" max="100" value="90"/></div>
+    </div>
+    <div class="form-group" style="margin-bottom:14px">
+      <label class="form-label">Icono (emoji)</label>
+      <input type="text" class="form-input" id="na-icono" placeholder="🏭" style="width:80px"/>
+      <span style="font-size:11px;color:rgba(131,131,139,0.4);margin-left:8px">Escribe un emoji representativo</span>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" onclick="guardarActivo()">Crear activo</button>
+    </div>`;
+  document.getElementById('modal-overlay').classList.remove('hidden');
 }
+
 async function guardarActivo(){
   const nombre=document.getElementById('na-nombre').value.trim();
-  if(!nombre){showToast('⚠️ El nombre es obligatorio','rgba(226,75,74,0.4)');return;}
-  const nuevo={nombre,codigo:document.getElementById('na-codigo').value.trim(),ubicacion:document.getElementById('na-ubic').value.trim(),categoria:document.getElementById('na-cat').value,estado:'ok',salud:100};
+  if(!nombre){showToast('El nombre es obligatorio','rgba(226,75,74,0.4)');return;}
+  const nuevo={
+    nombre,
+    codigo:    document.getElementById('na-codigo').value.trim()||null,
+    ubicacion: document.getElementById('na-ubic').value.trim()||null,
+    categoria: document.getElementById('na-cat').value,
+    estado:    document.getElementById('na-est').value,
+    salud:     parseInt(document.getElementById('na-salud').value)||90,
+    icono:     document.getElementById('na-icono').value.trim()||'🏭',
+  };
   try{
     const{data,error}=await db.from('activos').insert(nuevo).select().single();
     if(error) throw error;
     ACTS.unshift(data);
-    await audit('create','Creó activo',nombre);
-    closeModal(); showToast('✓ Activo creado','rgba(99,153,34,0.4)'); renderActivos(ACTS);
-  }catch(err){ showToast('✕ Error: '+err.message,'rgba(226,75,74,0.4)'); }
+    await audit('create','Creo activo: '+nombre, nuevo.categoria+' · '+nuevo.ubicacion);
+    closeModal();
+    showToast('✓ Activo "'+nombre+'" creado','rgba(99,153,34,0.4)');
+    applyFilters();
+  }catch(err){showToast('✕ Error: '+err.message,'rgba(226,75,74,0.4)');}
 }
 
+function closeModal(){document.getElementById('modal-overlay').classList.add('hidden');}
+document.getElementById('modal-overlay').addEventListener('click',function(e){if(e.target===this)closeModal();});
+
+async function audit(tipo,accion,detalle){
+  try{await db.from('auditoria').insert({usuario_id:USER.id,usuario_nombre:USER.nombre||USER.email,tipo,accion,detalle});}catch(e){}
+}
+
+let tT;
+function showToast(msg,col){
+  const t=document.getElementById('toast');t.textContent=msg;t.style.borderColor=col||'rgba(33,150,243,0.3)';
+  t.classList.add('show');clearTimeout(tT);tT=setTimeout(()=>t.classList.remove('show'),3200);
+}
 </script>
 </body>
 </html>
