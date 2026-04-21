@@ -210,16 +210,29 @@ async function loadPM(){
   updateStats(); renderPM(PMS);
 }
 function demosPM(){
-  const hoy=new Date();
-  const f=(d)=>{const x=new Date(hoy);x.setDate(x.getDate()+d);return x.toISOString().split('T')[0];};
   return[
-    {id:'p1',nombre:'Cambio aceite Compresor C-101',activo:'Compresor C-101',frecuencia:'Mensual',proxima_fecha:f(-12),estado:'overdue',responsable:'Luis García',es_externo:false},
-    {id:'p2',nombre:'Revisión sello mecánico Bomba P-205',activo:'Bomba P-205',frecuencia:'Semestral',proxima_fecha:f(-5),estado:'overdue',responsable:'María Pérez',es_externo:false},
-    {id:'p3',nombre:'Lubricación rodamientos Motor MO-18',activo:'Motor MO-18',frecuencia:'Mensual',proxima_fecha:f(3),estado:'soon',responsable:'Luis García',es_externo:false},
-    {id:'p4',nombre:'Limpieza filtros Enfriadora CH-3',activo:'Enfriadora CH-3',frecuencia:'Quincenal',proxima_fecha:f(5),estado:'soon',responsable:'R. Torres',es_externo:false},
-    {id:'p5',nombre:'Inspección termográfica tableros',activo:'Tablero E-01',frecuencia:'Anual',proxima_fecha:f(290),estado:'ok',responsable:'Termograf SpA',es_externo:true},
-    {id:'p6',nombre:'Calibración sensores Línea A',activo:'Línea A',frecuencia:'Trimestral',proxima_fecha:f(45),estado:'ok',responsable:'E. Castro',es_externo:false},
-    {id:'p7',nombre:'PM semestral sistema vapor Turbina T-01',activo:'Turbina T-01',frecuencia:'Semestral',proxima_fecha:f(-3),estado:'overdue',responsable:'E. Castro',es_externo:false},
+    {id:'p1',nombre:'Inspección y verificación Balanzas',activo:'Balanzas',frecuencia:'Quincenal',proxima_fecha:'2026-05-04',estado:'soon',responsable:'Equipo Interno',es_externo:false},
+    {id:'p2',nombre:'Mantención Generador Vielco / ATS',activo:'Generador Vielco / ATS',frecuencia:'Mensual',proxima_fecha:'2026-05-04',estado:'soon',responsable:'Proveedor Externo',es_externo:true},
+    {id:'p3',nombre:'Revisión Vehículos de planta',activo:'Vehículos de planta',frecuencia:'Mensual',proxima_fecha:'2026-05-04',estado:'soon',responsable:'Equipo Interno / Taller Externo',es_externo:true},
+    {id:'p4',nombre:'Inspección Portones eléctricos',activo:'Portones eléctricos',frecuencia:'Trimestral',proxima_fecha:'2026-05-11',estado:'soon',responsable:'Equipo Interno',es_externo:false},
+    {id:'p5',nombre:'Inspección Cerco eléctrico',activo:'Cerco eléctrico',frecuencia:'Cuatrimestral',proxima_fecha:'2026-06-09',estado:'ok',responsable:'Proveedor Externo',es_externo:true},
+    {id:'p6',nombre:'Revisión Sistema agua potable',activo:'Sistema agua potable',frecuencia:'Semestral',proxima_fecha:'2026-08-10',estado:'ok',responsable:'Equipo Interno',es_externo:false},
+    {id:'p7',nombre:'Revisión Iluminación interior',activo:'Iluminación interior',frecuencia:'Semestral',proxima_fecha:'2026-08-10',estado:'ok',responsable:'Equipo Interno',es_externo:false},
+    {id:'p8',nombre:'Revisión Sensores de movimiento',activo:'Sensores de movimiento',frecuencia:'Semestral',proxima_fecha:'2026-08-10',estado:'ok',responsable:'Equipo Interno',es_externo:false},
+    {id:'p9',nombre:'Revisión Cámaras de seguridad',activo:'Cámaras de seguridad',frecuencia:'Semestral',proxima_fecha:'2026-08-10',estado:'ok',responsable:'Equipo Interno / Soporte Externo',es_externo:true},
+    {id:'p10',nombre:'Revisión Cierres magnéticos',activo:'Cierres magnéticos',frecuencia:'Semestral',proxima_fecha:'2026-08-10',estado:'ok',responsable:'Equipo Interno',es_externo:false},
+    {id:'p11',nombre:'Revisión Duchas de emergencia',activo:'Duchas de emergencia',frecuencia:'Semestral',proxima_fecha:'2026-08-10',estado:'ok',responsable:'Equipo Interno',es_externo:false},
+    {id:'p12',nombre:'Revisión Sistema de regadío',activo:'Sistema de regadío',frecuencia:'Semestral',proxima_fecha:'2026-08-10',estado:'ok',responsable:'Equipo Interno',es_externo:false},
+    {id:'p13',nombre:'Revisión Aguas servidas',activo:'Sistema aguas servidas',frecuencia:'Semestral',proxima_fecha:'2026-08-10',estado:'ok',responsable:'Proveedor Externo / Equipo Interno',es_externo:true},
+    {id:'p14',nombre:'Mantención Climatización',activo:'Climatización',frecuencia:'Anual',proxima_fecha:'2027-02-09',estado:'ok',responsable:'Proveedor Externo',es_externo:true},
+    {id:'p15',nombre:'Inspección Ventilación (extractores)',activo:'Ventilación (extractores)',frecuencia:'Anual',proxima_fecha:'2027-02-09',estado:'ok',responsable:'Equipo Interno',es_externo:false},
+    {id:'p16',nombre:'Inspección Racks almacenamiento',activo:'Racks almacenamiento',frecuencia:'Anual',proxima_fecha:'2027-02-09',estado:'ok',responsable:'Equipo Interno',es_externo:false},
+    {id:'p17',nombre:'Recarga y certificación Extintores',activo:'Extintores',frecuencia:'Anual',proxima_fecha:'2027-02-09',estado:'ok',responsable:'Proveedor Externo',es_externo:true},
+    {id:'p18',nombre:'Mantención Sistema detección incendios',activo:'Sistema detección incendios',frecuencia:'Anual',proxima_fecha:'2027-02-09',estado:'ok',responsable:'Proveedor Externo',es_externo:true},
+    {id:'p19',nombre:'Revisión Tableros eléctricos',activo:'Tableros eléctricos',frecuencia:'Anual',proxima_fecha:'2027-02-09',estado:'ok',responsable:'Equipo Interno',es_externo:false},
+    {id:'p20',nombre:'Revisión Luminarias',activo:'Luminarias',frecuencia:'Anual',proxima_fecha:'2027-02-09',estado:'ok',responsable:'Equipo Interno',es_externo:false},
+    {id:'p21',nombre:'Mantención Máquinas de fabricación',activo:'Máquinas de fabricación',frecuencia:'Anual',proxima_fecha:'2027-02-09',estado:'ok',responsable:'Equipo Interno',es_externo:false},
+    {id:'p22',nombre:'Mantención Grúas horquillas',activo:'Grúas horquillas',frecuencia:'Anual',proxima_fecha:'2027-02-09',estado:'ok',responsable:'Proveedor Externo',es_externo:true},
   ];
 }
 function getEst(pm){
