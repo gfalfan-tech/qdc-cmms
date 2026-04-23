@@ -528,229 +528,173 @@ function verOT(id){
 
   const fecha = new Date(o.creado_en).toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit',year:'numeric'});
   const canEdit = USER.rol === 's';
+  const canUpload = USER.rol === 't' || USER.rol === 's';
 
-  document.getElementById('modal-ver-inner').innerHTML = `
+  const pdfSection = o.es_externo ? `
+    <div style="background:rgba(255,255,255,0.03);border-radius:7px;padding:12px 14px;margin-bottom:12px;border:0.5px solid ${o.pdf_url?'rgba(99,153,34,0.2)':'rgba(239,159,39,0.2)'}">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:8px">Informe PDF del contratista</div>
+      ${o.pdf_url
+        ? `<div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:18px">📄</span>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:500;color:var(--ok)">Informe adjunto</div>
+              <div style="font-size:10px;color:rgba(131,131,139,0.5)">Subido correctamente</div>
+            </div>
+            <a href="${o.pdf_url}" target="_blank" style="padding:5px 12px;border-radius:5px;background:rgba(99,153,34,0.15);color:#C0DD97;border:0.5px solid rgba(99,153,34,0.3);font-size:11px;text-decoration:none">Ver PDF</a>
+            ${canUpload?`<button onclick="uploadPDF('${o.id}','pdf')" style="padding:5px 10px;border-radius:5px;background:rgba(255,255,255,0.06);color:rgba(200,210,225,0.6);border:0.5px solid rgba(255,255,255,0.1);font-size:11px;cursor:pointer">Reemplazar</button>`:''}
+          </div>`
+        : canUpload
+          ? `<div style="border:2px dashed rgba(239,159,39,0.3);border-radius:6px;padding:16px;text-align:center;cursor:pointer" onclick="document.getElementById('pdf-input-${o.id}').click()" id="pdf-drop-${o.id}">
+              <div style="font-size:24px;margin-bottom:6px">📄</div>
+              <div style="font-size:12px;font-weight:500;color:var(--warn)">Adjuntar informe PDF</div>
+              <div style="font-size:11px;color:rgba(131,131,139,0.5);margin-top:3px">Haz clic o arrastra el archivo aquí</div>
+              <input type="file" id="pdf-input-${o.id}" accept=".pdf,.doc,.docx" style="display:none" onchange="handleFileUpload(event,'${o.id}','pdf')"/>
+            </div>
+            <div id="pdf-progress-${o.id}" style="display:none;margin-top:8px"></div>`
+          : `<div style="padding:12px;text-align:center;font-size:12px;color:rgba(239,159,39,0.6)">⚠️ PDF pendiente — solo el técnico o supervisor puede adjuntar</div>`
+      }
+    </div>` : '';
+
+  document.getElementById('modal-ver-inner').innerHTML = \`
     <div class="modal-header">
-      <div class="modal-title">${o.codigo || 'OT'} — ${o.activo||''}</div>
+      <div class="modal-title">\${o.codigo || 'OT'} — \${o.activo||''}</div>
       <button class="modal-close" onclick="closeModal()">✕</button>
     </div>
     <div style="margin-bottom:14px">
-      <div style="font-size:13px;color:var(--white);margin-bottom:8px">${o.descripcion}</div>
+      <div style="font-size:13px;color:var(--white);margin-bottom:8px">\${o.descripcion}</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
-        ${EST_BADGE[o.estado]||''}
-        <span class="badge" style="background:rgba(255,255,255,0.07);color:rgba(200,210,225,0.7)">${o.tipo||'Correctivo'}</span>
-        <span class="badge" style="background:rgba(255,255,255,0.07);color:${PRIO_COLOR[o.prioridad]||'gray'}">${PRIO_LABEL[o.prioridad]||''}</span>
+        \${EST_BADGE[o.estado]||''}
+        <span class="badge" style="background:rgba(255,255,255,0.07);color:rgba(200,210,225,0.7)">\${o.tipo||'Correctivo'}</span>
+        <span class="badge" style="background:rgba(255,255,255,0.07);color:\${PRIO_COLOR[o.prioridad]||'gray'}">\${PRIO_LABEL[o.prioridad]||''}</span>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px">
-        <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Activo</div>${o.activo||'—'}</div>
-        <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Asignado a</div>${o.asignado_nombre||o.contratista||'—'}</div>
-        <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Fecha</div>${fecha}</div>
-        <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">PDF informe</div>${o.pdf_url?'📄✓ Adjunto':'📄 Sin adjuntar'}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px;font-size:12px">
+        <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Activo</div>\${o.activo||'—'}</div>
+        <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Asignado a</div>\${o.asignado_nombre||o.contratista||'—'}</div>
+        <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Fecha</div>\${fecha}</div>
+        <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Tipo</div>\${o.tipo||'Correctivo'}</div>
       </div>
-      ${o.notas?`<div style="margin-top:8px;background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px;font-size:12px;color:rgba(200,210,225,0.7)"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Notas</div>${o.notas}</div>`:''}
+      \${o.notas?`<div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px;font-size:12px;margin-bottom:12px;color:rgba(200,210,225,0.7)"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Notas</div>\${o.notas}</div>`:''}
     </div>
-    ${canEdit?`
+    \${pdfSection}
+    \${canEdit?\`
     <div style="border-top:1px solid rgba(255,255,255,0.07);padding-top:14px">
       <div style="font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);margin-bottom:10px">Actualizar estado</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
-        <button class="ab" onclick="cambiarEstado('${id}','open')">Abierta</button>
-        <button class="ab" onclick="cambiarEstado('${id}','prog')">En proceso</button>
-        <button class="ab" onclick="cambiarEstado('${id}','done')" style="color:#C0DD97;border-color:rgba(99,153,34,0.3)">✓ Completada</button>
+        <button class="ab" onclick="cambiarEstado('\${o.id}','open')">Abierta</button>
+        <button class="ab" onclick="cambiarEstado('\${o.id}','prog')">En proceso</button>
+        <button class="ab" onclick="cambiarEstado('\${o.id}','done')" style="color:#C0DD97;border-color:rgba(99,153,34,0.3)">✓ Completada</button>
       </div>
-    </div>`:''}
+    </div>\`:''}
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeModal()">Cerrar</button>
     </div>
-  `;
+  \`;
   document.getElementById('modal-ver').classList.remove('hidden');
-}
 
-async function cambiarEstado(id, nuevoEstado){
-  try {
-    const { error } = await db.from('ots').update({estado: nuevoEstado, actualizado_en: new Date().toISOString()}).eq('id', id);
-    if(error) throw error;
-
-    const o = OTS_DATA.find(x=>x.id===id);
-    if(o) o.estado = nuevoEstado;
-
-    showToast('✓ Estado actualizado', 'rgba(99,153,34,0.4)');
-    closeModal();
-    updateStats();
-    filterTable();
-
-    // Auditoría
-    await db.from('auditoria').insert({
-      usuario_id: USER.id,
-      usuario_nombre: USER.nombre || USER.email,
-      tipo: 'ot',
-      accion: `Actualizó ${o?.codigo||id}`,
-      detalle: `Estado → ${nuevoEstado}`,
+  // Setup drag & drop for PDF
+  const dropZone = document.getElementById('pdf-drop-' + o.id);
+  if(dropZone){
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.style.borderColor='var(--accent)'; dropZone.style.background='rgba(33,150,243,0.05)'; });
+    dropZone.addEventListener('dragleave', e => { dropZone.style.borderColor='rgba(239,159,39,0.3)'; dropZone.style.background=''; });
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.style.borderColor='rgba(239,159,39,0.3)'; dropZone.style.background='';
+      const file = e.dataTransfer.files[0];
+      if(file) handleFileUpload({target:{files:[file]}}, o.id, 'pdf');
     });
-
-  } catch(err){
-    showToast('✕ Error: ' + err.message, 'rgba(226,75,74,0.4)');
   }
 }
 
-function closeModal(){
-  document.getElementById('modal-ver').classList.add('hidden');
-}
-document.getElementById('modal-ver').addEventListener('click', function(e){
-  if(e.target === this) closeModal();
-});
+// ── SUBIDA REAL DE ARCHIVOS A SUPABASE STORAGE ──
+async function handleFileUpload(event, otId, tipo){
+  const file = event.target.files[0];
+  if(!file) return;
 
-// ═══════════════════════════════════════
-// FILTROS Y BÚSQUEDA
-// ═══════════════════════════════════════
-function filterTable(){
-  const search = document.getElementById('search-input').value.toLowerCase();
-  const estado = document.getElementById('filter-estado').value;
-  const prio   = document.getElementById('filter-prio').value;
+  // Validar tipo
+  const allowed = tipo==='pdf'
+    ? ['application/pdf','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+    : ['image/jpeg','image/jpg','image/png','image/webp'];
 
-  OTS_FILTERED = OTS_DATA.filter(o => {
-    const matchSearch = !search ||
-      (o.descripcion||'').toLowerCase().includes(search) ||
-      (o.activo||'').toLowerCase().includes(search) ||
-      (o.codigo||'').toLowerCase().includes(search) ||
-      (o.asignado_nombre||'').toLowerCase().includes(search);
-    const matchEstado = !estado || o.estado === estado;
-    const matchPrio   = !prio   || o.prioridad === prio;
-    return matchSearch && matchEstado && matchPrio;
-  });
-
-  renderTable(OTS_FILTERED);
-}
-
-// ═══════════════════════════════════════
-// TOAST
-// ═══════════════════════════════════════
-let toastT;
-function showToast(msg, color){
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.style.borderColor = color || 'rgba(33,150,243,0.3)';
-  t.classList.add('show');
-  clearTimeout(toastT);
-  toastT = setTimeout(()=>t.classList.remove('show'), 3200);
-}
-
-// Enter en el formulario
-document.addEventListener('keydown', e => {
-  if(e.key === 'Enter' && document.activeElement.id === 'q-desc'){
-    registrarOT();
+  if(!allowed.includes(file.type)){
+    showToast('✕ Formato no válido. ' + (tipo==='pdf'?'Solo PDF o Word.':'Solo JPG, PNG o WebP.'), 'rgba(226,75,74,0.4)');
+    return;
   }
-});
 
-// ── BÚSQUEDA PREDICTIVA DE ACTIVOS ──
-const ACTIVOS_QDC = [
-  'Balanzas',
-  'Generador Vielco / ATS',
-  'Portones eléctricos',
-  'Vehículos de planta',
-  'Cerco eléctrico',
-  'Sistema agua potable',
-  'Iluminación interior',
-  'Sensores de movimiento',
-  'Cámaras de seguridad',
-  'Cierres magnéticos',
-  'Duchas de emergencia',
-  'Sistema de regadío',
-  'Climatización',
-  'Ventilación (extractores)',
-  'Sistema aguas servidas',
-  'Racks almacenamiento',
-  'Extintores',
-  'Sistema detección incendios',
-  'Tableros eléctricos',
-  'Luminarias',
-  'Máquinas de fabricación',
-  'Grúas horquillas',
-  'Otro equipo',
-];
+  const maxMB = tipo==='pdf' ? 10 : 5;
+  if(file.size > maxMB*1024*1024){
+    showToast(`✕ Archivo muy grande. Máximo ${maxMB}MB.`, 'rgba(226,75,74,0.4)');
+    return;
+  }
 
-// Cargar activos reales desde Supabase al iniciar
-async function loadActivosForSearch(){
+  // Mostrar progreso
+  const progEl = document.getElementById(`pdf-progress-${otId}`);
+  const dropEl = document.getElementById(`pdf-drop-${otId}`);
+  if(progEl){
+    progEl.style.display='block';
+    progEl.innerHTML=`<div style="display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(200,210,225,0.7)"><div style="width:16px;height:16px;border:2px solid rgba(255,255,255,0.1);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite"></div>Subiendo ${file.name}…</div>`;
+  }
+  if(dropEl) dropEl.style.opacity='0.5';
+
   try{
-    const{data}=await db.from('activos').select('nombre').order('nombre');
-    if(data&&data.length){
-      ACTIVOS_QDC.length=0;
-      data.forEach(a=>ACTIVOS_QDC.push(a.nombre));
-      ACTIVOS_QDC.push('Otro equipo');
+    // Generar nombre único para el archivo
+    const ext   = file.name.split('.').pop();
+    const fname = `ots/${otId}/${tipo}_${Date.now()}.${ext}`;
+    const bucket = tipo==='pdf' ? 'documentos' : 'fotos';
+
+    // Subir a Supabase Storage
+    const {data: uploadData, error: uploadError} = await db.storage
+      .from(bucket)
+      .upload(fname, file, {cacheControl:'3600', upsert:true});
+
+    if(uploadError) throw uploadError;
+
+    // Obtener URL pública
+    const {data: urlData} = db.storage
+      .from(bucket)
+      .getPublicUrl(fname);
+
+    const publicUrl = urlData.publicUrl;
+
+    // Guardar URL en la OT
+    const campo = tipo==='pdf' ? 'pdf_url' : 'foto_url';
+    const {error: updateError} = await db.from('ots')
+      .update({[campo]: publicUrl})
+      .eq('id', otId);
+
+    if(updateError) throw updateError;
+
+    // Actualizar datos locales
+    const ot = OTS_DATA.find(o=>o.id===otId);
+    if(ot) ot[campo] = publicUrl;
+
+    await audit('ot', `Adjuntó ${tipo==='pdf'?'PDF':'foto'}: ${file.name}`, `OT ${ot?.codigo||otId}`);
+
+    showToast('✓ Archivo subido correctamente', 'rgba(99,153,34,0.4)');
+
+    // Reabrir modal actualizado
+    setTimeout(()=>verOT(otId), 400);
+
+  }catch(err){
+    console.error(err);
+    if(progEl) progEl.innerHTML=`<div style="font-size:12px;color:var(--crit)">✕ Error al subir: ${err.message}</div>`;
+    if(dropEl) dropEl.style.opacity='1';
+
+    // Si el bucket no existe, dar instrucción clara
+    if(err.message?.includes('Bucket not found') || err.message?.includes('bucket')){
+      showToast('✕ Bucket no configurado. Crea "documentos" y "fotos" en Supabase Storage.', 'rgba(226,75,74,0.4)');
+    } else {
+      showToast('✕ Error: ' + err.message, 'rgba(226,75,74,0.4)');
     }
-  }catch(e){}
-}
-
-let _activoSel = -1;
-
-function activoSearch(val){
-  const dd = document.getElementById('activo-dropdown');
-  if(!val||val.length<1){ dd.style.display='none'; return; }
-  
-  const q = val.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-  const matches = ACTIVOS_QDC.filter(a => {
-    const an = a.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-    return an.includes(q);
-  });
-
-  if(!matches.length){ dd.style.display='none'; return; }
-
-  _activoSel = -1;
-  dd.innerHTML = matches.map((a,i) => {
-    // Highlight matching text
-    const reg = new RegExp('(' + val.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'gi');
-    const highlighted = a.replace(reg, '<strong>$1</strong>');
-    return `<div class="activo-opt" data-idx="${i}" data-val="${a}" 
-      onmousedown="selectActivo('${a.replace(/'/g,"\'")}')">
-      ${highlighted}
-    </div>`;
-  }).join('');
-  dd.style.display = 'block';
-}
-
-function selectActivo(val){
-  document.getElementById('q-activo').value = val;
-  document.getElementById('activo-dropdown').style.display = 'none';
-  _activoSel = -1;
-}
-
-function activoKeyNav(e){
-  const dd = document.getElementById('activo-dropdown');
-  const opts = dd.querySelectorAll('.activo-opt');
-  if(!opts.length) return;
-
-  if(e.key === 'ArrowDown'){
-    e.preventDefault();
-    _activoSel = Math.min(_activoSel+1, opts.length-1);
-    opts.forEach((o,i) => o.classList.toggle('selected', i===_activoSel));
-    if(opts[_activoSel]) opts[_activoSel].scrollIntoView({block:'nearest'});
-  } else if(e.key === 'ArrowUp'){
-    e.preventDefault();
-    _activoSel = Math.max(_activoSel-1, 0);
-    opts.forEach((o,i) => o.classList.toggle('selected', i===_activoSel));
-    if(opts[_activoSel]) opts[_activoSel].scrollIntoView({block:'nearest'});
-  } else if(e.key === 'Enter'){
-    e.preventDefault();
-    if(_activoSel>=0 && opts[_activoSel]){
-      selectActivo(opts[_activoSel].dataset.val);
-    } else if(opts.length===1){
-      selectActivo(opts[0].dataset.val);
-    }
-  } else if(e.key === 'Escape'){
-    dd.style.display = 'none';
   }
 }
 
-// Close dropdown when clicking outside
-document.addEventListener('click', e=>{
-  if(!document.getElementById('activo-wrap')?.contains(e.target)){
-    const dd=document.getElementById('activo-dropdown');
-    if(dd) dd.style.display='none';
-  }
-});
+// Upload PDF triggered from button (replace existing)
+function uploadPDF(otId, tipo){
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = tipo==='pdf' ? '.pdf,.doc,.docx' : 'image/*';
+  input.onchange = e => handleFileUpload(e, otId, tipo);
+  input.click();
+}
 
-// Override registrarOT to validate activo from input (not select)
-const _origRegOT = registrarOT;
 
-</script>
-</body>
-</html>

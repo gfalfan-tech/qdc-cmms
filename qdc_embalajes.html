@@ -230,8 +230,15 @@ function renderEmb(list){
         <td style="font-size:11px;color:rgba(200,210,225,0.6)">${e.tipo_cajon||'—'}</td>
         <td style="font-size:11px;color:rgba(200,210,225,0.6)">${e.destino||'—'}</td>
         <td style="font-family:var(--head);font-size:13px;font-weight:600;color:#F0997B">$${(e.costo_total||0).toLocaleString('es-CL')}</td>
-        <td style="font-size:13px">${e.foto1_url?'📷✓':'📷?'} ${e.foto2_url?'📷✓':'📷?'}</td>
-        <td style="font-size:13px">${e.pdf_url?'📄✓':'<span style="color:var(--warn)">📄?</span>'}</td>
+        <td style="font-size:13px">
+          <span onclick="uploadEmbFile('${e.id}','foto1')" style="cursor:pointer;padding:2px 5px;border-radius:3px;transition:background .1s" title="${e.foto1_url?'Ver foto':'Adjuntar foto 1'}" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background=''">${e.foto1_url?'📷✓':'📷?'}</span>
+          <span onclick="uploadEmbFile('${e.id}','foto2')" style="cursor:pointer;padding:2px 5px;border-radius:3px;transition:background .1s" title="${e.foto2_url?'Ver foto':'Adjuntar foto 2'}" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background=''">${e.foto2_url?'📷✓':'📷?'}</span>
+        </td>
+        <td style="font-size:13px">
+          <span onclick="uploadEmbFile('${e.id}','pdf')" style="cursor:pointer;padding:2px 5px;border-radius:3px;transition:background .1s" title="${e.pdf_url?'Ver PDF':'Adjuntar PDF'}" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background=''">
+            ${e.pdf_url?'📄✓':'<span style="color:var(--warn)">📄?</span>'}
+          </span>
+        </td>
         <td><span class="badge ${e.estado==='completo'?'b-ok':'b-warn'}">${e.estado==='completo'?'Completo':'Pendiente'}</span></td>
         <td style="font-size:11px;font-family:monospace;color:rgba(131,131,139,0.5)">${fecha}</td>
       </tr>`;
