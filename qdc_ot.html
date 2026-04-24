@@ -450,7 +450,7 @@ function renderTable(list){
     const fecha = new Date(o.creado_en).toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit'});
     const pdfCell = o.es_externo ? (o.pdf_url ? '📄✓' : '<span style="color:var(--warn)">📄?</span>') : '—';
     return `<tr class="${o.es_externo?'ext-row':''}">
-      <td style="font-family:monospace;font-size:11px;color:rgba(131,131,139,0.6)">${o.codigo||o.id.substring(0,8)}</td>
+      <td style="font-family:monospace;font-size:11px;color:rgba(131,131,139,0.6)">${o.codigo||('OT-'+String(o.folio||'?').padStart(4,'0'))}</td>
       <td><div style="font-size:12px;font-weight:500;color:var(--white)">${o.descripcion}</div><div style="font-size:10px;color:rgba(131,131,139,0.5);margin-top:1px">${o.activo||'—'}</div></td>
       <td style="font-size:11px;color:rgba(200,210,225,0.6)">${o.tipo||'Correctivo'}</td>
       <td><span style="display:flex;align-items:center;gap:4px;font-size:11px"><span class="prio-dot" style="background:${PRIO_COLOR[o.prioridad]||'gray'}"></span>${PRIO_LABEL[o.prioridad]||o.prioridad}</span></td>
@@ -501,7 +501,13 @@ async function registrarOT(){
   btn.textContent = 'Guardando…';
   btn.disabled = true;
 
-  const codigo = 'OT-' + Date.now().toString().slice(-6);
+  // Obtener siguiente folio correlativo
+  let folio = 1;
+  try{
+    const{data:maxData} = await db.from('ots').select('folio').order('folio',{ascending:false}).limit(1);
+    folio = maxData && maxData.length && maxData[0].folio ? maxData[0].folio + 1 : 1;
+  }catch(e){ folio = Date.now() % 10000; }
+  const codigo = 'OT-' + String(folio).padStart(4,'0');
 
   // Auto-detectar si es externo: por tipo O por el tipo del responsable en la tabla
   const respData = RESPONSABLES_DATA.find(r=>r.id===respId);
@@ -509,6 +515,7 @@ async function registrarOT(){
 
   const nuevaOT = {
     codigo,
+    folio,
     descripcion: desc,
     activo,
     tipo,
@@ -520,6 +527,7 @@ async function registrarOT(){
     es_externo: esExterno,
     contratista: esExterno ? respNombre : null,
     notas,
+    observaciones: null,
     costo: 0,
   };
 
@@ -719,6 +727,27 @@ function verOT(id){
     </div>
 
     ${o.notas?`<div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px;font-size:12px;margin-bottom:12px;color:rgba(200,210,225,0.7)"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Notas</div>${o.notas}</div>`:''}
+
+    <div style="margin-bottom:12px">
+      <div style="font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);margin-bottom:6px">
+        Observaciones del responsable
+        <span style="font-weight:400;text-transform:none;font-size:10px;color:rgba(131,131,139,0.35)"> — máx. 1000 caracteres</span>
+      </div>
+      <textarea id="obs-input-${o.id}" maxlength="1000"
+        style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:var(--white);font-size:12px;font-family:var(--font);padding:10px 12px;outline:none;width:100%;resize:vertical;min-height:80px;transition:border-color .1s;line-height:1.5"
+        placeholder="Describe el trabajo realizado, materiales usados, observaciones técnicas…"
+        oninput="document.getElementById('obs-counter-${o.id}').textContent=(1000-this.value.length)+' caracteres restantes'"
+        onfocus="this.style.borderColor='var(--accent)'"
+        onblur="this.style.borderColor='rgba(255,255,255,0.1)'"
+      >${o.observaciones||''}</textarea>
+      <div style="display:flex;justify-content:space-between;margin-top:4px">
+        <span id="obs-counter-${o.id}" style="font-size:10px;color:rgba(131,131,139,0.4)">${1000-(o.observaciones||'').length} caracteres restantes</span>
+        <button onclick="guardarObservaciones('${o.id}')"
+          style="padding:4px 12px;border-radius:4px;border:0.5px solid rgba(33,150,243,0.3);background:rgba(33,150,243,0.1);color:#85B7EB;cursor:pointer;font-size:11px;font-family:var(--font)">
+          Guardar observaciones
+        </button>
+      </div>
+    </div>
 
     ${pdfSection}
 
@@ -983,6 +1012,25 @@ async function audit(tipo,accion,detalle){
 }
 
 
+// ── GUARDAR OBSERVACIONES ──
+async function guardarObservaciones(id){
+  const obs = document.getElementById('obs-input-'+id)?.value || '';
+  if(obs.length > 1000){
+    showToast('⚠️ Máximo 1000 caracteres','rgba(226,75,74,0.4)');
+    return;
+  }
+  try{
+    const{error} = await db.from('ots').update({observaciones: obs}).eq('id',id);
+    if(error) throw error;
+    const o = OTS_DATA.find(x=>x.id===id);
+    if(o) o.observaciones = obs;
+    showToast('✓ Observaciones guardadas','rgba(99,153,34,0.4)');
+    await audit('ot','Guardó observaciones OT '+(o?.codigo||id), obs.substring(0,80)+'...');
+  }catch(err){
+    showToast('✕ Error: '+err.message,'rgba(226,75,74,0.4)');
+  }
+}
+
 // ── IMPRIMIR BOLETA OT ──
 function imprimirOT(id){
   const o = OTS_DATA.find(x=>x.id===id);
@@ -1055,6 +1103,7 @@ function imprimirOT(id){
   </div>
   <div class="ot-num">
     <div class="ot-codigo">${o.codigo||'OT'}</div>
+    ${o.folio?`<div style="font-size:13px;font-weight:600;color:#2196F3">Folio N° ${o.folio}</div>`:''}
     <div class="ot-tipo">Orden de Trabajo — ${o.tipo||'Correctivo'}</div>
     <div class="ot-fecha">Emitida: ${fechaHora}</div>
   </div>
@@ -1092,12 +1141,19 @@ ${o.costo?`
   </div>
 </div>`:''}
 
+
+
+${o.observaciones?`
 <div class="section">
-  <div class="section-title">Registro de trabajo realizado</div>
-  <div style="background:#f8f9fa;border-radius:5px;padding:14px;min-height:80px;border:1px dashed #ccc;">
-    <div style="font-size:10px;color:#bbb">Descripción del trabajo ejecutado (completar a mano si es necesario)</div>
+  <div class="section-title">Observaciones del responsable</div>
+  <div style="background:#f8f9fa;border-radius:5px;padding:14px;border-left:3px solid #2196F3;font-size:12px;line-height:1.6;color:#333;white-space:pre-wrap">${o.observaciones}</div>
+</div>`:`
+<div class="section">
+  <div class="section-title">Observaciones del responsable</div>
+  <div style="background:#f8f9fa;border-radius:5px;padding:14px;min-height:70px;border:1px dashed #ccc;">
+    <div style="font-size:10px;color:#bbb">Observaciones del trabajo ejecutado (completar a mano)</div>
   </div>
-</div>
+</div>`}
 
 <div class="firmas">
   <div class="firma">
