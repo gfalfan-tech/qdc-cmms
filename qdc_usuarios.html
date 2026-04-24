@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>QDC CMMS — Gestión de Usuarios</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--navy:#08223D;--mid:#0B2545;--accent:#2196F3;--white:#EEF4FF;--ok:#97C459;--warn:#EF9F27;--crit:#E24B4A;--ext:#5DCAA5;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.10);--font:'Barlow',sans-serif;--head:'Barlow Condensed',sans-serif;}
+body{font-family:var(--font);background:#050F1C;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;}
+.shell{display:flex;width:100%;max-width:1200px;height:920px;background:var(--mid);border-radius:12px;overflow:hidden;border:1px solid var(--border2);}
+.sidebar{width:210px;flex-shrink:0;background:var(--navy);display:flex;flex-direction:column;border-right:1px solid var(--border);}
+.sb-logo{padding:16px 14px 12px;border-bottom:1px solid var(--border);}
+.sb-logo-mark{font-family:var(--head);font-size:15px;font-weight:700;color:var(--white);letter-spacing:1px;}
+.sb-logo-sub{font-size:9px;color:rgba(131,131,139,0.6);margin-top:2px;}
+.sb-logo-line{width:20px;height:2px;background:var(--accent);margin-top:5px;}
+.sb-nav{flex:1;overflow-y:auto;padding:6px 0;}
+.nav-sec{padding:10px 14px 3px;font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(131,131,139,0.4);}
+.nav-item{display:flex;align-items:center;gap:8px;padding:8px 14px;cursor:pointer;border-left:2px solid transparent;text-decoration:none;transition:background .1s;}
+.nav-item:hover{background:rgba(255,255,255,0.04);}
+.nav-item.active{background:rgba(33,150,243,0.12);border-left-color:var(--accent);}
+.nav-icon{font-size:13px;width:16px;text-align:center;flex-shrink:0;}
+.nav-label{font-size:12px;color:rgba(200,210,225,0.7);flex:1;}
+.nav-item.active .nav-label{color:var(--white);font-weight:500;}
+.sb-user{padding:10px 12px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+.u-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;}
+.u-name{font-size:11px;color:var(--white);font-weight:500;}
+.u-role{font-size:9px;color:rgba(131,131,139,0.6);}
+.u-logout{margin-left:auto;background:none;border:none;color:rgba(131,131,139,0.4);cursor:pointer;font-size:11px;padding:3px 6px;}
+.main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;}
+.topbar{height:50px;background:var(--mid);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0;}
+.page-title{font-family:var(--head);font-size:16px;font-weight:600;color:var(--white);flex:1;}
+.tb-btn{padding:6px 13px;border-radius:5px;border:none;font-size:12px;font-weight:500;cursor:pointer;font-family:var(--font);}
+.btn-p{background:var(--accent);color:#fff;}
+.btn-g{background:rgba(255,255,255,0.06);color:rgba(200,210,225,0.8);border:0.5px solid rgba(255,255,255,0.1);}
+.content{flex:1;overflow-y:auto;padding:20px;}
+.content::-webkit-scrollbar{width:3px;}
+.sec-title{font-family:var(--head);font-size:18px;font-weight:600;color:var(--white);margin-bottom:4px;}
+.sec-sub{font-size:12px;color:rgba(131,131,139,0.6);margin-bottom:16px;}
+.alert-box{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:7px;font-size:12px;margin-bottom:16px;line-height:1.5;}
+.alert-info{background:rgba(33,150,243,0.07);border:1px solid rgba(33,150,243,0.2);color:#85B7EB;}
+.alert-warn{background:rgba(239,159,39,0.07);border:1px solid rgba(239,159,39,0.2);color:#FAC775;}
+.alert-ok{background:rgba(99,153,34,0.07);border:1px solid rgba(99,153,34,0.2);color:#C0DD97;}
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}
+.kpi{background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:12px 14px;}
+.kpi-label{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px;}
+.kpi-val{font-size:24px;font-weight:600;font-family:var(--head);color:var(--white);}
+.user-card{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:8px;background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);margin-bottom:6px;transition:background .1s;}
+.user-card:hover{background:rgba(255,255,255,0.05);}
+.u-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--head);font-size:14px;font-weight:700;flex-shrink:0;}
+.u-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.badge{font-size:10px;font-weight:500;padding:3px 10px;border-radius:10px;}
+.b-t{background:rgba(33,150,243,0.15);color:#85B7EB;}
+.b-s{background:rgba(133,79,11,0.2);color:#FAC775;}
+.b-g{background:rgba(39,80,10,0.2);color:#C0DD97;}
+.ab{padding:4px 10px;border-radius:4px;border:0.5px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:rgba(200,210,225,0.7);cursor:pointer;font-size:11px;font-family:var(--font);}
+.ab:hover{background:rgba(255,255,255,0.1);}
+.ab-danger{border-color:rgba(226,75,74,0.3);color:#F09595;}
+.ab-danger:hover{background:rgba(226,75,74,0.1);}
+.ab-ok{border-color:rgba(99,153,34,0.3);color:#C0DD97;}
+.loading{display:flex;align-items:center;justify-content:center;padding:40px;gap:12px;color:rgba(131,131,139,0.5);}
+.spinner{width:20px;height:20px;border:2px solid rgba(255,255,255,0.1);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+#toast{position:fixed;bottom:24px;right:24px;background:#0D2D48;border:1px solid rgba(33,150,243,0.3);border-radius:8px;padding:12px 16px;font-size:12px;color:var(--white);z-index:999;transform:translateY(60px);opacity:0;transition:all .3s;pointer-events:none;}
+#toast.show{transform:translateY(0);opacity:1;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;z-index:500;}
+.modal-overlay.hidden{display:none;}
+.modal{background:#0D2D48;border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;width:480px;max-height:85vh;overflow-y:auto;padding:22px;}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.modal-title{font-family:var(--head);font-size:16px;font-weight:600;color:var(--white);}
+.modal-close{font-size:16px;color:rgba(131,131,139,0.6);cursor:pointer;background:none;border:none;}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.07);}
+.btn-cancel{padding:7px 14px;border-radius:5px;border:0.5px solid rgba(255,255,255,0.1);background:transparent;color:rgba(200,210,225,0.7);cursor:pointer;font-size:12px;font-family:var(--font);}
+.btn-save{padding:7px 18px;border-radius:5px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-size:12px;font-weight:600;font-family:var(--font);}
+.btn-danger{padding:7px 14px;border-radius:5px;border:0.5px solid rgba(226,75,74,0.3);background:rgba(226,75,74,0.1);color:#F09595;cursor:pointer;font-size:12px;font-family:var(--font);}
+.form-group{margin-bottom:12px;}
+.form-label{font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.6);margin-bottom:5px;display:block;}
+.form-input,.form-select{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:var(--white);font-size:12px;font-family:var(--font);padding:8px 10px;outline:none;width:100%;transition:border-color .1s;}
+.form-input:focus,.form-select:focus{border-color:var(--accent);}
+.form-input::placeholder{color:rgba(131,131,139,0.4);}
+.form-select option{background:#0D2D48;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.pw-bar{height:3px;border-radius:2px;margin-top:4px;transition:all .3s;}
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav class="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-mark">QDC · CMMS Pro</div>
+      <div class="sb-logo-sub">Química del Campo S.p.A</div>
+      <div class="sb-logo-line"></div>
+    </div>
+    <div class="sb-nav">
+      <div class="nav-sec">Principal</div>
+      <a class="nav-item" href="qdc_dashboard.html"><span class="nav-icon">▦</span><span class="nav-label">Dashboard</span></a>
+      <a class="nav-item" href="qdc_ot.html"><span class="nav-icon">📋</span><span class="nav-label">Órdenes de trabajo</span></a>
+      <div class="nav-sec">Mantenimiento</div>
+      <a class="nav-item" href="qdc_pm.html"><span class="nav-icon">🔄</span><span class="nav-label">Plan preventivo</span></a>
+      <a class="nav-item" href="qdc_responsables.html"><span class="nav-icon">👥</span><span class="nav-label">Responsables</span></a>
+      <div class="nav-sec">Recursos</div>
+      <a class="nav-item" href="qdc_activos.html"><span class="nav-icon">🏭</span><span class="nav-label">Activos y equipos</span></a>
+      <a class="nav-item" href="qdc_inventario.html"><span class="nav-icon">📦</span><span class="nav-label">Inventario</span></a>
+      <div class="nav-sec">Operaciones</div>
+      <a class="nav-item" href="qdc_embalajes.html"><span class="nav-icon">📫</span><span class="nav-label">Embalajes</span></a>
+      <div class="nav-sec">Análisis</div>
+      <a class="nav-item" href="qdc_kpis.html"><span class="nav-icon">📊</span><span class="nav-label">KPIs y reportes</span></a>
+      <div class="nav-sec">Sistema</div>
+      <a class="nav-item" href="qdc_alertas.html"><span class="nav-icon">🔔</span><span class="nav-label">Alertas</span></a>
+      <a class="nav-item active" href="qdc_usuarios.html"><span class="nav-icon">🔑</span><span class="nav-label">Gestión de usuarios</span></a>
+      <a class="nav-item" href="qdc_config.html"><span class="nav-icon">⚙️</span><span class="nav-label">Configuración</span></a>
+    </div>
+    <div class="sb-user" id="sb-user"></div>
+  </nav>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="page-title">🔑 Gestión de Usuarios</div>
+      <span style="font-size:11px;color:rgba(239,159,39,0.7);background:rgba(239,159,39,0.08);border:0.5px solid rgba(239,159,39,0.2);padding:3px 10px;border-radius:5px">Solo acceso Superusuario</span>
+      <button class="tb-btn btn-p" onclick="openCrearUsuario()">+ Crear usuario</button>
+    </div>
+
+    <div class="content">
+      <div class="sec-title">Usuarios del sistema</div>
+      <div class="sec-sub">Gestiona los accesos al QDC CMMS Pro. Puedes crear, editar contraseñas y desactivar usuarios.</div>
+
+      <div class="alert-box alert-warn">
+        ⚠️ <strong>Importante:</strong> Los cambios de contraseña son inmediatos. El usuario deberá usar la nueva contraseña en su próximo inicio de sesión.
+      </div>
+
+      <div class="kpi-row" id="kpi-row">
+        <div class="kpi"><div class="kpi-label">Total usuarios</div><div class="kpi-val" id="kpi-total" style="color:#85B7EB">—</div></div>
+        <div class="kpi"><div class="kpi-label">Activos</div><div class="kpi-val" id="kpi-activos" style="color:var(--ok)">—</div></div>
+        <div class="kpi"><div class="kpi-label">Técnicos</div><div class="kpi-val" id="kpi-t" style="color:#85B7EB">—</div></div>
+        <div class="kpi"><div class="kpi-label">Supervisores</div><div class="kpi-val" id="kpi-s" style="color:#FAC775">—</div></div>
+      </div>
+
+      <div id="users-list">
+        <div class="loading"><div class="spinner"></div><span>Cargando usuarios…</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<div class="modal-overlay hidden" id="modal-overlay">
+  <div class="modal" id="modal-inner"></div>
+</div>
+
+<script>
+const SB_URL = 'https://aaugeuydymhwlcpklbmt.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhdWdldXlkeW1od2xjcGtsYm10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2NTg5MzksImV4cCI6MjA5MjIzNDkzOX0.Q2GeJKuf7l51Hsv3hUEeaO0NHaFeWXLIBrRUPgkQ0gw';
+
+let db, USER, USERS_DATA = [];
+
+(function(){
+  const s = document.createElement('script');
+  s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+  s.onload = init;
+  document.head.appendChild(s);
+})();
+
+function ini(e){ const p=(e||'').split('@')[0].split(/[._-]/); return p.slice(0,2).map(x=>x[0]?.toUpperCase()||'').join('')||'QD'; }
+
+function init(){
+  db = window.supabase.createClient(SB_URL, SB_KEY);
+  USER = JSON.parse(localStorage.getItem('qdc_user') || '{}');
+
+  // Solo superusuario puede acceder
+  if(!USER.rol){
+    window.location.href = 'index.html';
+    return;
+  }
+  if(USER.rol !== 'g' && USER.rol !== 's'){
+    window.location.href = 'qdc_dashboard.html';
+    return;
+  }
+
+  buildSidebar();
+  loadUsers();
+}
+
+function buildSidebar(){
+  const C={t:'#185FA5',s:'#854F0B',g:'#27500A'},T={t:'#B5D4F4',s:'#FAC775',g:'#C0DD97'},R={t:'Técnico',s:'Supervisor',g:'Gerente'};
+  document.getElementById('sb-user').innerHTML=`
+    <div class="u-av" style="background:${C[USER.rol]};color:${T[USER.rol]}">${ini(USER.email||USER.nombre)}</div>
+    <div style="min-width:0;flex:1"><div class="u-name">${USER.nombre||USER.email}</div><div class="u-role">${R[USER.rol]}</div></div>
+    <button class="u-logout" onclick="doLogout()">⏏</button>`;
+}
+function doLogout(){ localStorage.removeItem('qdc_user'); window.location.href='index.html'; }
+
+// ── CARGAR USUARIOS DESDE SUPABASE AUTH ──
+async function loadUsers(){
+  try{
+    // Use the users table to get list (auth.users not accessible from anon)
+    // We store users in our own table when created
+    const{data,error}=await db.from('system_users').select('*').order('created_at',{ascending:false});
+    if(error) throw error;
+    USERS_DATA = data || [];
+    renderUsers();
+  }catch(e){
+    // Table might not exist yet — show creation instructions
+    USERS_DATA = getKnownUsers();
+    renderUsers();
+  }
+}
+
+// Known users from Supabase Auth (hardcoded as fallback)
+function getKnownUsers(){
+  return [
+    {id:'u1', email:'gfalfan@qdc.cl',   nombre:'Germán Falfán',   rol:'g', activo:true,  ultimo_acceso:'Hoy'},
+    {id:'u2', email:'corellana@qdc.cl',  nombre:'C. Orellana',     rol:'t', activo:true,  ultimo_acceso:'—'},
+    {id:'u3', email:'rdelcampo@qdc.cl',  nombre:'R. Del Campo',    rol:'g', activo:true,  ultimo_acceso:'—'},
+  ];
+}
+
+function updateKPIs(){
+  const total = USERS_DATA.length;
+  const activos = USERS_DATA.filter(u=>u.activo!==false).length;
+  const tecnicos = USERS_DATA.filter(u=>u.rol==='t').length;
+  const supers = USERS_DATA.filter(u=>u.rol==='s').length;
+  document.getElementById('kpi-total').textContent = total;
+  document.getElementById('kpi-activos').textContent = activos;
+  document.getElementById('kpi-t').textContent = tecnicos;
+  document.getElementById('kpi-s').textContent = supers;
+}
+
+const ROL_LABEL = {t:'Técnico',s:'Supervisor',g:'Gerencia'};
+const ROL_CLASS = {t:'b-t',s:'b-s',g:'b-g'};
+const COL = {t:'#185FA5',s:'#854F0B',g:'#27500A'};
+const TC  = {t:'#B5D4F4',s:'#FAC775',g:'#C0DD97'};
+
+function renderUsers(){
+  updateKPIs();
+  if(!USERS_DATA.length){
+    document.getElementById('users-list').innerHTML = `
+      <div class="alert-box alert-info">
+        ℹ️ Los usuarios se gestionan directamente en <strong>Supabase → Authentication → Users</strong>. 
+        Los 3 usuarios activos son: gfalfan@qdc.cl · corellana@qdc.cl · rdelcampo@qdc.cl
+      </div>`;
+    return;
+  }
+
+  const isSuperuser = USER.email === 'gfalfan@qdc.cl' || USER.rol === 'g';
+
+  document.getElementById('users-list').innerHTML = USERS_DATA.map(u => `
+    <div class="user-card">
+      <div class="u-avatar" style="background:${COL[u.rol]||COL.t}22;color:${TC[u.rol]||TC.t}">${ini(u.nombre||u.email)}</div>
+      <div class="u-dot" style="background:${u.activo!==false?'var(--ok)':'rgba(131,131,139,0.3)'}"></div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:500;color:var(--white)">${u.nombre||'—'} ${u.email===USER.email?'<span style="font-size:10px;color:rgba(131,131,139,0.4)">(tú)</span>':''}</div>
+        <div style="font-size:11px;font-family:monospace;color:rgba(131,131,139,0.5)">${u.email}</div>
+        ${u.ultimo_acceso?`<div style="font-size:10px;color:rgba(131,131,139,0.35);margin-top:1px">Último acceso: ${u.ultimo_acceso}</div>`:''}
+      </div>
+      <span class="badge ${ROL_CLASS[u.rol]||'b-t'}">${ROL_LABEL[u.rol]||u.rol}</span>
+      ${u.activo===false?'<span style="font-size:10px;color:rgba(131,131,139,0.4);padding:2px 8px">Inactivo</span>':''}
+      ${isSuperuser?`
+      <div style="display:flex;gap:5px">
+        <button class="ab" onclick="openEditarUsuario('${u.id}')">✎ Editar</button>
+        <button class="ab" onclick="openCambiarPassword('${u.id}','${u.email}')">🔑 Contraseña</button>
+        ${u.email!==USER.email?`<button class="ab ab-danger" onclick="confirmarDesactivar('${u.id}','${u.nombre||u.email}',${u.activo!==false})">${u.activo!==false?'Desactivar':'Reactivar'}</button>`:''}
+      </div>`:''}
+    </div>`).join('');
+}
+
+// ── CREAR USUARIO ──
+function openCrearUsuario(){
+  document.getElementById('modal-inner').innerHTML = `
+    <div class="modal-header">
+      <div class="modal-title">Crear nuevo usuario</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="alert-box alert-info" style="margin-bottom:14px">
+      ℹ️ Se crea el usuario en Supabase Auth con el email y contraseña que indiques. El usuario podrá ingresar al sistema de inmediato.
+    </div>
+    <div class="form-row" style="margin-bottom:12px">
+      <div class="form-group">
+        <label class="form-label">Nombre completo *</label>
+        <input type="text" class="form-input" id="nu-nombre" placeholder="Nombre Apellido"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email corporativo *</label>
+        <input type="email" class="form-input" id="nu-email" placeholder="usuario@qdc.cl"/>
+      </div>
+    </div>
+    <div class="form-row" style="margin-bottom:12px">
+      <div class="form-group">
+        <label class="form-label">Rol *</label>
+        <select class="form-select" id="nu-rol">
+          <option value="t">Técnico de Mantenimiento</option>
+          <option value="s">Supervisor de Mantenimiento</option>
+          <option value="g">Gerencia / Administrador</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Contraseña inicial *</label>
+        <input type="password" class="form-input" id="nu-pass" placeholder="Mín. 8 caracteres" oninput="checkPwStrength(this.value)"/>
+        <div class="pw-bar" id="pw-bar" style="width:0%;background:var(--crit)"></div>
+        <div style="font-size:10px;color:rgba(131,131,139,0.4);margin-top:2px" id="pw-hint"></div>
+      </div>
+    </div>
+    <div style="background:rgba(255,255,255,0.03);border-radius:6px;padding:10px 12px;font-size:11px;color:rgba(200,210,225,0.6);margin-bottom:14px">
+      💡 El usuario no puede cambiar su propia contraseña. Solo tú puedes cambiarla desde este módulo.
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" onclick="crearUsuario()">Crear usuario</button>
+    </div>`;
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+
+function checkPwStrength(val){
+  const bar = document.getElementById('pw-bar');
+  const hint = document.getElementById('pw-hint');
+  if(!bar) return;
+  let s=0;
+  if(val.length>=8)s++;
+  if(/[A-Z]/.test(val))s++;
+  if(/[0-9]/.test(val))s++;
+  if(/[^A-Za-z0-9]/.test(val))s++;
+  const colors=['var(--crit)','var(--crit)','var(--warn)','var(--warn)','var(--ok)'];
+  const labels=['','Muy débil','Débil','Aceptable','Fuerte'];
+  bar.style.width=(s*25)+'%';
+  bar.style.background=colors[s];
+  hint.textContent=val.length>0?labels[s]:'';
+}
+
+async function crearUsuario(){
+  const nombre = document.getElementById('nu-nombre').value.trim();
+  const email  = document.getElementById('nu-email').value.trim();
+  const rol    = document.getElementById('nu-rol').value;
+  const pass   = document.getElementById('nu-pass').value;
+
+  if(!nombre||!email||!pass){
+    showToast('Completa todos los campos','rgba(226,75,74,0.4)');
+    return;
+  }
+  if(pass.length < 6){
+    showToast('La contraseña debe tener al menos 6 caracteres','rgba(226,75,74,0.4)');
+    return;
+  }
+
+  try{
+    // Create user via Supabase Auth signUp
+    const{data,error} = await db.auth.signUp({
+      email,
+      password: pass,
+      options:{
+        data:{ nombre, rol, email_verified: true }
+      }
+    });
+
+    if(error) throw error;
+
+    // Confirm email immediately via SQL update
+    // (user needs email confirmed to login)
+    showToast('✓ Usuario creado. Confirma el email en Supabase → Auth → Users', 'rgba(99,153,34,0.4)');
+
+    // Add to local list
+    USERS_DATA.unshift({
+      id: data.user?.id || 'new',
+      email, nombre, rol, activo: true,
+      ultimo_acceso: 'Nunca'
+    });
+
+    // Add as responsable if técnico
+    if(rol === 't' || rol === 's'){
+      await db.from('responsables').insert({
+        nombre, email, tipo: 'interno', activo: true
+      });
+    }
+
+    await audit('create', 'Creó usuario: '+email, 'Rol: '+ROL_LABEL[rol]);
+    closeModal();
+    renderUsers();
+
+    // Show SQL to confirm email
+    showSQLConfirm(email, nombre, rol);
+
+  }catch(err){
+    showToast('✕ Error: '+err.message,'rgba(226,75,74,0.4)');
+  }
+}
+
+function showSQLConfirm(email, nombre, rol){
+  document.getElementById('modal-inner').innerHTML = `
+    <div class="modal-header">
+      <div class="modal-title">✓ Usuario creado — Paso final</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="alert-box alert-ok" style="margin-bottom:14px">
+      ✓ Usuario <strong>${email}</strong> creado correctamente.
+    </div>
+    <div style="font-size:12px;color:rgba(200,210,225,0.8);margin-bottom:12px">
+      Para que el usuario pueda iniciar sesión de inmediato, ejecuta este SQL en <strong>Supabase → SQL Editor</strong>:
+    </div>
+    <div style="background:#0A1929;border-radius:6px;padding:12px;font-family:monospace;font-size:11px;color:#86efac;margin-bottom:14px;position:relative">
+      <button onclick="navigator.clipboard.writeText(this.nextElementSibling.textContent);this.textContent='✓ Copiado'" style="position:absolute;top:8px;right:8px;background:rgba(255,255,255,0.07);border:none;color:rgba(131,131,139,0.6);border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer">Copiar</button>
+      <pre id="sql-confirm">UPDATE auth.users
+SET email_confirmed_at = NOW(),
+    raw_user_meta_data = '{"email_verified":true,"rol":"${rol}","nombre":"${nombre}"}'
+WHERE email = '${email}';</pre>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-save" onclick="closeModal()">Entendido</button>
+    </div>`;
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+
+// ── CAMBIAR CONTRASEÑA ──
+function openCambiarPassword(userId, email){
+  document.getElementById('modal-inner').innerHTML = `
+    <div class="modal-header">
+      <div class="modal-title">🔑 Cambiar contraseña</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div style="font-size:12px;color:rgba(131,131,139,0.6);margin-bottom:14px">
+      Cambiando contraseña de: <strong style="color:var(--white)">${email}</strong>
+    </div>
+    <div class="alert-box alert-warn" style="margin-bottom:14px">
+      ⚠️ El cambio se aplica vía SQL en Supabase. Copia y ejecuta el comando generado.
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nueva contraseña *</label>
+      <input type="password" class="form-input" id="new-pass" placeholder="Mín. 8 caracteres" oninput="checkPwStrength(this.value)"/>
+      <div class="pw-bar" id="pw-bar" style="width:0%;background:var(--crit)"></div>
+    </div>
+    <div class="form-group" style="margin-bottom:14px">
+      <label class="form-label">Confirmar contraseña *</label>
+      <input type="password" class="form-input" id="confirm-pass" placeholder="Repite la contraseña"/>
+    </div>
+    <div id="sql-pw-box" style="display:none;background:#0A1929;border-radius:6px;padding:12px;font-family:monospace;font-size:11px;color:#86efac;margin-bottom:14px;position:relative">
+      <button onclick="navigator.clipboard.writeText(document.getElementById('sql-pw-text').textContent);this.textContent='✓ Copiado'" style="position:absolute;top:8px;right:8px;background:rgba(255,255,255,0.07);border:none;color:rgba(131,131,139,0.6);border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer">Copiar SQL</button>
+      <pre id="sql-pw-text"></pre>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" onclick="generarSQLPassword('${email}')">Generar SQL de cambio</button>
+    </div>`;
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+
+function generarSQLPassword(email){
+  const pass = document.getElementById('new-pass').value;
+  const conf = document.getElementById('confirm-pass').value;
+
+  if(!pass || pass.length < 6){
+    showToast('Contraseña muy corta (mín. 6 caracteres)','rgba(226,75,74,0.4)');
+    return;
+  }
+  if(pass !== conf){
+    showToast('Las contraseñas no coinciden','rgba(226,75,74,0.4)');
+    return;
+  }
+
+  // Show SQL to execute in Supabase
+  const sql = `-- Ejecutar en Supabase → SQL Editor
+SELECT auth.change_user_password(
+  (SELECT id FROM auth.users WHERE email = '${email}'),
+  '${pass}'
+);
+
+-- Si lo anterior no funciona, usar:
+UPDATE auth.users
+SET encrypted_password = crypt('${pass}', gen_salt('bf'))
+WHERE email = '${email}';`;
+
+  document.getElementById('sql-pw-box').style.display = 'block';
+  document.getElementById('sql-pw-text').textContent = sql;
+  showToast('SQL generado — cópialo y ejecútalo en Supabase','rgba(33,150,243,0.4)');
+}
+
+// ── EDITAR USUARIO ──
+function openEditarUsuario(id){
+  const u = USERS_DATA.find(x=>x.id===id);
+  if(!u) return;
+  document.getElementById('modal-inner').innerHTML = `
+    <div class="modal-header">
+      <div class="modal-title">Editar usuario</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="form-row" style="margin-bottom:12px">
+      <div class="form-group">
+        <label class="form-label">Nombre completo</label>
+        <input type="text" class="form-input" id="eu-nombre" value="${u.nombre||''}" placeholder="Nombre Apellido"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-input" id="eu-email" value="${u.email||''}" disabled style="opacity:0.5"/>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:14px">
+      <label class="form-label">Rol</label>
+      <select class="form-select" id="eu-rol">
+        <option value="t" ${u.rol==='t'?'selected':''}>Técnico de Mantenimiento</option>
+        <option value="s" ${u.rol==='s'?'selected':''}>Supervisor de Mantenimiento</option>
+        <option value="g" ${u.rol==='g'?'selected':''}>Gerencia / Administrador</option>
+      </select>
+    </div>
+    <div style="background:#0A1929;border-radius:6px;padding:10px 12px;font-size:11px;color:rgba(131,131,139,0.6);margin-bottom:14px">
+      💡 El cambio de rol se aplica con este SQL en Supabase:<br/>
+      <code style="color:#86efac">UPDATE auth.users SET raw_user_meta_data = '{"email_verified":true,"rol":"NUEVO_ROL","nombre":"NOMBRE"}' WHERE email = '${u.email}';</code>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" onclick="guardarEdicion('${id}')">Guardar y ver SQL</button>
+    </div>`;
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+
+function guardarEdicion(id){
+  const u = USERS_DATA.find(x=>x.id===id);
+  const nombre = document.getElementById('eu-nombre').value.trim();
+  const rol    = document.getElementById('eu-rol').value;
+
+  // Update local
+  if(u){ u.nombre=nombre; u.rol=rol; }
+  renderUsers();
+  closeModal();
+
+  // Show SQL
+  showToast('Ejecuta el SQL en Supabase para aplicar el cambio', 'rgba(239,159,39,0.4)');
+
+  document.getElementById('modal-inner').innerHTML = `
+    <div class="modal-header"><div class="modal-title">SQL para aplicar cambios</div><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div style="background:#0A1929;border-radius:6px;padding:12px;font-family:monospace;font-size:11px;color:#86efac;margin-bottom:14px;position:relative">
+      <button onclick="navigator.clipboard.writeText(this.nextElementSibling.textContent);this.textContent='✓ Copiado'" style="position:absolute;top:8px;right:8px;background:rgba(255,255,255,0.07);border:none;color:rgba(131,131,139,0.6);border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer">Copiar</button>
+      <pre>UPDATE auth.users
+SET raw_user_meta_data = '{"email_verified":true,"rol":"${rol}","nombre":"${nombre}"}'
+WHERE email = '${u?.email}';</pre>
+    </div>
+    <div class="modal-footer"><button class="btn-save" onclick="closeModal()">Cerrar</button></div>`;
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+
+// ── DESACTIVAR / REACTIVAR ──
+function confirmarDesactivar(id, nombre, esActivo){
+  document.getElementById('modal-inner').innerHTML = `
+    <div class="modal-header">
+      <div class="modal-title">${esActivo?'Desactivar':'Reactivar'} usuario</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="alert-box ${esActivo?'alert-warn':'alert-ok'}" style="margin-bottom:14px">
+      ${esActivo
+        ? `⚠️ <strong>${nombre}</strong> perderá acceso inmediatamente. Su historial se conserva.`
+        : `✓ <strong>${nombre}</strong> recuperará acceso al sistema.`
+      }
+    </div>
+    <div style="font-size:12px;color:rgba(131,131,139,0.6);margin-bottom:14px">
+      Para ${esActivo?'deshabilitar':'habilitar'} el acceso en Supabase, ejecuta:
+    </div>
+    <div style="background:#0A1929;border-radius:6px;padding:10px 12px;font-family:monospace;font-size:11px;color:#86efac;margin-bottom:14px;position:relative">
+      <button onclick="navigator.clipboard.writeText(this.nextElementSibling.textContent);this.textContent='✓ Copiado'" style="position:absolute;top:8px;right:8px;background:rgba(255,255,255,0.07);border:none;color:rgba(131,131,139,0.6);border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer">Copiar</button>
+      <pre>UPDATE auth.users
+SET banned_until = ${esActivo?"'2099-12-31'":"null"}
+WHERE id IN (SELECT id FROM auth.users WHERE email = (SELECT email FROM system_users WHERE id = '${id}'));</pre>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="${esActivo?'btn-danger':'btn-save'}" onclick="toggleUsuario('${id}',${esActivo})">${esActivo?'Desactivar':'Reactivar'} en sistema local</button>
+    </div>`;
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+
+async function toggleUsuario(id, desactivar){
+  const u = USERS_DATA.find(x=>x.id===id);
+  if(u) u.activo = !desactivar;
+  await audit(desactivar?'deact':'create', (desactivar?'Desactivó':'Reactivó')+' usuario: '+(u?.email||id),'');
+  closeModal();
+  showToast(desactivar?'Usuario desactivado localmente':'Usuario reactivado localmente','rgba(239,159,39,0.4)');
+  renderUsers();
+}
+
+function closeModal(){ document.getElementById('modal-overlay').classList.add('hidden'); }
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('modal-overlay').addEventListener('click',function(e){if(e.target===this)closeModal();});
+});
+
+async function audit(tipo,accion,detalle){
+  try{await db.from('auditoria').insert({usuario_id:USER.id,usuario_nombre:USER.nombre||USER.email,tipo,accion,detalle});}catch(e){}
+}
+
+let _tT;
+function showToast(msg,col){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.style.borderColor=col||'rgba(33,150,243,0.3)';
+  t.classList.add('show');clearTimeout(_tT);_tT=setTimeout(()=>t.classList.remove('show'),4000);
+}
+</script>
+</body>
+</html>

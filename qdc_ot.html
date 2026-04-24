@@ -163,6 +163,7 @@ tr.ext-row td{border-left:2px solid rgba(29,158,117,0.4);}
       <a class="nav-item" href="qdc_kpis.html"><span class="nav-icon">📊</span><span class="nav-label">KPIs y reportes</span></a>
       <div class="nav-sec">Sistema</div>
       <a class="nav-item" href="qdc_alertas.html"><span class="nav-icon">🔔</span><span class="nav-label">Alertas</span></a>
+      <a class="nav-item" id="nav-usuarios" href="qdc_usuarios.html" style="display:none"><span class="nav-icon">🔑</span><span class="nav-label">Gestión usuarios</span></a>
       <a class="nav-item" id="nav-config" href="qdc_config.html" style="display:none"><span class="nav-icon">⚙️</span><span class="nav-label">Configuración</span></a>
     </div>
     <div class="sb-user" id="sb-user"></div>
@@ -443,7 +444,7 @@ function renderTable(list){
     return;
   }
 
-  const canEdit = USER.rol === 't' || USER.rol === 's';
+  const canEdit = true; // Todos los roles pueden ver el detalle
 
   const rows = list.map(o => {
     const fecha = new Date(o.creado_en).toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit'});
@@ -645,6 +646,116 @@ function uploadPDF(otId, tipo){
 
 
 // ── CAMBIAR ESTADO OT ──
+
+// ── VER DETALLE OT ──
+function verOT(id){
+  const o = OTS_DATA.find(x => x.id === id);
+  if(!o) return;
+
+  const fecha = new Date(o.creado_en).toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit',year:'numeric'});
+  const canModify = USER.rol === 's' || USER.rol === 'g';
+  const canDelete = USER.rol === 's' || USER.rol === 'g';
+
+  const PRIO_COL = {crit:'var(--crit)',alta:'var(--warn)',med:'var(--accent)',baja:'rgba(131,131,139,0.5)'};
+  const PRIO_LBL = {crit:'Crítica',alta:'Alta',med:'Media',baja:'Baja'};
+  const EST_BADGE = {
+    open:'<span class="badge b-open">Abierta</span>',
+    prog:'<span class="badge b-prog">En proceso</span>',
+    ext: '<span class="badge b-ext">Externo</span>',
+    done:'<span class="badge b-done">Completada</span>',
+  };
+
+  // PDF section for external OTs
+  const pdfSection = o.es_externo ? `
+    <div style="background:rgba(255,255,255,0.03);border-radius:7px;padding:12px 14px;margin-bottom:12px;border:0.5px solid ${o.pdf_url?'rgba(99,153,34,0.2)':'rgba(239,159,39,0.2)'}">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:8px">Informe PDF del contratista</div>
+      ${o.pdf_url
+        ? `<div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:18px">📄</span>
+            <div style="flex:1"><div style="font-size:12px;font-weight:500;color:var(--ok)">Informe adjunto</div></div>
+            <a href="${o.pdf_url}" target="_blank" style="padding:5px 12px;border-radius:5px;background:rgba(99,153,34,0.15);color:#C0DD97;border:0.5px solid rgba(99,153,34,0.3);font-size:11px;text-decoration:none">Ver PDF</a>
+          </div>`
+        : `<div style="border:2px dashed rgba(239,159,39,0.3);border-radius:6px;padding:14px;text-align:center;cursor:pointer" onclick="document.getElementById('pdf-input-${o.id}').click()">
+            <div style="font-size:20px;margin-bottom:4px">📄</div>
+            <div style="font-size:12px;font-weight:500;color:var(--warn)">Adjuntar informe PDF</div>
+            <div style="font-size:11px;color:rgba(131,131,139,0.4);margin-top:2px">Clic para seleccionar archivo</div>
+            <input type="file" id="pdf-input-${o.id}" accept=".pdf,.doc,.docx" style="display:none" onchange="handleFileUpload(event,'${o.id}','pdf')"/>
+          </div>`
+      }
+    </div>` : '';
+
+  document.getElementById('modal-ver-inner').innerHTML = `
+    <div class="modal-header">
+      <div class="modal-title">${o.codigo||'OT'} — ${o.activo||''}</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+      ${EST_BADGE[o.estado]||''}
+      <span class="badge" style="background:rgba(255,255,255,0.07);color:rgba(200,210,225,0.7)">${o.tipo||'Correctivo'}</span>
+      <span class="badge" style="background:rgba(255,255,255,0.07);color:${PRIO_COL[o.prioridad]||'gray'}">${PRIO_LBL[o.prioridad]||''}</span>
+      ${o.es_externo?'<span class="badge b-ext">🏢 Externo</span>':'<span class="badge b-open">👤 Interno</span>'}
+    </div>
+
+    <div style="font-size:13px;color:var(--white);margin-bottom:12px;line-height:1.5">${o.descripcion}</div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px;font-size:12px">
+      <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px">
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Activo</div>
+        <div style="color:var(--white)">${o.activo||'—'}</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px">
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Responsable</div>
+        <div style="color:${o.es_externo?'var(--ext)':'var(--white)'}">${o.responsable_nombre||o.asignado_nombre||'—'}</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px">
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Fecha creación</div>
+        <div style="color:var(--white)">${fecha}</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px">
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Costo registrado</div>
+        <div style="color:${o.costo?'var(--ok)':'rgba(131,131,139,0.4)'};font-weight:${o.costo?'600':'400'}">${o.costo?'$'+(o.costo||0).toLocaleString('es-CL'):'Sin costo aún'}</div>
+      </div>
+    </div>
+
+    ${o.notas?`<div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px;font-size:12px;margin-bottom:12px;color:rgba(200,210,225,0.7)"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Notas</div>${o.notas}</div>`:''}
+
+    ${pdfSection}
+
+    ${canModify?`
+    <div style="border-top:1px solid rgba(255,255,255,0.07);padding-top:12px;margin-bottom:12px">
+      <div style="font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);margin-bottom:8px">Cambiar estado</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        ${o.estado!=='open'?`<button class="ab" onclick="cambiarEstadoDir('${o.id}','open')">Reabrir</button>`:''}
+        ${o.estado!=='prog'?`<button class="ab" onclick="cambiarEstadoDir('${o.id}','prog')">En proceso</button>`:''}
+        ${o.estado!=='done'?`<button class="ab" style="color:#C0DD97;border-color:rgba(99,153,34,0.3)" onclick="cambiarEstado('${o.id}','done')">✓ Completar y registrar costo</button>`:''}
+        ${o.estado==='done'?`<button class="ab" style="color:#85B7EB" onclick="openCostoModal('${o.id}',OTS_DATA.find(x=>x.id==='${o.id}'))">✏️ Editar costo ($${(o.costo||0).toLocaleString('es-CL')})</button>`:''}
+      </div>
+    </div>`:''}
+
+    <div style="display:flex;gap:8px;justify-content:space-between;align-items:center">
+      ${canDelete?`<button onclick="eliminarOT('${o.id}')" style="padding:6px 12px;border-radius:5px;border:0.5px solid rgba(226,75,74,0.3);background:rgba(226,75,74,0.1);color:#F09595;cursor:pointer;font-size:11px;font-family:var(--font)">🗑 Eliminar OT</button>`:'<div></div>'}
+      <button style="padding:7px 14px;border-radius:5px;border:0.5px solid rgba(255,255,255,0.1);background:transparent;color:rgba(200,210,225,0.7);cursor:pointer;font-size:12px;font-family:var(--font)" onclick="closeModal()">Cerrar</button>
+    </div>
+  `;
+  document.getElementById('modal-ver').classList.remove('hidden');
+}
+
+// Cambiar estado sin pedir costo (para estados intermedios)
+async function cambiarEstadoDir(id, nuevoEstado){
+  try{
+    const{error}=await db.from('ots').update({estado:nuevoEstado,actualizado_en:new Date().toISOString()}).eq('id',id);
+    if(error) throw error;
+    const o=OTS_DATA.find(x=>x.id===id);
+    if(o) o.estado=nuevoEstado;
+    showToast('✓ Estado actualizado','rgba(99,153,34,0.4)');
+    closeModal();
+    updateStats();
+    filterTable();
+    await audit('ot','Actualizó OT '+(o?.codigo||id),'Estado: '+nuevoEstado);
+  }catch(err){showToast('✕ Error: '+err.message,'rgba(226,75,74,0.4)');}
+}
+
 async function cambiarEstado(id, nuevoEstado){
   // Si se está completando, pedir costo
   if(nuevoEstado === 'done'){

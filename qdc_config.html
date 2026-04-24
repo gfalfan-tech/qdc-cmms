@@ -124,6 +124,7 @@ body{font-family:var(--font);background:#050F1C;min-height:100vh;display:flex;al
       <a class="nav-item NAV_ activeKPI" href="qdc_kpis.html"><span class="nav-icon">📊</span><span class="nav-label">KPIs y reportes</span></a>
       <div class="nav-sec">Sistema</div>
       <a class="nav-item NAV_ activeALT" href="qdc_alertas.html"><span class="nav-icon">🔔</span><span class="nav-label">Alertas</span></a>
+      <a class="nav-item" id="nav-usuarios" href="qdc_usuarios.html" style="display:none"><span class="nav-icon">🔑</span><span class="nav-label">Gestión usuarios</span></a>
       <a class="nav-item" id="nav-config" href="qdc_config.html" style="display:none"><span class="nav-icon">⚙️</span><span class="nav-label">Configuración</span></a>
     </div>
     <div class="sb-user" id="sb-user"></div>
@@ -163,6 +164,7 @@ let db,USER;
     if(!USER.rol){window.location.href='index.html';return;}
     buildSidebar();
     if(USER.rol==='g')document.getElementById('nav-config').style.display='flex';
+  document.getElementById('nav-usuarios').style.display='flex';
     if(typeof pageInit==='function') pageInit();
   };
   document.head.appendChild(s);
