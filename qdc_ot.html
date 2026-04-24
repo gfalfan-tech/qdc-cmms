@@ -125,6 +125,12 @@ tr.ext-row td{border-left:2px solid rgba(29,158,117,0.4);}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 
 .activo-opt{padding:9px 12px;font-size:12px;color:rgba(200,210,225,0.85);cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);transition:background .1s;}
+.resp-opt{padding:9px 12px;font-size:12px;color:rgba(200,210,225,0.85);cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);transition:background .1s;display:flex;align-items:center;gap:8px;}
+.resp-opt:hover,.resp-opt.selected{background:rgba(93,202,165,0.12);color:var(--white);}
+.resp-opt strong{color:var(--ext);}
+.resp-opt .ro-type{font-size:9px;padding:1px 6px;border-radius:6px;flex-shrink:0;}
+.ro-int{background:rgba(33,150,243,0.12);color:#85B7EB;}
+.ro-ext{background:rgba(93,202,165,0.12);color:var(--ext);}
 .activo-opt:hover,.activo-opt.selected{background:rgba(33,150,243,0.15);color:var(--white);}
 .activo-opt strong{color:var(--accent);}
 .activo-opt:last-child{border-bottom:none;}
@@ -146,6 +152,7 @@ tr.ext-row td{border-left:2px solid rgba(29,158,117,0.4);}
       <a class="nav-item active" href="qdc_ot.html"><span class="nav-icon">📋</span><span class="nav-label">Órdenes de trabajo</span></a>
       <div class="nav-sec">Mantenimiento</div>
       <a class="nav-item" href="qdc_pm.html"><span class="nav-icon">🔄</span><span class="nav-label">Plan preventivo</span></a>
+      <a class="nav-item" href="qdc_responsables.html"><span class="nav-icon">👥</span><span class="nav-label">Responsables</span></a>
       <a class="nav-item" href="qdc_contratistas.html"><span class="nav-icon">🏢</span><span class="nav-label">Contratistas</span></a>
       <div class="nav-sec">Recursos</div>
       <a class="nav-item" href="qdc_activos.html"><span class="nav-icon">🏭</span><span class="nav-label">Activos y equipos</span></a>
@@ -217,15 +224,11 @@ tr.ext-row td{border-left:2px solid rgba(29,158,117,0.4);}
         <div>
           <div class="qf-label">Tipo</div>
           <select class="qf-select" id="q-tipo">
-            <option>Correctivo</option>
-            <option>Preventivo</option>
-            <option>Predictivo</option>
-            <option>Externo</option>
+            <option value="Correctivo">Correctivo</option>
+            <option value="Preventivo">Preventivo</option>
+            <option value="Predictivo">Predictivo</option>
+            <option value="Externo">Externo</option>
           </select>
-        </div>
-        <div>
-          <div class="qf-label">Asignar a</div>
-          <input type="text" class="qf-input" id="q-resp" placeholder="Nombre técnico…"/>
         </div>
         <div>
           <div class="qf-label">Notas</div>
@@ -246,6 +249,18 @@ tr.ext-row td{border-left:2px solid rgba(29,158,117,0.4);}
         <option value="prog">En proceso</option>
         <option value="ext">Externas</option>
         <option value="done">Completadas</option>
+      </select>
+      <select class="filter-sel" id="filter-tipo" onchange="filterTable()">
+        <option value="">Todos los tipos</option>
+        <option value="Correctivo">Correctivo</option>
+        <option value="Preventivo">Preventivo</option>
+        <option value="Externo">Externo</option>
+        <option value="Predictivo">Predictivo</option>
+      </select>
+      <select class="filter-sel" id="filter-origen" onchange="filterTable()">
+        <option value="">Interno y externo</option>
+        <option value="int">Solo interno</option>
+        <option value="ext">Solo externo</option>
       </select>
       <select class="filter-sel" id="filter-prio" onchange="filterTable()">
         <option value="">Todas las prioridades</option>
@@ -314,6 +329,7 @@ function init(){
 
   loadOTs();
   loadActivosForSearch();
+  loadResponsables();
 }
 
 function buildSidebar(){
@@ -586,6 +602,7 @@ function verOT(id){
       </div>
     </div>`:''}
     <div class="modal-footer">
+      ${(USER.rol==='g'||USER.rol==='s')?'<button onclick="eliminarOT(\''+o.id+'\')" style="padding:7px 14px;border-radius:5px;border:0.5px solid rgba(226,75,74,0.3);background:rgba(226,75,74,0.1);color:#F09595;cursor:pointer;font-size:12px;font-family:var(--font)">🗑 Eliminar OT</button>':''}
       <button class="btn-cancel" onclick="closeModal()">Cerrar</button>
     </div>
   `;
@@ -702,6 +719,12 @@ function uploadPDF(otId, tipo){
 
 // ── CAMBIAR ESTADO OT ──
 async function cambiarEstado(id, nuevoEstado){
+  // Si se está completando, pedir costo
+  if(nuevoEstado === 'done'){
+    const o = OTS_DATA.find(x=>x.id===id);
+    openCostoModal(id, o);
+    return;
+  }
   try{
     const{error}=await db.from('ots').update({estado:nuevoEstado,actualizado_en:new Date().toISOString()}).eq('id',id);
     if(error) throw error;
@@ -715,6 +738,60 @@ async function cambiarEstado(id, nuevoEstado){
   }catch(err){ showToast('✕ Error: '+err.message,'rgba(226,75,74,0.4)'); }
 }
 
+function openCostoModal(id, ot){
+  document.getElementById('modal-ver-inner').innerHTML = `
+    <div class="modal-header">
+      <div class="modal-title">✓ Completar OT ${ot?.codigo||''}</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div style="font-size:12px;color:rgba(131,131,139,0.6);margin-bottom:16px">
+      Antes de cerrar, registra el costo total de esta intervención. Este valor se usa en los reportes de gerencia.
+    </div>
+    <div style="margin-bottom:14px">
+      <label style="font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.6);margin-bottom:5px;display:block">Costo total (CLP)</label>
+      <input type="number" id="costo-input" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:var(--white);font-size:14px;font-family:var(--font);padding:10px 12px;outline:none;width:100%;transition:border-color .1s" placeholder="0" min="0" value="${ot?.costo||0}" oninput="document.getElementById('costo-preview').textContent=parseInt(this.value||0).toLocaleString('es-CL')"/>
+      <div style="font-size:12px;color:rgba(131,131,139,0.5);margin-top:6px">$<span id="costo-preview">${(ot?.costo||0).toLocaleString('es-CL')}</span> CLP</div>
+    </div>
+    <div style="background:rgba(255,255,255,0.03);border-radius:6px;padding:10px 12px;font-size:11px;color:rgba(200,210,225,0.6);margin-bottom:16px">
+      💡 Incluye mano de obra, repuestos y cualquier costo asociado a esta OT.
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button style="padding:7px 14px;border-radius:5px;border:0.5px solid rgba(255,255,255,0.1);background:transparent;color:rgba(200,210,225,0.7);cursor:pointer;font-size:12px;font-family:var(--font)" onclick="closeModal()">Cancelar</button>
+      <button style="padding:7px 18px;border-radius:5px;border:none;background:rgba(99,153,34,0.8);color:#fff;cursor:pointer;font-size:12px;font-weight:600;font-family:var(--font)" onclick="confirmarCerrar('${id}')">Cerrar OT</button>
+    </div>`;
+  document.getElementById('modal-ver').classList.remove('hidden');
+}
+
+async function confirmarCerrar(id){
+  const costo = parseInt(document.getElementById('costo-input')?.value)||0;
+  try{
+    const{error}=await db.from('ots').update({estado:'done',costo,actualizado_en:new Date().toISOString()}).eq('id',id);
+    if(error) throw error;
+    const o=OTS_DATA.find(x=>x.id===id);
+    if(o){o.estado='done';o.costo=costo;}
+    showToast('✓ OT completada. Costo: $'+costo.toLocaleString('es-CL'),'rgba(99,153,34,0.4)');
+    closeModal();
+    updateStats();
+    filterTable();
+    await audit('ot','Completó OT '+(o?.codigo||id),'Costo: $'+costo.toLocaleString('es-CL'));
+  }catch(err){showToast('✕ Error: '+err.message,'rgba(226,75,74,0.4)');}
+}
+
+async function eliminarOT(id){
+  const o=OTS_DATA.find(x=>x.id===id);
+  if(!confirm('¿Eliminar definitivamente la OT '+( o?.codigo||id)+'? Esta acción no se puede deshacer.')) return;
+  try{
+    const{error}=await db.from('ots').delete().eq('id',id);
+    if(error) throw error;
+    OTS_DATA=OTS_DATA.filter(x=>x.id!==id);
+    await audit('ot','Eliminó OT '+(o?.codigo||id),o?.descripcion||'');
+    showToast('OT eliminada','rgba(239,159,39,0.4)');
+    closeModal();
+    updateStats();
+    filterTable();
+  }catch(err){showToast('✕ Error: '+err.message,'rgba(226,75,74,0.4)');}
+}
+
 function closeModal(){
   document.getElementById('modal-ver').classList.add('hidden');
 }
@@ -726,16 +803,21 @@ document.addEventListener('DOMContentLoaded',()=>{
 function filterTable(){
   const search=(document.getElementById('search-input')?.value||'').toLowerCase();
   const estado=document.getElementById('filter-estado')?.value||'';
+  const tipo=document.getElementById('filter-tipo')?.value||'';
+  const origen=document.getElementById('filter-origen')?.value||'';
   const prio=document.getElementById('filter-prio')?.value||'';
   OTS_FILTERED=OTS_DATA.filter(o=>{
     const ms=!search||
       (o.descripcion||'').toLowerCase().includes(search)||
       (o.activo||'').toLowerCase().includes(search)||
       (o.codigo||'').toLowerCase().includes(search)||
-      (o.asignado_nombre||'').toLowerCase().includes(search);
+      (o.asignado_nombre||'').toLowerCase().includes(search)||
+      (o.responsable_nombre||'').toLowerCase().includes(search);
     const me=!estado||o.estado===estado;
+    const mt=!tipo||o.tipo===tipo;
+    const mo=!origen||(origen==='ext'?o.es_externo:!o.es_externo);
     const mp=!prio||o.prioridad===prio;
-    return ms&&me&&mp;
+    return ms&&me&&mt&&mo&&mp;
   });
   renderTable(OTS_FILTERED);
 }
@@ -755,6 +837,70 @@ async function loadActivosForSearch(){
     if(data&&data.length){ACTIVOS_QDC.length=0;data.forEach(a=>ACTIVOS_QDC.push(a.nombre));ACTIVOS_QDC.push('Otro equipo');}
   }catch(e){}
 }
+// ── BÚSQUEDA PREDICTIVA DE RESPONSABLES ──
+let RESPONSABLES_DATA = [];
+
+async function loadResponsables(){
+  try{
+    const{data}=await db.from('responsables').select('id,nombre,tipo,especialidad,activo').eq('activo',true).order('nombre');
+    RESPONSABLES_DATA=data||[];
+  }catch(e){ RESPONSABLES_DATA=[]; }
+}
+
+let _respSel=-1;
+function respSearch(val, dropdownId, hiddenId){
+  const dd=document.getElementById(dropdownId);
+  document.getElementById(hiddenId).value='';
+  if(!val||val.length<1){dd.style.display='none';return;}
+  const q=val.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const matches=RESPONSABLES_DATA.filter(r=>{
+    const n=(r.nombre||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    const e=(r.especialidad||'').toLowerCase();
+    return n.includes(q)||e.includes(q);
+  });
+  if(!matches.length){dd.style.display='none';return;}
+  _respSel=-1;
+  dd.innerHTML=matches.map((r,i)=>{
+    const reg=new RegExp('('+val.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');
+    const hl=r.nombre.replace(reg,'<strong>$1</strong>');
+    return `<div class="resp-opt" data-idx="${i}" data-id="${r.id}" data-nombre="${r.nombre}"
+      onmousedown="selectResp('${r.id}','${r.nombre}','${dropdownId}',document.getElementById('${hiddenId.replace(/'/g,"\'")}'))">
+      <span class="ro-type ${r.tipo==='externo'?'ro-ext':'ro-int'}">${r.tipo==='externo'?'Externa':'Interno'}</span>
+      <span style="flex:1">${hl}</span>
+      <span style="font-size:10px;color:rgba(131,131,139,0.4)">${r.especialidad||''}</span>
+    </div>`;
+  }).join('');
+  dd.style.display='block';
+}
+
+function selectResp(id, nombre, dropdownId, inputEl){
+  if(!inputEl) inputEl=document.getElementById('q-resp-id');
+  const nameInput=document.getElementById('q-resp');
+  if(nameInput) nameInput.value=nombre;
+  if(inputEl) inputEl.value=id;
+  const dd=document.getElementById(dropdownId);
+  if(dd) dd.style.display='none';
+  _respSel=-1;
+}
+
+function respKeyNav(e, dropdownId, inputId, hiddenId){
+  const dd=document.getElementById(dropdownId);
+  const opts=dd.querySelectorAll('.resp-opt');
+  if(!opts.length) return;
+  if(e.key==='ArrowDown'){e.preventDefault();_respSel=Math.min(_respSel+1,opts.length-1);opts.forEach((o,i)=>o.classList.toggle('selected',i===_respSel));}
+  else if(e.key==='ArrowUp'){e.preventDefault();_respSel=Math.max(_respSel-1,0);opts.forEach((o,i)=>o.classList.toggle('selected',i===_respSel));}
+  else if(e.key==='Enter'){e.preventDefault();if(_respSel>=0&&opts[_respSel]){const o=opts[_respSel];selectResp(o.dataset.id,o.dataset.nombre,dropdownId,document.getElementById(hiddenId));}else if(opts.length===1){const o=opts[0];selectResp(o.dataset.id,o.dataset.nombre,dropdownId,document.getElementById(hiddenId));}}
+  else if(e.key==='Escape'){dd.style.display='none';}
+}
+
+document.addEventListener('click',e=>{
+  if(!document.getElementById('resp-wrap')?.contains(e.target)){
+    const dd=document.getElementById('resp-dropdown');
+    if(dd) dd.style.display='none';
+  }
+});
+
+
 let _activoSel=-1;
 function activoSearch(val){
   const dd=document.getElementById('activo-dropdown');

@@ -481,59 +481,170 @@ async function renderSupervisor(){
 
 async function renderGerencia(){
   const {ots, pms, embs} = await loadDashboardData();
-  const costoEmb = embs.reduce((a,e)=>a+(e.costo_total||0),0);
-  const pmVenc   = pms.filter(p=>calcEstPM(p.proxima_fecha)==='overdue').length;
-  const pmTotal  = pms.length;
-  const pctPM    = pmTotal ? Math.round(((pmTotal-pmVenc)/pmTotal)*100) : 100;
-  const today    = new Date().toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const costoEmb  = embs.reduce((a,e)=>a+(e.costo_total||0),0);
+  const costoOTs  = ots.reduce((a,o)=>a+(o.costo||0),0);
+  const pmVenc    = pms.filter(p=>calcEstPM(p.proxima_fecha)==='overdue').length;
+  const pmTotal   = pms.length;
+  const pctPM     = pmTotal ? Math.round(((pmTotal-pmVenc)/pmTotal)*100) : 100;
+  const today     = new Date().toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 
-  document.getElementById('dashboard-content').innerHTML = `<div style="padding:16px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-      <div>
-        <div style="font-family:var(--head);font-size:20px;font-weight:700;color:var(--white)">Buenos días, ${_nombre}</div>
-        <div style="font-size:12px;color:rgba(131,131,139,0.6);margin-top:2px">${today} · Vista ejecutiva</div>
+  // Costo por tipo
+  const costoCorrectivo = ots.filter(o=>o.tipo==='Correctivo').reduce((a,o)=>a+(o.costo||0),0);
+  const costoPreventivo = ots.filter(o=>o.tipo==='Preventivo').reduce((a,o)=>a+(o.costo||0),0);
+  const costoExterno    = ots.filter(o=>o.es_externo).reduce((a,o)=>a+(o.costo||0),0);
+  const costoInterno    = ots.filter(o=>!o.es_externo).reduce((a,o)=>a+(o.costo||0),0);
+
+  // OTs por tipo
+  const otCorrectivo = ots.filter(o=>o.tipo==='Correctivo').length;
+  const otPreventivo = ots.filter(o=>o.tipo==='Preventivo').length;
+  const otExterno    = ots.filter(o=>o.es_externo).length;
+  const otActivas    = ots.filter(o=>o.estado!=='done').length;
+
+  // Costos por responsable (top 5)
+  const byResp = {};
+  ots.forEach(o=>{
+    const n=o.responsable_nombre||o.asignado_nombre||'Sin asignar';
+    if(!byResp[n]) byResp[n]={nombre:n,ots:0,costo:0};
+    byResp[n].ots++;
+    byResp[n].costo+=(o.costo||0);
+  });
+  const topResp=Object.values(byResp).sort((a,b)=>b.costo-a.costo).slice(0,5);
+
+  document.getElementById('dashboard-content').innerHTML = `
+    <div style="padding:16px;overflow-y:auto;height:100%">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div>
+          <div style="font-family:var(--head);font-size:20px;font-weight:700;color:var(--white)">Buenos días, ${_nombre}</div>
+          <div style="font-size:12px;color:rgba(131,131,139,0.6);margin-top:2px">${today} · Vista ejecutiva</div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button onclick="filtrarDash('todos')" id="db-f-todos" style="padding:5px 12px;border-radius:5px;border:none;background:rgba(33,150,243,0.2);color:#85B7EB;font-size:11px;cursor:pointer;font-family:var(--font)">Todos</button>
+          <button onclick="filtrarDash('correctivo')" id="db-f-correctivo" style="padding:5px 12px;border-radius:5px;border:none;background:rgba(255,255,255,0.06);color:rgba(200,210,225,0.6);font-size:11px;cursor:pointer;font-family:var(--font)">Correctivo</button>
+          <button onclick="filtrarDash('preventivo')" id="db-f-preventivo" style="padding:5px 12px;border-radius:5px;border:none;background:rgba(255,255,255,0.06);color:rgba(200,210,225,0.6);font-size:11px;cursor:pointer;font-family:var(--font)">Preventivo</button>
+          <button onclick="filtrarDash('externo')" id="db-f-externo" style="padding:5px 12px;border-radius:5px;border:none;background:rgba(255,255,255,0.06);color:rgba(200,210,225,0.6);font-size:11px;cursor:pointer;font-family:var(--font)">Externo</button>
+          <button onclick="filtrarDash('interno')" id="db-f-interno" style="padding:5px 12px;border-radius:5px;border:none;background:rgba(255,255,255,0.06);color:rgba(200,210,225,0.6);font-size:11px;cursor:pointer;font-family:var(--font)">Interno</button>
+        </div>
+      </div>
+
+      <!-- KPIs principales -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px" id="g-kpis">
+        <div style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:12px 14px;border-top:2px solid var(--accent);cursor:pointer" onclick="window.location.href='qdc_ot.html'">
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px">OT activas</div>
+          <div style="font-size:24px;font-weight:600;font-family:var(--head);color:#85B7EB" id="g-ot-activas">${otActivas}</div>
+          <div style="font-size:10px;color:rgba(131,131,139,0.45);margin-top:3px">${otExterno} externas · ${ots.length-otExterno} internas</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:12px 14px;border-top:2px solid var(--ok);cursor:pointer" onclick="window.location.href='qdc_ot.html'">
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px">Costo total OT</div>
+          <div style="font-size:20px;font-weight:600;font-family:var(--head);color:var(--ok)" id="g-costo-total">$${Math.round(costoOTs/1000)}K</div>
+          <div style="font-size:10px;color:rgba(131,131,139,0.45);margin-top:3px">${ots.filter(o=>o.costo>0).length} OT con costo</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:12px 14px;border-top:2px solid var(--pm);cursor:pointer" onclick="window.location.href='qdc_pm.html'">
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px">Cumplimiento PM</div>
+          <div style="font-size:24px;font-weight:600;font-family:var(--head);color:#AFA9EC">${pctPM}%</div>
+          <div style="font-size:10px;color:rgba(131,131,139,0.45);margin-top:3px">${pmVenc} vencidos</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:12px 14px;border-top:2px solid #F0997B;cursor:pointer" onclick="window.location.href='qdc_embalajes.html'">
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px">Embalajes mes</div>
+          <div style="font-size:24px;font-weight:600;font-family:var(--head);color:#F0997B">${embs.length}</div>
+          <div style="font-size:10px;color:rgba(131,131,139,0.45);margin-top:3px">$${Math.round(costoEmb/1000)}K total</div>
+        </div>
+      </div>
+
+      <!-- Desglose costos -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div style="background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px">
+          <div style="font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);margin-bottom:12px">Costo por tipo de OT</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            ${[
+              {label:'Correctivo',val:costoCorrectivo,cnt:otCorrectivo,color:'var(--crit)'},
+              {label:'Preventivo',val:costoPreventivo,cnt:otPreventivo,color:'var(--pm)'},
+              {label:'Externo',val:costoExterno,cnt:otExterno,color:'var(--ext)'},
+              {label:'Interno',val:costoInterno,cnt:ots.length-otExterno,color:'var(--accent)'},
+            ].map(({label,val,cnt,color})=>{
+              const pct=costoOTs>0?Math.round(val/costoOTs*100):0;
+              return `<div>
+                <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">
+                  <span style="color:rgba(200,210,225,0.7)">${label} (${cnt} OT)</span>
+                  <span style="font-weight:600;color:${color}">$${Math.round(val/1000)}K <span style="font-size:10px;color:rgba(131,131,139,0.4)">(${pct}%)</span></span>
+                </div>
+                <div style="height:4px;background:rgba(255,255,255,0.07);border-radius:2px;overflow:hidden">
+                  <div style="height:100%;width:${pct}%;background:${color};border-radius:2px"></div>
+                </div>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>
+
+        <div style="background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px">
+          <div style="font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);margin-bottom:12px">Costo por responsable (top 5)</div>
+          ${topResp.length
+            ? topResp.map(r=>`
+              <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);cursor:pointer" onclick="window.location.href='qdc_responsables.html'">
+                <div style="width:26px;height:26px;border-radius:50%;background:rgba(33,150,243,0.12);color:#85B7EB;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0">${r.nombre.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase()}</div>
+                <div style="flex:1;min-width:0"><div style="font-size:11px;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.nombre}</div><div style="font-size:10px;color:rgba(131,131,139,0.4)">${r.ots} OT</div></div>
+                <div style="font-size:12px;font-weight:600;color:var(--ok);flex-shrink:0">$${Math.round(r.costo/1000)}K</div>
+              </div>`).join('')
+            : '<div style="padding:16px;text-align:center;font-size:12px;color:rgba(131,131,139,0.4)">Sin costos registrados aún</div>'
+          }
+        </div>
+      </div>
+
+      <!-- Últimas OTs y PM -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div style="background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px;cursor:pointer" onclick="window.location.href='qdc_ot.html'">
+          <div style="font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);margin-bottom:10px">Últimas OT</div>
+          ${ots.length
+            ? ots.slice(0,4).map(o=>`
+              <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:11px">
+                <div style="width:6px;height:6px;border-radius:50%;background:${o.es_externo?'var(--ext)':o.prioridad==='crit'?'var(--crit)':'var(--accent)'};flex-shrink:0"></div>
+                <div style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:rgba(200,210,225,0.7)">${o.descripcion||'—'}</div>
+                ${o.costo?`<div style="font-size:10px;color:var(--ok);flex-shrink:0">$${Math.round((o.costo||0)/1000)}K</div>`:''}
+              </div>`).join('')
+            : emptyCard('📋','Sin OT registradas')
+          }
+        </div>
+        <div style="background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px;cursor:pointer" onclick="window.location.href='qdc_pm.html'">
+          <div style="font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);margin-bottom:8px">Cumplimiento PM</div>
+          <div style="font-size:32px;font-weight:700;font-family:var(--head);color:#AFA9EC;margin-bottom:8px">${pctPM}%</div>
+          <div style="height:5px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden;margin-bottom:6px">
+            <div style="height:100%;width:${pctPM}%;background:var(--pm)"></div>
+          </div>
+          <div style="font-size:10px;color:rgba(131,131,139,0.45)">${pmVenc} PM vencidos · ${pms.filter(p=>calcEstPM(p.proxima_fecha)==='soon').length} próximos</div>
+        </div>
       </div>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px">
-      <div style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:12px 14px;border-top:2px solid var(--accent);cursor:pointer" onclick="window.location.href='qdc_ot.html'">
-        <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px">OT activas</div>
-        <div style="font-size:24px;font-weight:600;font-family:var(--head);color:#85B7EB">${ots.filter(o=>o.estado!=='done').length}</div>
-        <div style="font-size:10px;color:rgba(131,131,139,0.45);margin-top:3px">${ots.filter(o=>o.es_externo).length} externas</div>
-      </div>
-      <div style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:12px 14px;border-top:2px solid var(--pm);cursor:pointer" onclick="window.location.href='qdc_pm.html'">
-        <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px">Cumplimiento PM</div>
-        <div style="font-size:24px;font-weight:600;font-family:var(--head);color:#AFA9EC">${pctPM}%</div>
-        <div style="font-size:10px;color:rgba(131,131,139,0.45);margin-top:3px">${pmVenc} vencidos</div>
-      </div>
-      <div style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:12px 14px;border-top:2px solid #F0997B;cursor:pointer" onclick="window.location.href='qdc_embalajes.html'">
-        <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px">Embalajes mes</div>
-        <div style="font-size:24px;font-weight:600;font-family:var(--head);color:#F0997B">${embs.length}</div>
-        <div style="font-size:10px;color:rgba(131,131,139,0.45);margin-top:3px">$${Math.round(costoEmb/1000)}K total</div>
-      </div>
-      <div style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:12px 14px;border-top:2px solid var(--ok);cursor:pointer" onclick="window.location.href='qdc_activos.html'">
-        <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px">Activos planta</div>
-        <div style="font-size:24px;font-weight:600;font-family:var(--head);color:var(--ok)">22</div>
-        <div style="font-size:10px;color:rgba(131,131,139,0.45);margin-top:3px">Equipos registrados</div>
-      </div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
-      <div style="background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px;cursor:pointer" onclick="window.location.href='qdc_ot.html'">
-        <div style="font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);margin-bottom:10px">Ultimas OT</div>
-        ${ots.length ? ots.slice(0,3).map(o=>`<div style="font-size:11px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04);color:rgba(200,210,225,0.7)">${o.descripcion?.substring(0,40)||'—'}</div>`).join('') : emptyCard('📋','Sin OT registradas')}
-      </div>
-      <div style="background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px;cursor:pointer" onclick="window.location.href='qdc_pm.html'">
-        <div style="font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);margin-bottom:8px">Cumplimiento PM</div>
-        <div style="font-size:32px;font-weight:700;font-family:var(--head);color:#AFA9EC;margin-bottom:8px">${pctPM}%</div>
-        <div style="height:5px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden"><div style="height:100%;width:${pctPM}%;background:var(--pm)"></div></div>
-        <div style="font-size:10px;color:rgba(131,131,139,0.45);margin-top:6px">${pmVenc} PM vencidos · ${pms.filter(p=>calcEstPM(p.proxima_fecha)==='soon').length} próximos</div>
-      </div>
-      <div style="background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px;cursor:pointer" onclick="window.location.href='qdc_embalajes.html'">
-        <div style="font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);margin-bottom:10px">Embalajes recientes</div>
-        ${embs.length ? embs.slice(0,4).map(e=>`<div style="display:flex;justify-content:space-between;font-size:11px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04)"><span style="color:rgba(200,210,225,0.7);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px">${e.cliente||'—'}</span><span style="color:#F0997B;font-weight:500;flex-shrink:0">$${Math.round((e.costo_total||0)/1000)}K</span></div>`).join('') : emptyCard('📫','Sin embalajes registrados')}
-      </div>
-    </div>
-  </div>`;
+  `;
+
+  // Store data for filter buttons
+  window._dashOTs = ots;
+  window._dashEmbs = embs;
+  window._dashPMs = pms;
 }
+
+function filtrarDash(tipo){
+  // Update button styles
+  ['todos','correctivo','preventivo','externo','interno'].forEach(t=>{
+    const btn=document.getElementById('db-f-'+t);
+    if(btn){
+      btn.style.background=t===tipo?'rgba(33,150,243,0.2)':'rgba(255,255,255,0.06)';
+      btn.style.color=t===tipo?'#85B7EB':'rgba(200,210,225,0.6)';
+    }
+  });
+  if(!window._dashOTs) return;
+  let filtered=window._dashOTs;
+  if(tipo==='correctivo') filtered=filtered.filter(o=>o.tipo==='Correctivo');
+  else if(tipo==='preventivo') filtered=filtered.filter(o=>o.tipo==='Preventivo');
+  else if(tipo==='externo') filtered=filtered.filter(o=>o.es_externo);
+  else if(tipo==='interno') filtered=filtered.filter(o=>!o.es_externo);
+
+  const costo=filtered.reduce((a,o)=>a+(o.costo||0),0);
+  const activas=filtered.filter(o=>o.estado!=='done').length;
+  const el1=document.getElementById('g-ot-activas');
+  const el2=document.getElementById('g-costo-total');
+  if(el1) el1.textContent=activas+' / '+filtered.length;
+  if(el2) el2.textContent='$'+Math.round(costo/1000)+'K';
+}
+
 
 function setRole(r){
   role=r;
