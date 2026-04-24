@@ -734,8 +734,11 @@ function verOT(id){
     </div>`:''}
 
     <div style="display:flex;gap:8px;justify-content:space-between;align-items:center">
-      ${canDelete?`<button onclick="eliminarOT('${o.id}')" style="padding:6px 12px;border-radius:5px;border:0.5px solid rgba(226,75,74,0.3);background:rgba(226,75,74,0.1);color:#F09595;cursor:pointer;font-size:11px;font-family:var(--font)">🗑 Eliminar OT</button>`:'<div></div>'}
-      <button style="padding:7px 14px;border-radius:5px;border:0.5px solid rgba(255,255,255,0.1);background:transparent;color:rgba(200,210,225,0.7);cursor:pointer;font-size:12px;font-family:var(--font)" onclick="closeModal()">Cerrar</button>
+      ${canDelete?`<button onclick="eliminarOT('${o.id}')" style="padding:6px 12px;border-radius:5px;border:0.5px solid rgba(226,75,74,0.3);background:rgba(226,75,74,0.1);color:#F09595;cursor:pointer;font-size:11px;font-family:var(--font)">🗑 Eliminar</button>`:'<div></div>'}
+      <div style="display:flex;gap:6px">
+        <button onclick="imprimirOT('${o.id}')" style="padding:7px 12px;border-radius:5px;border:0.5px solid rgba(33,150,243,0.3);background:rgba(33,150,243,0.1);color:#85B7EB;cursor:pointer;font-size:12px;font-family:var(--font)">🖨️ Imprimir boleta</button>
+        <button style="padding:7px 14px;border-radius:5px;border:0.5px solid rgba(255,255,255,0.1);background:transparent;color:rgba(200,210,225,0.7);cursor:pointer;font-size:12px;font-family:var(--font)" onclick="closeModal()">Cerrar</button>
+      </div>
     </div>
   `;
   document.getElementById('modal-ver').classList.remove('hidden');
@@ -977,6 +980,152 @@ document.addEventListener('click',e=>{
 
 async function audit(tipo,accion,detalle){
   try{await db.from('auditoria').insert({usuario_id:USER.id,usuario_nombre:USER.nombre||USER.email,tipo,accion,detalle});}catch(e){}
+}
+
+
+// ── IMPRIMIR BOLETA OT ──
+function imprimirOT(id){
+  const o = OTS_DATA.find(x=>x.id===id);
+  if(!o) return;
+
+  const fecha = new Date(o.creado_en).toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const fechaHora = new Date(o.creado_en).toLocaleString('es-CL');
+  const hoy = new Date().toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  const EST_LABEL = {open:'Abierta',prog:'En proceso',ext:'Externo',done:'Completada'};
+  const PRIO_LBL  = {crit:'CRÍTICA',alta:'Alta',med:'Media',baja:'Baja'};
+
+  const win = window.open('','_blank','width=800,height=900');
+  win.document.write(`<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<title>Orden de Trabajo ${o.codigo||''}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Arial', sans-serif; padding: 32px; color: #1a1a1a; background: #fff; }
+  .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid #08223D; }
+  .logo { font-size: 28px; font-weight: 900; color: #08223D; letter-spacing: 2px; }
+  .logo-sub { font-size: 11px; color: #666; margin-top: 3px; }
+  .logo-line { width: 28px; height: 2px; background: #2196F3; margin-top: 6px; }
+  .ot-num { text-align: right; }
+  .ot-codigo { font-size: 22px; font-weight: 700; color: #08223D; }
+  .ot-tipo { font-size: 12px; color: #666; margin-top: 4px; }
+  .ot-fecha { font-size: 11px; color: #999; margin-top: 3px; }
+  .title-bar { background: #08223D; color: #fff; padding: 10px 16px; border-radius: 6px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+  .title-bar h2 { font-size: 14px; font-weight: 600; letter-spacing: 0.5px; }
+  .prio-badge { font-size: 11px; padding: 3px 10px; border-radius: 10px; background: rgba(255,255,255,0.15); }
+  .section { margin-bottom: 20px; }
+  .section-title { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #2196F3; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 1px solid #e0e0e0; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .field { background: #f8f9fa; border-radius: 5px; padding: 10px 12px; border-left: 3px solid #2196F3; }
+  .field-label { font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #888; margin-bottom: 4px; }
+  .field-val { font-size: 13px; font-weight: 600; color: #1a1a1a; }
+  .desc-box { background: #f8f9fa; border-radius: 5px; padding: 14px; border-left: 3px solid #08223D; font-size: 13px; line-height: 1.6; color: #333; min-height: 50px; }
+  .notas-box { background: #fffde7; border-radius: 5px; padding: 10px 12px; border-left: 3px solid #FFC107; font-size: 12px; color: #555; }
+  .costo-box { background: #e8f5e9; border-radius: 5px; padding: 12px 16px; border-left: 3px solid #4CAF50; display: flex; justify-content: space-between; align-items: center; }
+  .costo-label { font-size: 11px; color: #555; font-weight: 600; }
+  .costo-val { font-size: 22px; font-weight: 900; color: #2E7D32; }
+  .status-chip { display: inline-block; padding: 5px 14px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+  .st-done { background: #e8f5e9; color: #2E7D32; }
+  .st-prog { background: #fff8e1; color: #F57F17; }
+  .st-open { background: #e3f2fd; color: #1565C0; }
+  .st-ext  { background: #e0f2f1; color: #00695C; }
+  .firmas { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 30px; }
+  .firma { border-top: 1px solid #333; padding-top: 8px; text-align: center; }
+  .firma-label { font-size: 10px; color: #666; }
+  .firma-nombre { font-size: 12px; font-weight: 600; color: #333; margin-top: 3px; }
+  .footer { margin-top: 24px; padding-top: 12px; border-top: 1px solid #e0e0e0; display: flex; justify-content: space-between; font-size: 9px; color: #aaa; }
+  .watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) rotate(-30deg); font-size: 80px; font-weight: 900; color: rgba(8,34,61,0.04); pointer-events: none; white-space: nowrap; }
+  @media print {
+    body { padding: 20px; }
+    .no-print { display: none !important; }
+    @page { margin: 1cm; }
+  }
+</style>
+</head>
+<body>
+<div class="watermark">QDC CMMS PRO</div>
+
+<div class="header">
+  <div>
+    <div class="logo">QDC</div>
+    <div class="logo-sub">Química del Campo S.p.A</div>
+    <div class="logo-line"></div>
+  </div>
+  <div class="ot-num">
+    <div class="ot-codigo">${o.codigo||'OT'}</div>
+    <div class="ot-tipo">Orden de Trabajo — ${o.tipo||'Correctivo'}</div>
+    <div class="ot-fecha">Emitida: ${fechaHora}</div>
+  </div>
+</div>
+
+<div class="title-bar">
+  <h2>${o.descripcion}</h2>
+  <span class="prio-badge">Prioridad: ${PRIO_LBL[o.prioridad]||o.prioridad}</span>
+</div>
+
+<div class="section">
+  <div class="section-title">Información de la orden</div>
+  <div class="grid3">
+    <div class="field"><div class="field-label">Activo / Equipo</div><div class="field-val">${o.activo||'—'}</div></div>
+    <div class="field"><div class="field-label">Responsable</div><div class="field-val" style="color:${o.es_externo?'#00695C':'#1565C0'}">${o.responsable_nombre||o.asignado_nombre||'—'}</div></div>
+    <div class="field"><div class="field-label">Tipo de intervención</div><div class="field-val">${o.es_externo?'🏢 Externa':'👤 Interna'} — ${o.tipo||'Correctivo'}</div></div>
+    <div class="field"><div class="field-label">Estado</div><div class="field-val"><span class="status-chip st-${o.estado}">${EST_LABEL[o.estado]||o.estado}</span></div></div>
+    <div class="field"><div class="field-label">Fecha creación</div><div class="field-val">${fecha}</div></div>
+    <div class="field"><div class="field-label">Código OT</div><div class="field-val" style="font-family:monospace">${o.codigo||'—'}</div></div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Descripción del trabajo</div>
+  <div class="desc-box">${o.descripcion}</div>
+  ${o.notas?`<div class="notas-box" style="margin-top:8px"><strong>Notas:</strong> ${o.notas}</div>`:''}
+</div>
+
+${o.costo?`
+<div class="section">
+  <div class="section-title">Costo de la intervención</div>
+  <div class="costo-box">
+    <div><div class="costo-label">Costo total registrado</div><div style="font-size:11px;color:#777;margin-top:2px">Incluye mano de obra y materiales</div></div>
+    <div class="costo-val">$${(o.costo||0).toLocaleString('es-CL')}</div>
+  </div>
+</div>`:''}
+
+<div class="section">
+  <div class="section-title">Registro de trabajo realizado</div>
+  <div style="background:#f8f9fa;border-radius:5px;padding:14px;min-height:80px;border:1px dashed #ccc;">
+    <div style="font-size:10px;color:#bbb">Descripción del trabajo ejecutado (completar a mano si es necesario)</div>
+  </div>
+</div>
+
+<div class="firmas">
+  <div class="firma">
+    <br/><br/>
+    <div class="firma-label">Firma Responsable</div>
+    <div class="firma-nombre">${o.responsable_nombre||o.asignado_nombre||'_________________'}</div>
+  </div>
+  <div class="firma">
+    <br/><br/>
+    <div class="firma-label">Firma Supervisor / Jefe de Mantenimiento</div>
+    <div class="firma-nombre">_________________</div>
+  </div>
+</div>
+
+<div class="footer">
+  <span>QDC CMMS Pro v2.0 · Química del Campo S.p.A</span>
+  <span>Impreso: ${hoy}</span>
+  <span>${o.codigo||''} · Documento interno</span>
+</div>
+
+<div class="no-print" style="text-align:center;margin-top:20px;padding:16px;background:#f5f5f5;border-radius:8px">
+  <button onclick="window.print()" style="padding:10px 24px;background:#08223D;color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;margin-right:10px">🖨️ Imprimir / Guardar PDF</button>
+  <button onclick="window.close()" style="padding:10px 18px;background:#e0e0e0;color:#333;border:none;border-radius:6px;font-size:14px;cursor:pointer">Cerrar</button>
+</div>
+</body>
+</html>`);
+  win.document.close();
+  win.focus();
 }
 
 let _tT;

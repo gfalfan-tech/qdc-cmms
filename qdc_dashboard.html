@@ -244,19 +244,19 @@ const ROLES={
 };
 const NAV={
   t:[
-    {sec:"Principal",items:[{i:"▦",l:"Dashboard",u:"qdc_dashboard.html",active:true},{i:"📋",l:"Órdenes de trabajo",u:"qdc_ot.html",b:"3"}]},
+    {sec:"Principal",items:[{i:"▦",l:"Dashboard",u:"qdc_dashboard.html",active:true},{i:"📋",l:"Órdenes de trabajo",u:"qdc_ot.html"}]},
     {sec:"Mantenimiento",items:[{i:"🔧",l:"Correctivo",u:"qdc_ot.html"},{i:"🔄",l:"Plan preventivo",u:"qdc_pm.html"}]},
     {sec:"Recursos",items:[{i:"🏭",l:"Activos",u:"qdc_activos.html"},{i:"📦",l:"Inventario",u:"qdc_inventario.html"}]},
     {sec:"Operaciones",items:[{i:"📫",l:"Embalajes",u:"qdc_embalajes.html"}]},
-    {sec:"Sistema",items:[{i:"🔔",l:"Alertas",u:"qdc_alertas.html",b:"2",bt:"w"},{i:"🔑",l:"Gestión usuarios",u:"qdc_usuarios.html"},{i:"⚙️",l:"Configuración",u:"qdc_config.html"}]}
+    {sec:"Sistema",items:[{i:"🔔",l:"Alertas",u:"qdc_alertas.html"},{i:"🔑",l:"Gestión usuarios",u:"qdc_usuarios.html"},{i:"⚙️",l:"Configuración",u:"qdc_config.html"}]}
   ],
   s:[
-    {sec:"Principal",items:[{i:"▦",l:"Dashboard",u:"qdc_dashboard.html",active:true},{i:"📋",l:"Órdenes de trabajo",u:"qdc_ot.html",b:"7"}]},
-    {sec:"Mantenimiento",items:[{i:"🏢",l:"Contratistas",u:"qdc_contratistas.html",b:"2",bt:"e"},{i:"👥",l:"Responsables",u:"qdc_responsables.html"},{i:"🔄",l:"Plan preventivo",u:"qdc_pm.html"},{i:"🔧",l:"Correctivo",u:"qdc_ot.html"}]},
-    {sec:"Recursos",items:[{i:"🏭",l:"Activos",u:"qdc_activos.html"},{i:"📦",l:"Inventario",u:"qdc_inventario.html",b:"3",bt:"w"}]},
+    {sec:"Principal",items:[{i:"▦",l:"Dashboard",u:"qdc_dashboard.html",active:true},{i:"📋",l:"Órdenes de trabajo",u:"qdc_ot.html"}]},
+    {sec:"Mantenimiento",items:[{i:"🏢",l:"Contratistas",u:"qdc_contratistas.html"},{i:"👥",l:"Responsables",u:"qdc_responsables.html"},{i:"🔄",l:"Plan preventivo",u:"qdc_pm.html"},{i:"🔧",l:"Correctivo",u:"qdc_ot.html"}]},
+    {sec:"Recursos",items:[{i:"🏭",l:"Activos",u:"qdc_activos.html"},{i:"📦",l:"Inventario",u:"qdc_inventario.html"}]},
     {sec:"Operaciones",items:[{i:"📫",l:"Embalajes",u:"qdc_embalajes.html"}]},
     {sec:"Análisis",items:[{i:"📊",l:"KPIs",u:"qdc_kpis.html"},{i:"💰",l:"Costos",u:"qdc_kpis.html"}]},
-    {sec:"Sistema",items:[{i:"🔔",l:"Alertas",u:"qdc_alertas.html",b:"5"}]}
+    {sec:"Sistema",items:[{i:"🔔",l:"Alertas",u:"qdc_alertas.html"}]}
   ],
   g:[
     {sec:"Principal",items:[{i:"▦",l:"Dashboard",u:"qdc_dashboard.html",active:true},{i:"📋",l:"OT",u:"qdc_ot.html"}]},
@@ -304,7 +304,7 @@ const SB_URL_D = 'https://aaugeuydymhwlcpklbmt.supabase.co';
 const SB_KEY_D = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhdWdldXlkeW1od2xjcGtsYm10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2NTg5MzksImV4cCI6MjA5MjIzNDkzOX0.Q2GeJKuf7l51Hsv3hUEeaO0NHaFeWXLIBrRUPgkQ0gw';
 let _db = null;
 function getDB(){
-  if(!_db) _db = window.supabase ? window.supabase.createClient(SB_URL_D, SB_KEY_D) : null;
+  if(!_db && window.supabase) _db = window.supabase.createClient(SB_URL_D, SB_KEY_D);
   return _db;
 }
 
@@ -313,7 +313,7 @@ async function loadDashboardData(){
   if(!db) return {ots:[], inv:[], pms:[], embs:[]};
   try{
     const [r1,r2,r3,r4] = await Promise.all([
-      db.from('ots').select('id,codigo,descripcion,activo,prioridad,estado,asignado_nombre,es_externo,pdf_url,creado_en').order('creado_en',{ascending:false}).limit(20),
+      db.from('ots').select('id,codigo,descripcion,activo,tipo,prioridad,estado,asignado_nombre,responsable_nombre,es_externo,pdf_url,costo,creado_en').order('creado_en',{ascending:false}).limit(50),
       db.from('inventario').select('sku,descripcion,stock,stock_minimo').order('stock'),
       db.from('plan_pm').select('id,nombre,activo,proxima_fecha,es_externo').order('proxima_fecha').limit(10),
       db.from('embalajes').select('id,codigo,cliente,costo_total,creado_en').order('creado_en',{ascending:false}).limit(10),
@@ -670,7 +670,16 @@ if(_roleLabel) _roleLabel.textContent='Usuario activo';
 // Update topbar date dynamically
 const _dtEl = document.getElementById('topbar-date');
 if(_dtEl) _dtEl.textContent = new Date().toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-setRole(_rol);
+
+// Wait for Supabase to be available before rendering dashboard
+function waitAndRender(){
+  if(window.supabase){
+    setRole(_rol);
+  } else {
+    setTimeout(waitAndRender, 100);
+  }
+}
+waitAndRender();
 </script>
 </body>
 </html>
