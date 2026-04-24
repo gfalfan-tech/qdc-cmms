@@ -555,40 +555,40 @@ function verOT(id){
       }
     </div>` : '';
 
-  document.getElementById('modal-ver-inner').innerHTML = \`
+  document.getElementById('modal-ver-inner').innerHTML = `
     <div class="modal-header">
-      <div class="modal-title">\${o.codigo || 'OT'} — \${o.activo||''}</div>
+      <div class="modal-title">${o.codigo || 'OT'} — ${o.activo||''}</div>
       <button class="modal-close" onclick="closeModal()">✕</button>
     </div>
     <div style="margin-bottom:14px">
-      <div style="font-size:13px;color:var(--white);margin-bottom:8px">\${o.descripcion}</div>
+      <div style="font-size:13px;color:var(--white);margin-bottom:8px">${o.descripcion}</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
-        \${EST_BADGE[o.estado]||''}
-        <span class="badge" style="background:rgba(255,255,255,0.07);color:rgba(200,210,225,0.7)">\${o.tipo||'Correctivo'}</span>
-        <span class="badge" style="background:rgba(255,255,255,0.07);color:\${PRIO_COLOR[o.prioridad]||'gray'}">\${PRIO_LABEL[o.prioridad]||''}</span>
+        ${EST_BADGE[o.estado]||''}
+        <span class="badge" style="background:rgba(255,255,255,0.07);color:rgba(200,210,225,0.7)">${o.tipo||'Correctivo'}</span>
+        <span class="badge" style="background:rgba(255,255,255,0.07);color:${PRIO_COLOR[o.prioridad]||'gray'}">${PRIO_LABEL[o.prioridad]||''}</span>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px;font-size:12px">
-        <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Activo</div>\${o.activo||'—'}</div>
-        <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Asignado a</div>\${o.asignado_nombre||o.contratista||'—'}</div>
-        <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Fecha</div>\${fecha}</div>
-        <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Tipo</div>\${o.tipo||'Correctivo'}</div>
+        <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Activo</div>${o.activo||'—'}</div>
+        <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Asignado a</div>${o.asignado_nombre||o.contratista||'—'}</div>
+        <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Fecha</div>${fecha}</div>
+        <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Tipo</div>${o.tipo||'Correctivo'}</div>
       </div>
-      \${o.notas?`<div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px;font-size:12px;margin-bottom:12px;color:rgba(200,210,225,0.7)"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Notas</div>\${o.notas}</div>`:''}
+      ${o.notas?`<div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px;font-size:12px;margin-bottom:12px;color:rgba(200,210,225,0.7)"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Notas</div>${o.notas}</div>`:''}
     </div>
-    \${pdfSection}
-    \${canEdit?\`
+    ${pdfSection}
+    ${canEdit?`
     <div style="border-top:1px solid rgba(255,255,255,0.07);padding-top:14px">
       <div style="font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);margin-bottom:10px">Actualizar estado</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
-        <button class="ab" onclick="cambiarEstado('\${o.id}','open')">Abierta</button>
-        <button class="ab" onclick="cambiarEstado('\${o.id}','prog')">En proceso</button>
-        <button class="ab" onclick="cambiarEstado('\${o.id}','done')" style="color:#C0DD97;border-color:rgba(99,153,34,0.3)">✓ Completada</button>
+        <button class="ab" onclick="cambiarEstado('${o.id}','open')">Abierta</button>
+        <button class="ab" onclick="cambiarEstado('${o.id}','prog')">En proceso</button>
+        <button class="ab" onclick="cambiarEstado('${o.id}','done')" style="color:#C0DD97;border-color:rgba(99,153,34,0.3)">✓ Completada</button>
       </div>
-    </div>\`:''}
+    </div>`:''}
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeModal()">Cerrar</button>
     </div>
-  \`;
+  `;
   document.getElementById('modal-ver').classList.remove('hidden');
 
   // Setup drag & drop for PDF
