@@ -190,16 +190,16 @@ tr.ext-row td{border-left:2px solid rgba(29,158,117,0.4);}
         ⚡ Registrar OT rápido
         <span style="font-size:10px;font-weight:400;color:rgba(131,131,139,0.5)">3 campos — menos de 1 minuto</span>
       </div>
-      <div class="qf-grid">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px">
         <div>
           <div class="qf-label">Descripción del problema <span style="color:var(--accent)">*</span></div>
-          <input type="text" class="qf-input" id="q-desc" placeholder="ej: Falla en compresor C-101…"/>
+          <input type="text" class="qf-input" id="q-desc" placeholder="ej: Revisión portón eléctrico…" onkeydown="if(event.key==='Enter')registrarOT()"/>
         </div>
         <div>
           <div class="qf-label">Activo / Equipo <span style="color:var(--accent)">*</span></div>
           <div style="position:relative" id="activo-wrap">
-            <input type="text" class="qf-input" id="q-activo" 
-              placeholder="Escribe el nombre del equipo…" 
+            <input type="text" class="qf-input" id="q-activo"
+              placeholder="Escribe el nombre del equipo…"
               autocomplete="off"
               oninput="activoSearch(this.value)"
               onkeydown="activoKeyNav(event)"
@@ -209,6 +209,21 @@ tr.ext-row td{border-left:2px solid rgba(29,158,117,0.4);}
           </div>
         </div>
         <div>
+          <div class="qf-label">Responsable <span style="color:var(--accent)">*</span></div>
+          <div style="position:relative" id="resp-wrap">
+            <input type="text" class="qf-input" id="q-resp"
+              placeholder="Técnico o empresa externa…"
+              autocomplete="off"
+              oninput="respSearch(this.value,'resp-dropdown','q-resp-id')"
+              onkeydown="respKeyNav(event,'resp-dropdown','q-resp','q-resp-id')"
+            />
+            <input type="hidden" id="q-resp-id"/>
+            <div id="resp-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#0D2D48;border:1px solid rgba(93,202,165,0.3);border-radius:0 0 6px 6px;z-index:100;max-height:200px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.4)"></div>
+          </div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:130px 110px 1fr;gap:8px;align-items:end">
+        <div>
           <div class="qf-label">Prioridad <span style="color:var(--accent)">*</span></div>
           <select class="qf-select" id="q-prio">
             <option value="crit">🔴 Crítica</option>
@@ -217,21 +232,21 @@ tr.ext-row td{border-left:2px solid rgba(29,158,117,0.4);}
             <option value="baja">⚪ Baja</option>
           </select>
         </div>
-        <button class="qf-btn" id="q-btn" onclick="registrarOT()">Registrar OT</button>
-      </div>
-      <span class="opt-toggle" id="opt-toggle" onclick="toggleOpts()">+ Agregar detalles opcionales</span>
-      <div class="opt-fields" id="opt-fields">
         <div>
           <div class="qf-label">Tipo</div>
           <select class="qf-select" id="q-tipo">
             <option value="Correctivo">Correctivo</option>
             <option value="Preventivo">Preventivo</option>
-            <option value="Predictivo">Predictivo</option>
             <option value="Externo">Externo</option>
+            <option value="Predictivo">Predictivo</option>
           </select>
         </div>
+        <button class="qf-btn" id="q-btn" onclick="registrarOT()" style="height:100%">⚡ Registrar OT</button>
+      </div>
+      <span class="opt-toggle" id="opt-toggle" onclick="toggleOpts()" style="font-size:11px;color:rgba(33,150,243,0.5);cursor:pointer;margin-top:6px;display:inline-block">+ Agregar notas</span>
+      <div id="opt-fields" style="display:none;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.05)">
         <div>
-          <div class="qf-label">Notas</div>
+          <div class="qf-label">Notas adicionales</div>
           <input type="text" class="qf-input" id="q-notas" placeholder="Opcional…"/>
         </div>
       </div>
@@ -472,8 +487,9 @@ async function registrarOT(){
   const activo = document.getElementById('q-activo').value.trim();
   const prio   = document.getElementById('q-prio').value;
   const tipo   = document.getElementById('q-tipo')?.value || 'Correctivo';
-  const resp   = document.getElementById('q-resp')?.value.trim() || USER.nombre || USER.email;
-  const notas  = document.getElementById('q-notas')?.value.trim() || null;
+  const respNombre = document.getElementById('q-resp')?.value.trim() || USER.nombre || USER.email;
+  const respId     = document.getElementById('q-resp-id')?.value || null;
+  const notas      = document.getElementById('q-notas')?.value.trim() || null;
 
   if(!desc || !activo){
     showToast('⚠️ Descripción y activo son obligatorios','rgba(226,75,74,0.4)');
@@ -484,9 +500,11 @@ async function registrarOT(){
   btn.textContent = 'Guardando…';
   btn.disabled = true;
 
-  // Generar código OT
   const codigo = 'OT-' + Date.now().toString().slice(-6);
-  const esExterno = tipo === 'Externo';
+
+  // Auto-detectar si es externo: por tipo O por el tipo del responsable en la tabla
+  const respData = RESPONSABLES_DATA.find(r=>r.id===respId);
+  const esExterno = tipo === 'Externo' || respData?.tipo === 'externo';
 
   const nuevaOT = {
     codigo,
@@ -495,134 +513,43 @@ async function registrarOT(){
     tipo,
     prioridad: prio,
     estado: esExterno ? 'ext' : 'open',
-    asignado_id: USER.id,
-    asignado_nombre: resp,
+    asignado_nombre: respNombre,
+    responsable_id: respId || null,
+    responsable_nombre: respNombre,
     es_externo: esExterno,
-    contratista: esExterno ? resp : null,
-    creado_por: USER.id,
+    contratista: esExterno ? respNombre : null,
     notas,
+    costo: 0,
   };
 
-  try {
+  try{
     const { data, error } = await db.from('ots').insert(nuevaOT).select().single();
     if(error) throw error;
 
-    // Registrar en auditoría
-    await db.from('auditoria').insert({
-      usuario_id: USER.id,
-      usuario_nombre: USER.nombre || USER.email,
-      tipo: 'ot',
-      accion: `Creó ${codigo}`,
-      detalle: `${desc} · ${activo} · Prioridad: ${prio}`,
-    });
+    await audit('ot', 'Creó ' + codigo, desc + ' · ' + activo + ' · ' + respNombre);
 
-    showToast(`✓ ${codigo} registrada correctamente`, 'rgba(99,153,34,0.4)');
+    showToast('✓ ' + codigo + ' registrada correctamente', 'rgba(99,153,34,0.4)');
 
     // Limpiar formulario
     document.getElementById('q-desc').value = '';
     document.getElementById('q-activo').value = '';
+    document.getElementById('q-resp').value = '';
+    document.getElementById('q-resp-id').value = '';
     document.getElementById('q-prio').value = 'med';
 
     // Recargar tabla
     await loadOTs();
 
-  } catch(err){
+  }catch(err){
     console.error(err);
     showToast('✕ Error al guardar: ' + err.message, 'rgba(226,75,74,0.4)');
-  } finally {
-    btn.textContent = 'Registrar OT';
+  }finally{
+    btn.textContent = '⚡ Registrar OT';
     btn.disabled = false;
   }
 }
 
-// ═══════════════════════════════════════
-// VER Y ACTUALIZAR OT
-// ═══════════════════════════════════════
-function verOT(id){
-  const o = OTS_DATA.find(x => x.id === id);
-  if(!o) return;
 
-  const fecha = new Date(o.creado_en).toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit',year:'numeric'});
-  const canEdit = USER.rol === 's';
-  const canUpload = USER.rol === 't' || USER.rol === 's';
-
-  const pdfSection = o.es_externo ? `
-    <div style="background:rgba(255,255,255,0.03);border-radius:7px;padding:12px 14px;margin-bottom:12px;border:0.5px solid ${o.pdf_url?'rgba(99,153,34,0.2)':'rgba(239,159,39,0.2)'}">
-      <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:8px">Informe PDF del contratista</div>
-      ${o.pdf_url
-        ? `<div style="display:flex;align-items:center;gap:10px">
-            <span style="font-size:18px">📄</span>
-            <div style="flex:1">
-              <div style="font-size:12px;font-weight:500;color:var(--ok)">Informe adjunto</div>
-              <div style="font-size:10px;color:rgba(131,131,139,0.5)">Subido correctamente</div>
-            </div>
-            <a href="${o.pdf_url}" target="_blank" style="padding:5px 12px;border-radius:5px;background:rgba(99,153,34,0.15);color:#C0DD97;border:0.5px solid rgba(99,153,34,0.3);font-size:11px;text-decoration:none">Ver PDF</a>
-            ${canUpload?`<button onclick="uploadPDF('${o.id}','pdf')" style="padding:5px 10px;border-radius:5px;background:rgba(255,255,255,0.06);color:rgba(200,210,225,0.6);border:0.5px solid rgba(255,255,255,0.1);font-size:11px;cursor:pointer">Reemplazar</button>`:''}
-          </div>`
-        : canUpload
-          ? `<div style="border:2px dashed rgba(239,159,39,0.3);border-radius:6px;padding:16px;text-align:center;cursor:pointer" onclick="document.getElementById('pdf-input-${o.id}').click()" id="pdf-drop-${o.id}">
-              <div style="font-size:24px;margin-bottom:6px">📄</div>
-              <div style="font-size:12px;font-weight:500;color:var(--warn)">Adjuntar informe PDF</div>
-              <div style="font-size:11px;color:rgba(131,131,139,0.5);margin-top:3px">Haz clic o arrastra el archivo aquí</div>
-              <input type="file" id="pdf-input-${o.id}" accept=".pdf,.doc,.docx" style="display:none" onchange="handleFileUpload(event,'${o.id}','pdf')"/>
-            </div>
-            <div id="pdf-progress-${o.id}" style="display:none;margin-top:8px"></div>`
-          : `<div style="padding:12px;text-align:center;font-size:12px;color:rgba(239,159,39,0.6)">⚠️ PDF pendiente — solo el técnico o supervisor puede adjuntar</div>`
-      }
-    </div>` : '';
-
-  document.getElementById('modal-ver-inner').innerHTML = `
-    <div class="modal-header">
-      <div class="modal-title">${o.codigo || 'OT'} — ${o.activo||''}</div>
-      <button class="modal-close" onclick="closeModal()">✕</button>
-    </div>
-    <div style="margin-bottom:14px">
-      <div style="font-size:13px;color:var(--white);margin-bottom:8px">${o.descripcion}</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
-        ${EST_BADGE[o.estado]||''}
-        <span class="badge" style="background:rgba(255,255,255,0.07);color:rgba(200,210,225,0.7)">${o.tipo||'Correctivo'}</span>
-        <span class="badge" style="background:rgba(255,255,255,0.07);color:${PRIO_COLOR[o.prioridad]||'gray'}">${PRIO_LABEL[o.prioridad]||''}</span>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px;font-size:12px">
-        <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Activo</div>${o.activo||'—'}</div>
-        <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Asignado a</div>${o.asignado_nombre||o.contratista||'—'}</div>
-        <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Fecha</div>${fecha}</div>
-        <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Tipo</div>${o.tipo||'Correctivo'}</div>
-      </div>
-      ${o.notas?`<div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px;font-size:12px;margin-bottom:12px;color:rgba(200,210,225,0.7)"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Notas</div>${o.notas}</div>`:''}
-    </div>
-    ${pdfSection}
-    ${canEdit?`
-    <div style="border-top:1px solid rgba(255,255,255,0.07);padding-top:14px">
-      <div style="font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);margin-bottom:10px">Actualizar estado</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
-        <button class="ab" onclick="cambiarEstado('${o.id}','open')">Abierta</button>
-        <button class="ab" onclick="cambiarEstado('${o.id}','prog')">En proceso</button>
-        <button class="ab" onclick="cambiarEstado('${o.id}','done')" style="color:#C0DD97;border-color:rgba(99,153,34,0.3)">✓ Completada</button>
-      </div>
-    </div>`:''}
-    <div class="modal-footer">
-      ${(USER.rol==='g'||USER.rol==='s')?'<button onclick="eliminarOT(\''+o.id+'\')" style="padding:7px 14px;border-radius:5px;border:0.5px solid rgba(226,75,74,0.3);background:rgba(226,75,74,0.1);color:#F09595;cursor:pointer;font-size:12px;font-family:var(--font)">🗑 Eliminar OT</button>':''}
-      <button class="btn-cancel" onclick="closeModal()">Cerrar</button>
-    </div>
-  `;
-  document.getElementById('modal-ver').classList.remove('hidden');
-
-  // Setup drag & drop for PDF
-  const dropZone = document.getElementById('pdf-drop-' + o.id);
-  if(dropZone){
-    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.style.borderColor='var(--accent)'; dropZone.style.background='rgba(33,150,243,0.05)'; });
-    dropZone.addEventListener('dragleave', e => { dropZone.style.borderColor='rgba(239,159,39,0.3)'; dropZone.style.background=''; });
-    dropZone.addEventListener('drop', e => {
-      e.preventDefault();
-      dropZone.style.borderColor='rgba(239,159,39,0.3)'; dropZone.style.background='';
-      const file = e.dataTransfer.files[0];
-      if(file) handleFileUpload({target:{files:[file]}}, o.id, 'pdf');
-    });
-  }
-}
-
-// ── SUBIDA REAL DE ARCHIVOS A SUPABASE STORAGE ──
 async function handleFileUpload(event, otId, tipo){
   const file = event.target.files[0];
   if(!file) return;
