@@ -698,3 +698,113 @@ function uploadPDF(otId, tipo){
 }
 
 
+
+
+// ── CAMBIAR ESTADO OT ──
+async function cambiarEstado(id, nuevoEstado){
+  try{
+    const{error}=await db.from('ots').update({estado:nuevoEstado,actualizado_en:new Date().toISOString()}).eq('id',id);
+    if(error) throw error;
+    const o=OTS_DATA.find(x=>x.id===id);
+    if(o) o.estado=nuevoEstado;
+    showToast('✓ Estado actualizado','rgba(99,153,34,0.4)');
+    closeModal();
+    updateStats();
+    filterTable();
+    await audit('ot','Actualizó OT '+(o?.codigo||id),'Estado: '+nuevoEstado);
+  }catch(err){ showToast('✕ Error: '+err.message,'rgba(226,75,74,0.4)'); }
+}
+
+function closeModal(){
+  document.getElementById('modal-ver').classList.add('hidden');
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  const mo=document.getElementById('modal-ver');
+  if(mo) mo.addEventListener('click',function(e){if(e.target===this)closeModal();});
+});
+
+function filterTable(){
+  const search=(document.getElementById('search-input')?.value||'').toLowerCase();
+  const estado=document.getElementById('filter-estado')?.value||'';
+  const prio=document.getElementById('filter-prio')?.value||'';
+  OTS_FILTERED=OTS_DATA.filter(o=>{
+    const ms=!search||
+      (o.descripcion||'').toLowerCase().includes(search)||
+      (o.activo||'').toLowerCase().includes(search)||
+      (o.codigo||'').toLowerCase().includes(search)||
+      (o.asignado_nombre||'').toLowerCase().includes(search);
+    const me=!estado||o.estado===estado;
+    const mp=!prio||o.prioridad===prio;
+    return ms&&me&&mp;
+  });
+  renderTable(OTS_FILTERED);
+}
+
+// ── BÚSQUEDA PREDICTIVA ACTIVOS ──
+const ACTIVOS_QDC=[
+  'Balanzas','Generador Vielco / ATS','Portones eléctricos','Vehículos de planta',
+  'Cerco eléctrico','Sistema agua potable','Iluminación interior','Sensores de movimiento',
+  'Cámaras de seguridad','Cierres magnéticos','Duchas de emergencia','Sistema de regadío',
+  'Climatización','Ventilación (extractores)','Sistema aguas servidas','Racks almacenamiento',
+  'Extintores','Sistema detección incendios','Tableros eléctricos','Luminarias',
+  'Máquinas de fabricación','Grúas horquillas','Otro equipo'
+];
+async function loadActivosForSearch(){
+  try{
+    const{data}=await db.from('activos').select('nombre').order('nombre');
+    if(data&&data.length){ACTIVOS_QDC.length=0;data.forEach(a=>ACTIVOS_QDC.push(a.nombre));ACTIVOS_QDC.push('Otro equipo');}
+  }catch(e){}
+}
+let _activoSel=-1;
+function activoSearch(val){
+  const dd=document.getElementById('activo-dropdown');
+  if(!val||val.length<1){dd.style.display='none';return;}
+  const q=val.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const matches=ACTIVOS_QDC.filter(a=>a.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').includes(q));
+  if(!matches.length){dd.style.display='none';return;}
+  _activoSel=-1;
+  dd.innerHTML=matches.map((a,i)=>{
+    const reg=new RegExp('('+val.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');
+    const hl=a.replace(reg,'<strong>$1</strong>');
+    return `<div class="activo-opt" data-idx="${i}" data-val="${a}" onmousedown="selectActivo('${a.replace(/'/g,"\'")}')"> ${hl}</div>`;
+  }).join('');
+  dd.style.display='block';
+}
+function selectActivo(val){
+  document.getElementById('q-activo').value=val;
+  document.getElementById('activo-dropdown').style.display='none';
+  _activoSel=-1;
+}
+function activoKeyNav(e){
+  const dd=document.getElementById('activo-dropdown');
+  const opts=dd.querySelectorAll('.activo-opt');
+  if(!opts.length) return;
+  if(e.key==='ArrowDown'){e.preventDefault();_activoSel=Math.min(_activoSel+1,opts.length-1);opts.forEach((o,i)=>o.classList.toggle('selected',i===_activoSel));if(opts[_activoSel])opts[_activoSel].scrollIntoView({block:'nearest'});}
+  else if(e.key==='ArrowUp'){e.preventDefault();_activoSel=Math.max(_activoSel-1,0);opts.forEach((o,i)=>o.classList.toggle('selected',i===_activoSel));if(opts[_activoSel])opts[_activoSel].scrollIntoView({block:'nearest'});}
+  else if(e.key==='Enter'){e.preventDefault();if(_activoSel>=0&&opts[_activoSel])selectActivo(opts[_activoSel].dataset.val);else if(opts.length===1)selectActivo(opts[0].dataset.val);}
+  else if(e.key==='Escape'){dd.style.display='none';}
+}
+document.addEventListener('click',e=>{
+  if(!document.getElementById('activo-wrap')?.contains(e.target)){
+    const dd=document.getElementById('activo-dropdown');
+    if(dd) dd.style.display='none';
+  }
+});
+
+async function audit(tipo,accion,detalle){
+  try{await db.from('auditoria').insert({usuario_id:USER.id,usuario_nombre:USER.nombre||USER.email,tipo,accion,detalle});}catch(e){}
+}
+
+let _tT;
+function showToast(msg,col){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.style.borderColor=col||'rgba(33,150,243,0.3)';
+  t.classList.add('show');clearTimeout(_tT);_tT=setTimeout(()=>t.classList.remove('show'),3200);
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&document.activeElement.id==='q-desc') registrarOT();
+});
+</script>
+</body>
+</html>
