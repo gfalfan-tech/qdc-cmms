@@ -334,14 +334,13 @@ function init(){
   buildSidebar();
   setDate();
 
-  // Mostrar formulario rápido solo a técnicos y supervisores
-  if(USER.rol === 't' || USER.rol === 's'){
-    document.getElementById('quick-form').style.display = 'block';
-  }
+  // Todos los roles pueden ver el formulario y crear OTs
+  document.getElementById('quick-form').style.display = 'block';
 
-  // Mostrar config solo a gerencia
-  if(USER.rol === 'g'){
-    document.getElementById('nav-config').style.display = 'flex';
+  // Mostrar config y usuarios para supervisor y gerencia
+  if(USER.rol === 's' || USER.rol === 'g'){
+    if(document.getElementById('nav-config')) document.getElementById('nav-config').style.display = 'flex';
+    if(document.getElementById('nav-usuarios')) document.getElementById('nav-usuarios').style.display = 'flex';
   }
 
   loadOTs();
@@ -390,13 +389,9 @@ function doLogout(){
 // ═══════════════════════════════════════
 async function loadOTs(){
   try {
+    // Todos los roles ven todas las OTs
+    // El técnico puede ver, crear y actualizar — pero no cerrar
     let query = db.from('ots').select('*').order('creado_en', {ascending: false});
-
-    // Técnico solo ve sus OTs
-    if(USER.rol === 't'){
-      query = query.eq('asignado_id', USER.id);
-    }
-
     const { data, error } = await query;
 
     if(error) throw error;
@@ -673,7 +668,8 @@ function verOT(id){
   if(!o) return;
 
   const fecha = new Date(o.creado_en).toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit',year:'numeric'});
-  const canModify = USER.rol === 's' || USER.rol === 'g';
+  const canModify = USER.rol === 's' || USER.rol === 'g'; // Can CLOSE and register cost
+  const canProgress = USER.rol === 't' || USER.rol === 's' || USER.rol === 'g'; // Can update progress
   const canDelete = USER.rol === 's' || USER.rol === 'g';
 
   const PRIO_COL = {crit:'var(--crit)',alta:'var(--warn)',med:'var(--accent)',baja:'rgba(131,131,139,0.5)'};
@@ -782,14 +778,16 @@ function verOT(id){
       </div>
     </div>
 
-    ${canModify?`
+    ${canProgress?`
     <div style="border-top:1px solid rgba(255,255,255,0.07);padding-top:12px;margin-bottom:12px">
-      <div style="font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);margin-bottom:8px">Cambiar estado</div>
+      <div style="font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);margin-bottom:8px">Actualizar estado</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
         ${o.estado!=='open'?`<button class="ab" onclick="cambiarEstadoDir('${o.id}','open')">Reabrir</button>`:''}
-        ${o.estado!=='prog'?`<button class="ab" onclick="cambiarEstadoDir('${o.id}','prog')">En proceso</button>`:''}
-        ${o.estado!=='done'?`<button class="ab" style="color:#C0DD97;border-color:rgba(99,153,34,0.3)" onclick="cambiarEstado('${o.id}','done')">✓ Completar y registrar costo</button>`:''}
-        ${o.estado==='done'?`<button class="ab" style="color:#85B7EB" onclick="openCostoModal('${o.id}',OTS_DATA.find(x=>x.id==='${o.id}'))">✏️ Editar costo ($${(o.costo||0).toLocaleString('es-CL')})</button>`:''}
+        ${o.estado!=='prog'?`<button class="ab" onclick="cambiarEstadoDir('${o.id}','prog')">⚙️ Marcar en proceso</button>`:''}
+        ${canModify?`
+          ${o.estado!=='done'?`<button class="ab" style="color:#C0DD97;border-color:rgba(99,153,34,0.3)" onclick="cambiarEstado('${o.id}','done')">✓ Completar y registrar costo</button>`:''}
+          ${o.estado==='done'?`<button class="ab" style="color:#85B7EB" onclick="openCostoModal('${o.id}',OTS_DATA.find(x=>x.id==='${o.id}'))">✏️ Editar costo ($${(o.costo||0).toLocaleString('es-CL')})</button>`:''}
+        `:`<span style="font-size:10px;color:rgba(131,131,139,0.35);padding:4px 8px">Solo el supervisor puede completar la OT</span>`}
       </div>
     </div>`:''}
 
