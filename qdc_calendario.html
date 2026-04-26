@@ -297,11 +297,8 @@ function generateOccurrences(pm, weekMap, horizonYears=5){
 }
 
 // ── BUILD FULL EVENT MAP FOR A YEAR/MONTH ──
-let _evMapCache = null;
-let _evMapYear  = null;
-
 function buildEvMap(){
-  // Rebuild only when PMS changes or year changes
+  // Always rebuild fresh — no caching
   const filtered = getFilteredPMs();
   const weekMap = {};
   const evMap = {};
@@ -350,18 +347,31 @@ function render(){
   else renderYear();
 }
 
-function prevMonth(){
-  if(VIEW==='año'){CUR_YEAR--;render();return;}
-  CUR_MONTH--;if(CUR_MONTH<0){CUR_MONTH=11;CUR_YEAR--;}
+// Reload PMs from Supabase and re-render (called on navigation)
+async function reloadAndRender(){
+  try{
+    const{data,error}=await db.from('plan_pm').select('*').order('proxima_fecha');
+    if(!error && data){
+      PMS=data;
+      const cEl=document.getElementById('cal-count');
+      if(cEl) cEl.textContent=PMS.length+' rutinas PM';
+    }
+  }catch(e){}
   render();
+}
+
+function prevMonth(){
+  if(VIEW==='año'){CUR_YEAR--;reloadAndRender();return;}
+  CUR_MONTH--;if(CUR_MONTH<0){CUR_MONTH=11;CUR_YEAR--;}
+  reloadAndRender();
 }
 function nextMonth(){
-  if(VIEW==='año'){CUR_YEAR++;render();return;}
+  if(VIEW==='año'){CUR_YEAR++;reloadAndRender();return;}
   CUR_MONTH++;if(CUR_MONTH>11){CUR_MONTH=0;CUR_YEAR++;}
-  render();
+  reloadAndRender();
 }
 function goToday(){
-  CUR_YEAR=TODAY.getFullYear();CUR_MONTH=TODAY.getMonth();render();
+  CUR_YEAR=TODAY.getFullYear();CUR_MONTH=TODAY.getMonth();reloadAndRender();
 }
 
 // ── MONTH VIEW ──
@@ -516,7 +526,7 @@ function crearOTdesdePM(pmId){
   window.location.href='qdc_ot.html';
 }
 
-document.getElementById('filter-cat').addEventListener('change',render);
+document.getElementById('filter-cat').addEventListener('change',reloadAndRender);
 
 function goToday(){CUR_YEAR=TODAY.getFullYear();CUR_MONTH=TODAY.getMonth();render();}
 
