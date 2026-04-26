@@ -396,7 +396,13 @@ function renderPM(list){
       <td><span class="badge ${badge}">${label}</span></td>
       <td style="font-size:11px;color:${p.es_externo?'var(--ext)':'rgba(200,210,225,0.6)'}">${p.responsable||'—'}</td>
       ${accionCell}
-      <td><button onclick="crearOTdesdePM('${p.id}')" style="padding:4px 9px;border-radius:4px;border:0.5px solid rgba(33,150,243,0.3);background:rgba(33,150,243,0.08);color:#85B7EB;cursor:pointer;font-size:10px;font-family:var(--font)">📋 OT</button></td>
+      <td style="white-space:nowrap;display:flex;gap:4px;padding:8px 6px">
+        <button onclick="crearOTdesdePM('${p.id}')" style="padding:4px 9px;border-radius:4px;border:0.5px solid rgba(33,150,243,0.3);background:rgba(33,150,243,0.08);color:#85B7EB;cursor:pointer;font-size:10px;font-family:var(--font)">📋 OT</button>
+        ${canEdit?`
+        <button onclick="editarPM('${p.id}')" style="padding:4px 8px;border-radius:4px;border:0.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:rgba(200,210,225,0.7);cursor:pointer;font-size:10px;font-family:var(--font)">✎</button>
+        <button onclick="eliminarPM('${p.id}')" style="padding:4px 8px;border-radius:4px;border:0.5px solid rgba(226,75,74,0.25);background:rgba(226,75,74,0.07);color:#F09595;cursor:pointer;font-size:10px;font-family:var(--font)">✕</button>
+        `:''}
+      </td>
     </tr>`;
   }).join('');
 
@@ -613,6 +619,111 @@ function crearOTdesdePM(pmId){
     pm_id: p.id,
   }));
   window.location.href = 'qdc_ot.html';
+}
+
+
+// ── EDITAR RUTINA PM ──
+async function editarPM(id){
+  const p = PMS.find(x=>x.id===id);
+  if(!p) return;
+
+  // Load activos from Supabase
+  let activos = [];
+  try{
+    const{data} = await db.from('activos').select('nombre').order('nombre');
+    if(data&&data.length) activos = data.map(a=>a.nombre);
+  }catch(e){}
+  if(!activos.length) activos = ['Balanzas','Generador Vielco / ATS','Portones eléctricos','Vehículos de planta','Cerco eléctrico','Sistema agua potable','Iluminación interior','Sensores de movimiento','Cámaras de seguridad','Cierres magnéticos','Duchas de emergencia','Sistema de regadío','Climatización','Ventilación (extractores)','Sistema aguas servidas','Racks almacenamiento','Extintores','Sistema detección incendios','Tableros eléctricos','Luminarias','Máquinas de fabricación','Grúas horquillas'];
+  if(!activos.includes(p.activo||'')) activos.unshift(p.activo||'');
+  activos.push('Otro equipo');
+
+  const freqs = ['Quincenal','Mensual','Trimestral','Cuatrimestral','Semestral','Anual'];
+
+  document.getElementById('modal-inner').innerHTML = `
+    <div class="modal-header">
+      <div class="modal-title">Editar rutina PM</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nombre de la tarea *</label>
+      <input type="text" class="form-input" id="ep-nombre" value="${(p.nombre||'').replace(/"/g,'&quot;')}"/>
+    </div>
+    <div class="form-row" style="margin-bottom:12px">
+      <div class="form-group">
+        <label class="form-label">Activo *</label>
+        <select class="form-select" id="ep-activo">
+          ${activos.map(a=>`<option ${a===(p.activo||'')?'selected':''}>${a}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Frecuencia</label>
+        <select class="form-select" id="ep-freq">
+          ${freqs.map(f=>`<option ${f===(p.frecuencia||'')?'selected':''}>${f}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="form-row" style="margin-bottom:12px">
+      <div class="form-group">
+        <label class="form-label">Próxima fecha *</label>
+        <input type="date" class="form-input" id="ep-fecha" value="${p.proxima_fecha||''}"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Responsable</label>
+        <input type="text" class="form-input" id="ep-resp" value="${(p.responsable||'').replace(/"/g,'&quot;')}"/>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:14px">
+      <label class="form-label">Tipo</label>
+      <select class="form-select" id="ep-ext">
+        <option value="false" ${!p.es_externo?'selected':''}>Interno (Equipo QDC)</option>
+        <option value="true" ${p.es_externo?'selected':''}>Externo (Proveedor)</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" onclick="guardarEdicionPM('${id}')">Guardar cambios</button>
+    </div>`;
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+
+async function guardarEdicionPM(id){
+  const nombre = document.getElementById('ep-nombre').value.trim();
+  const fecha  = document.getElementById('ep-fecha').value;
+  if(!nombre||!fecha){ showToast('Nombre y fecha son obligatorios','rgba(226,75,74,0.4)'); return; }
+
+  const upd = {
+    nombre,
+    activo:       document.getElementById('ep-activo').value,
+    frecuencia:   document.getElementById('ep-freq').value,
+    proxima_fecha:fecha,
+    responsable:  document.getElementById('ep-resp').value.trim()||null,
+    es_externo:   document.getElementById('ep-ext').value==='true',
+  };
+  try{
+    const{error} = await db.from('plan_pm').update(upd).eq('id',id);
+    if(error) throw error;
+    // Update local
+    const idx = PMS.findIndex(x=>x.id===id);
+    if(idx>=0) PMS[idx] = {...PMS[idx],...upd};
+    showToast('✓ Rutina actualizada','rgba(99,153,34,0.4)');
+    closeModal();
+    updateStats();
+    applyFilters();
+  }catch(err){ showToast('✕ Error: '+err.message,'rgba(226,75,74,0.4)'); }
+}
+
+// ── ELIMINAR RUTINA PM ──
+async function eliminarPM(id){
+  const p = PMS.find(x=>x.id===id);
+  if(!confirm('¿Eliminar la rutina "'+( p?.nombre||id)+'"? Esta acción no se puede deshacer.')) return;
+  try{
+    const{error} = await db.from('plan_pm').delete().eq('id',id);
+    if(error) throw error;
+    PMS = PMS.filter(x=>x.id!==id);
+    showToast('Rutina eliminada','rgba(239,159,39,0.4)');
+    updateStats();
+    applyFilters();
+  }catch(err){ showToast('✕ Error: '+err.message,'rgba(226,75,74,0.4)'); }
 }
 
 let tT;
