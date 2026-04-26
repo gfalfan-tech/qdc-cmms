@@ -429,9 +429,8 @@ async function marcarHecho(id){
   const dias = freq[pm.frecuencia] || 30;
   const nueva = new Date();
   nueva.setDate(nueva.getDate() + dias);
-  // Ensure next date is weekday
-  while(nueva.getDay()===0||nueva.getDay()===6) nueva.setDate(nueva.getDate()+1);
-  const nuevaFecha = nueva.toISOString().split('T')[0];
+  // Smart scheduler for next occurrence
+  const nuevaFecha = findAvailableDate(nueva, 2);
   try{
     const { error } = await db.from('plan_pm').update({ proxima_fecha: nuevaFecha, estado: 'ok' }).eq('id', id);
     if(error) throw error;
@@ -577,23 +576,26 @@ async function openNuevoPM(){
 }
 
 function autoSetFecha(freq){
-  const hoy = new Date();
   const FREQ_DIAS = {
     'Quincenal':15,'Mensual':30,'Trimestral':90,
     'Cuatrimestral':120,'Semestral':180,'Anual':365
   };
   const dias = FREQ_DIAS[freq] || 30;
-  hoy.setDate(hoy.getDate() + dias);
-  // Skip weekends
-  while(hoy.getDay()===0||hoy.getDay()===6) hoy.setDate(hoy.getDate()+1);
-  const fechaStr = hoy.toISOString().split('T')[0];
+  const base = new Date();
+  base.setDate(base.getDate() + dias);
+
+  // Use smart scheduler — respects max 2 per week
+  const fechaStr = findAvailableDate(base, 2);
+  const dObj = new Date(fechaStr + 'T12:00:00');
+
   const input = document.getElementById('np-fecha');
   if(input){
     input.value = fechaStr;
     const hint = document.getElementById('np-fecha-hint');
-    const dias_label = FREQ_DIAS[freq];
-    const dow = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'][hoy.getDay()];
-    if(hint) hint.textContent = `Auto-calculada: ${dias_label} días desde hoy → ${dow} ${hoy.toLocaleDateString('es-CL',{day:'numeric',month:'long',year:'numeric'})}`;
+    const semActividades = countActivitiesInWeek(fechaStr);
+    const dow = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'][dObj.getDay()];
+    const fechaLabel = dObj.toLocaleDateString('es-CL',{day:'numeric',month:'long',year:'numeric'});
+    if(hint) hint.textContent = `✓ Auto-calculada: ${dias} días → ${dow} ${fechaLabel} (${semActividades+1}/2 en esa semana)`;
   }
 }
 
@@ -622,9 +624,10 @@ async function guardarPM(){
   const nombre = document.getElementById('np-nombre').value.trim();
   const fecha  = document.getElementById('np-fecha').value;
   if(!nombre || !fecha){ showToast('Nombre y fecha son obligatorios', 'rgba(226,75,74,0.4)'); return; }
-  // Enforce weekday — skip weekends
-  const fechaFinal = nextWeekday(new Date(fecha + 'T12:00:00'));
+  // Smart scheduler: enforce weekday + max 2 per week
   const freq = document.getElementById('np-freq').value;
+  const baseDate = new Date(fecha + 'T12:00:00');
+  const fechaFinal = findAvailableDate(baseDate, 2);
 
   const nuevo = {
     nombre,
@@ -781,30 +784,50 @@ async function eliminarPM(id){
 }
 
 
-// ── UTILIDADES DE FECHA ──
+// ── UTILIDADES DE FECHA Y PLANIFICACIÓN ──
 function nextWeekday(d){
-  // Avanza al siguiente lunes-viernes si cae en fin de semana
   const date = new Date(d);
   while(date.getDay()===0||date.getDay()===6) date.setDate(date.getDate()+1);
   return date.toISOString().split('T')[0];
 }
 
-function calcProximaFecha(desde, frecuencia){
-  // Calcula la próxima fecha según frecuencia, respetando L-V
-  const FREQ_DIAS = {
-    'Quincenal':15, 'Mensual':30, 'Trimestral':90,
-    'Cuatrimestral':120, 'Semestral':180, 'Anual':365
-  };
-  const dias = FREQ_DIAS[frecuencia] || 30;
-  const base = new Date(desde);
-  base.setDate(base.getDate() + dias);
-  return nextWeekday(base);
+function getWeekKey(fechaStr){
+  // Retorna 'YYYY-WW' para agrupar por semana ISO
+  const d = new Date(fechaStr);
+  const jan1 = new Date(d.getFullYear(),0,1);
+  const week = Math.ceil(((d-jan1)/86400000+jan1.getDay()+1)/7);
+  return d.getFullYear()+'-'+String(week).padStart(2,'0');
+}
+
+function countActivitiesInWeek(fechaStr){
+  // Cuenta cuántas rutinas PM ya tienen fecha en la misma semana
+  const wk = getWeekKey(fechaStr);
+  return PMS.filter(p => p.proxima_fecha && getWeekKey(p.proxima_fecha)===wk).length;
+}
+
+function findAvailableDate(baseDate, maxPerWeek=2){
+  // Desde baseDate, busca el próximo día hábil donde la semana
+  // no supere maxPerWeek actividades ya programadas
+  let d = new Date(baseDate);
+  // Ensure weekday
+  while(d.getDay()===0||d.getDay()===6) d.setDate(d.getDate()+1);
+  let attempts = 0;
+  while(attempts < 60){
+    const dStr = d.toISOString().split('T')[0];
+    if(countActivitiesInWeek(dStr) < maxPerWeek) return dStr;
+    // Week is full, jump to next Monday
+    const dow = d.getDay(); // 1=Mon...5=Fri
+    const daysToNextMon = 8 - dow; // jump to following Monday
+    d.setDate(d.getDate() + daysToNextMon);
+    attempts++;
+  }
+  return d.toISOString().split('T')[0];
 }
 
 function isWeekend(fechaStr){
   if(!fechaStr) return false;
   const d = new Date(fechaStr);
-  return d.getDay()===0 || d.getDay()===6;
+  return d.getDay()===0||d.getDay()===6;
 }
 
 let tT;
