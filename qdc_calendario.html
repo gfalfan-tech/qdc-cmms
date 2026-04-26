@@ -232,10 +232,98 @@ function calcEst(fecha){
   return diff<0?'overdue':diff<=14?'soon':'prog';
 }
 
+// ── FRECUENCIA → DÍAS ──
+const FREQ_DIAS = {
+  'Quincenal':15,'Mensual':30,'Trimestral':90,
+  'Cuatrimestral':120,'Semestral':180,'Anual':365
+};
+
+function nextWeekday(d){
+  const nd = new Date(d);
+  while(nd.getDay()===0||nd.getDay()===6) nd.setDate(nd.getDate()+1);
+  return nd;
+}
+
+function getWeekKey(d){
+  const jan1 = new Date(d.getFullYear(),0,1);
+  const wk = Math.ceil(((d-jan1)/86400000+jan1.getDay()+1)/7);
+  return d.getFullYear()*100+wk;
+}
+
+// ── GENERAR TODAS LAS OCURRENCIAS (5 años) ──
+// weekMap: {weekKey: count} — shared across all PMs for a given render
+function generateOccurrences(pm, weekMap, horizonYears=5){
+  const occurrences = [];
+  if(!pm.proxima_fecha) return occurrences;
+
+  const diasFreq = FREQ_DIAS[pm.frecuencia] || 30;
+  const horizonEnd = new Date(TODAY);
+  horizonEnd.setFullYear(horizonEnd.getFullYear() + horizonYears);
+
+  // Start from proxima_fecha
+  let current = new Date(pm.proxima_fecha + 'T12:00:00');
+
+  let iterations = 0;
+  while(current <= horizonEnd && iterations < 200){
+    iterations++;
+    // Ensure weekday
+    current = nextWeekday(current);
+    if(current > horizonEnd) break;
+
+    // Check week load — max 2 per week
+    const wk = getWeekKey(current);
+    const weekLoad = weekMap[wk] || 0;
+    if(weekLoad >= 2){
+      // Skip to next Monday
+      const dow = current.getDay();
+      const daysToMon = dow===0?1:(8-dow);
+      current = new Date(current);
+      current.setDate(current.getDate() + daysToMon);
+      current = nextWeekday(current);
+      // Don't advance frequency counter — retry same occurrence in next available week
+      continue;
+    }
+
+    // Assign this slot
+    weekMap[wk] = weekLoad + 1;
+    const dateStr = current.toISOString().split('T')[0];
+    occurrences.push({...pm, _occ_date: dateStr, _is_repeat: iterations > 1});
+
+    // Advance by frequency
+    current = new Date(current);
+    current.setDate(current.getDate() + diasFreq);
+  }
+  return occurrences;
+}
+
+// ── BUILD FULL EVENT MAP FOR A YEAR/MONTH ──
+let _evMapCache = null;
+let _evMapYear  = null;
+
+function buildEvMap(){
+  // Rebuild only when PMS changes or year changes
+  const filtered = getFilteredPMs();
+  const weekMap = {};
+  const evMap = {};
+
+  // Sort PMs by proxima_fecha so earlier ones get priority in week slots
+  const sorted = [...filtered].sort((a,b)=>(a.proxima_fecha||'').localeCompare(b.proxima_fecha||''));
+
+  sorted.forEach(p=>{
+    const occs = generateOccurrences(p, weekMap, 5);
+    occs.forEach(occ=>{
+      const d = occ._occ_date;
+      if(!evMap[d]) evMap[d] = [];
+      evMap[d].push(occ);
+    });
+  });
+
+  return evMap;
+}
+
 function getFilteredPMs(){
   const cat=document.getElementById('filter-cat')?.value||'';
-  if(!cat)return PMS;
-  // Simple category mapping
+  if(!cat) return PMS;
   const CAT={
     'Medicion y Control':['Balanzas','Sensores'],
     'Energia e Instalaciones':['Generador','Tablero','Iluminaci','agua potable','aguas servidas','regadio','Luminaria'],
@@ -281,15 +369,8 @@ function renderMonth(){
   document.getElementById('cal-month-name').textContent=MESES[CUR_MONTH];
   document.getElementById('cal-year-name').textContent=' '+CUR_YEAR;
 
-  const filtered=getFilteredPMs();
-  // Build date->events map
-  const evMap={};
-  filtered.forEach(p=>{
-    if(!p.proxima_fecha)return;
-    const d=p.proxima_fecha.substring(0,10);
-    if(!evMap[d])evMap[d]=[];
-    evMap[d].push(p);
-  });
+  // Build full 5-year event map with recurrences
+  const evMap = buildEvMap();
 
   // Calendar grid
   const firstDay=new Date(CUR_YEAR,CUR_MONTH,1);
@@ -344,14 +425,7 @@ function renderYear(){
   document.getElementById('cal-month-name').textContent='Año';
   document.getElementById('cal-year-name').textContent=' '+CUR_YEAR;
 
-  const filtered=getFilteredPMs();
-  const evMap={};
-  filtered.forEach(p=>{
-    if(!p.proxima_fecha)return;
-    const d=p.proxima_fecha.substring(0,10);
-    if(!evMap[d])evMap[d]=[];
-    evMap[d].push(p);
-  });
+  const evMap = buildEvMap();
 
   let html='<div class="year-grid">';
   for(let m=0;m<12;m++){
@@ -385,9 +459,10 @@ function renderYear(){
 
 // ── DAY DETAIL ──
 function showDetail(dateStr){
-  const filtered=getFilteredPMs();
-  const events=filtered.filter(p=>p.proxima_fecha?.startsWith(dateStr));
-  if(!events.length)return;
+  const evMap = buildEvMap();
+  const events = evMap[dateStr] || [];
+  if(!events.length) return;
+  const _ = null; // suppress unused var
 
   const d=new Date(dateStr+'T12:00:00');
   const dateLabel=d.toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
