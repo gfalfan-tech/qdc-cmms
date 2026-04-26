@@ -152,6 +152,7 @@ tr.ext-row td{border-left:2px solid rgba(29,158,117,0.4);}
       <a class="nav-item active" href="qdc_ot.html"><span class="nav-icon">📋</span><span class="nav-label">Órdenes de trabajo</span></a>
       <div class="nav-sec">Mantenimiento</div>
       <a class="nav-item" href="qdc_pm.html"><span class="nav-icon">🔄</span><span class="nav-label">Plan preventivo</span></a>
+      <a class="nav-item" href="qdc_calendario.html"><span class="nav-icon">📅</span><span class="nav-label">Calendario</span></a>
       <a class="nav-item" href="qdc_responsables.html"><span class="nav-icon">👥</span><span class="nav-label">Responsables</span></a>
       <a class="nav-item" href="qdc_contratistas.html"><span class="nav-icon">🏢</span><span class="nav-label">Contratistas</span></a>
       <div class="nav-sec">Recursos</div>
@@ -346,6 +347,7 @@ function init(){
   loadOTs();
   loadActivosForSearch();
   loadResponsables();
+  checkPrefill();
 }
 
 function buildSidebar(){
@@ -609,7 +611,17 @@ async function handleFileUpload(event, otId, tipo){
     const publicUrl = urlData.publicUrl;
 
     // Guardar URL en la OT
-    const campo = tipo==='pdf' ? 'pdf_url' : 'foto_url';
+    let campo = 'pdf_url';
+    if(tipo==='imagen'){
+      // Find next available image slot
+      const ot = OTS_DATA.find(o=>o.id===otId);
+      if(!ot?.imagen1_url) campo='imagen1_url';
+      else if(!ot?.imagen2_url) campo='imagen2_url';
+      else if(!ot?.imagen3_url) campo='imagen3_url';
+      else { showToast('Máximo 3 imágenes por OT','rgba(239,159,39,0.4)'); return; }
+    } else if(tipo==='foto'){
+      campo='foto_url';
+    }
     const {error: updateError} = await db.from('ots')
       .update({[campo]: publicUrl})
       .eq('id', otId);
@@ -750,6 +762,25 @@ function verOT(id){
     </div>
 
     ${pdfSection}
+
+    <!-- IMÁGENES DE EVIDENCIA -->
+    <div style="margin-bottom:12px">
+      <div style="font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);margin-bottom:8px">
+        Fotografías de evidencia
+        <span style="font-weight:400;text-transform:none;font-size:10px;color:rgba(131,131,139,0.35)"> — opcional</span>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap" id="img-gallery-${o.id}">
+        ${o.imagen1_url?`<div style="position:relative"><img src="${o.imagen1_url}" style="width:80px;height:80px;object-fit:cover;border-radius:6px;border:0.5px solid rgba(255,255,255,0.1);cursor:pointer" onclick="window.open('${o.imagen1_url}','_blank')" title="Ver imagen"/></div>`:''}
+        ${o.imagen2_url?`<div style="position:relative"><img src="${o.imagen2_url}" style="width:80px;height:80px;object-fit:cover;border-radius:6px;border:0.5px solid rgba(255,255,255,0.1);cursor:pointer" onclick="window.open('${o.imagen2_url}','_blank')" title="Ver imagen"/></div>`:''}
+        ${o.imagen3_url?`<div style="position:relative"><img src="${o.imagen3_url}" style="width:80px;height:80px;object-fit:cover;border-radius:6px;border:0.5px solid rgba(255,255,255,0.1);cursor:pointer" onclick="window.open('${o.imagen3_url}','_blank')" title="Ver imagen"/></div>`:''}
+        ${(!o.imagen1_url||!o.imagen2_url||!o.imagen3_url)?`
+        <div onclick="document.getElementById('img-input-${o.id}').click()" style="width:80px;height:80px;border:2px dashed rgba(255,255,255,0.15);border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .1s;color:rgba(131,131,139,0.5)" onmouseover="this.style.borderColor='rgba(33,150,243,0.4)';this.style.color='#85B7EB'" onmouseout="this.style.borderColor='rgba(255,255,255,0.15)';this.style.color='rgba(131,131,139,0.5)'">
+          <div style="font-size:22px">📷</div>
+          <div style="font-size:9px;margin-top:3px;text-align:center">Agregar foto</div>
+          <input type="file" id="img-input-${o.id}" accept="image/jpeg,image/jpg,image/png,image/webp" style="display:none" onchange="handleFileUpload(event,'${o.id}','imagen')"/>
+        </div>`:''}
+      </div>
+    </div>
 
     ${canModify?`
     <div style="border-top:1px solid rgba(255,255,255,0.07);padding-top:12px;margin-bottom:12px">
@@ -1182,6 +1213,36 @@ ${o.observaciones?`
 </html>`);
   win.document.close();
   win.focus();
+}
+
+
+// ── PREFILL DESDE PM O CALENDARIO ──
+function checkPrefill(){
+  const pre = localStorage.getItem('qdc_ot_prefill');
+  if(!pre) return;
+  try{
+    const data = JSON.parse(pre);
+    localStorage.removeItem('qdc_ot_prefill');
+    // Expand optional fields
+    const opts = document.getElementById('opt-fields');
+    const tog  = document.getElementById('opt-toggle');
+    if(opts){ opts.style.display='block'; }
+    if(tog){ tog.style.display='none'; }
+    // Fill fields
+    setTimeout(()=>{
+      const descEl = document.getElementById('q-desc');
+      const activoEl = document.getElementById('q-activo');
+      const respEl  = document.getElementById('q-resp');
+      const tipoEl  = document.getElementById('q-tipo');
+      if(descEl)  descEl.value  = data.desc||'';
+      if(activoEl)activoEl.value= data.activo||'';
+      if(respEl)  respEl.value  = data.responsable||'';
+      if(tipoEl)  tipoEl.value  = data.tipo||'Preventivo';
+      // Scroll to form
+      document.getElementById('quick-form')?.scrollIntoView({behavior:'smooth'});
+      showToast('📋 Datos precargados desde PM — revisa y registra la OT', 'rgba(127,119,221,0.4)');
+    }, 500);
+  }catch(e){}
 }
 
 let _tT;

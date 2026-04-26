@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>QDC CMMS — Calendario de Mantenciones</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--navy:#08223D;--mid:#0B2545;--accent:#2196F3;--white:#EEF4FF;--ok:#97C459;--warn:#EF9F27;--crit:#E24B4A;--ext:#5DCAA5;--pm:#7F77DD;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.10);--font:'Barlow',sans-serif;--head:'Barlow Condensed',sans-serif;}
+body{font-family:var(--font);background:#050F1C;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;}
+.shell{display:flex;width:100%;max-width:1300px;height:920px;background:var(--mid);border-radius:12px;overflow:hidden;border:1px solid var(--border2);}
+.sidebar{width:210px;flex-shrink:0;background:var(--navy);display:flex;flex-direction:column;border-right:1px solid var(--border);}
+.sb-logo{padding:16px 14px 12px;border-bottom:1px solid var(--border);}
+.sb-logo-mark{font-family:var(--head);font-size:15px;font-weight:700;color:var(--white);letter-spacing:1px;}
+.sb-logo-sub{font-size:9px;color:rgba(131,131,139,0.6);margin-top:2px;}
+.sb-logo-line{width:20px;height:2px;background:var(--pm);margin-top:5px;}
+.sb-nav{flex:1;overflow-y:auto;padding:6px 0;}
+.nav-sec{padding:10px 14px 3px;font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(131,131,139,0.4);}
+.nav-item{display:flex;align-items:center;gap:8px;padding:8px 14px;cursor:pointer;border-left:2px solid transparent;text-decoration:none;transition:background .1s;}
+.nav-item:hover{background:rgba(255,255,255,0.04);}
+.nav-item.active{background:rgba(127,119,221,0.1);border-left-color:var(--pm);}
+.nav-icon{font-size:13px;width:16px;text-align:center;flex-shrink:0;}
+.nav-label{font-size:12px;color:rgba(200,210,225,0.7);flex:1;}
+.nav-item.active .nav-label{color:var(--white);font-weight:500;}
+.sb-user{padding:10px 12px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+.u-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;}
+.u-name{font-size:11px;color:var(--white);font-weight:500;}
+.u-role{font-size:9px;color:rgba(131,131,139,0.6);}
+.u-logout{margin-left:auto;background:none;border:none;color:rgba(131,131,139,0.4);cursor:pointer;font-size:11px;}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.topbar{height:50px;background:var(--mid);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0;}
+.page-title{font-family:var(--head);font-size:16px;font-weight:600;color:var(--white);flex:1;}
+.tb-btn{padding:6px 13px;border-radius:5px;border:none;font-size:12px;font-weight:500;cursor:pointer;font-family:var(--font);}
+.btn-g{background:rgba(255,255,255,0.06);color:rgba(200,210,225,0.8);border:0.5px solid rgba(255,255,255,0.1);}
+.btn-p{background:var(--accent);color:#fff;}
+/* CALENDAR CONTROLS */
+.cal-controls{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);flex-shrink:0;background:rgba(255,255,255,0.02);}
+.cal-nav{width:32px;height:32px;border-radius:6px;border:0.5px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:rgba(200,210,225,0.8);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .1s;}
+.cal-nav:hover{background:rgba(255,255,255,0.12);}
+.cal-month{font-family:var(--head);font-size:18px;font-weight:600;color:var(--white);min-width:200px;text-align:center;}
+.cal-year{font-size:14px;color:rgba(131,131,139,0.5);margin-left:4px;}
+.view-toggle{display:flex;gap:4px;margin-left:auto;}
+.vt-btn{padding:5px 12px;border-radius:5px;border:0.5px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:rgba(200,210,225,0.5);font-size:11px;cursor:pointer;font-family:var(--font);transition:all .1s;}
+.vt-btn.on{background:rgba(127,119,221,0.15);border-color:var(--pm);color:#AFA9EC;}
+/* LEGEND */
+.legend{display:flex;align-items:center;gap:14px;padding:8px 16px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.leg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:rgba(200,210,225,0.6);}
+.leg-dot{width:10px;height:10px;border-radius:2px;}
+/* CALENDAR GRID */
+.cal-wrap{flex:1;overflow-y:auto;padding:12px 16px;}
+.cal-wrap::-webkit-scrollbar{width:3px;}
+.cal-wrap::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);}
+/* MONTH GRID VIEW */
+.month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+.day-header{text-align:center;font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.4);padding:6px 0;margin-bottom:2px;}
+.day-cell{min-height:90px;border-radius:6px;border:0.5px solid rgba(255,255,255,0.05);background:rgba(255,255,255,0.02);padding:6px;cursor:default;position:relative;transition:background .1s;}
+.day-cell:hover{background:rgba(255,255,255,0.05);}
+.day-cell.today{border-color:rgba(127,119,221,0.4);background:rgba(127,119,221,0.05);}
+.day-cell.other-month{opacity:0.3;}
+.day-cell.has-events{cursor:pointer;}
+.day-num{font-size:12px;font-weight:600;color:rgba(200,210,225,0.7);margin-bottom:4px;}
+.day-cell.today .day-num{color:var(--pm);font-size:13px;}
+.pm-chip{font-size:9px;padding:2px 6px;border-radius:3px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;transition:opacity .1s;}
+.pm-chip:hover{opacity:0.8;}
+.pm-chip.overdue{background:rgba(226,75,74,0.2);color:#F09595;border-left:2px solid var(--crit);}
+.pm-chip.soon{background:rgba(239,159,39,0.15);color:#FAC775;border-left:2px solid var(--warn);}
+.pm-chip.prog{background:rgba(127,119,221,0.12);color:#AFA9EC;border-left:2px solid var(--pm);}
+.pm-chip.ext{background:rgba(93,202,165,0.1);color:var(--ext);border-left:2px solid var(--ext);}
+.more-chip{font-size:9px;color:rgba(131,131,139,0.5);padding:1px 4px;cursor:pointer;}
+.more-chip:hover{color:var(--white);}
+/* YEAR VIEW */
+.year-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.mini-month{background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:12px;cursor:pointer;transition:background .1s;}
+.mini-month:hover{background:rgba(255,255,255,0.06);}
+.mini-month-title{font-family:var(--head);font-size:13px;font-weight:600;color:var(--white);margin-bottom:8px;}
+.mini-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+.mini-day{width:100%;aspect-ratio:1;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:8px;color:rgba(131,131,139,0.4);position:relative;}
+.mini-day.has-pm{background:rgba(127,119,221,0.2);color:#AFA9EC;font-weight:600;}
+.mini-day.today{background:var(--pm);color:#fff;border-radius:50%;}
+.mini-day.overdue{background:rgba(226,75,74,0.25);color:#F09595;}
+/* DETAIL PANEL */
+.detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;display:flex;align-items:center;justify-content:center;}
+.detail-overlay.hidden{display:none;}
+.detail-card{background:#0D2D48;border:0.5px solid rgba(127,119,221,0.3);border-radius:10px;width:460px;max-height:80vh;overflow-y:auto;padding:22px;}
+.detail-date{font-family:var(--head);font-size:20px;font-weight:700;color:var(--white);margin-bottom:14px;}
+.pm-detail-item{display:flex;gap:10px;padding:10px 12px;border-radius:7px;background:rgba(255,255,255,0.04);margin-bottom:6px;border-left:3px solid;}
+.loading{display:flex;align-items:center;justify-content:center;height:200px;gap:12px;color:rgba(131,131,139,0.5);}
+.spinner{width:20px;height:20px;border:2px solid rgba(255,255,255,0.1);border-top-color:var(--pm);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+#toast{position:fixed;bottom:24px;right:24px;background:#0D2D48;border:1px solid rgba(127,119,221,0.3);border-radius:8px;padding:12px 16px;font-size:12px;color:var(--white);z-index:999;transform:translateY(60px);opacity:0;transition:all .3s;pointer-events:none;}
+#toast.show{transform:translateY(0);opacity:1;}
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav class="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-mark">QDC · CMMS Pro</div>
+      <div class="sb-logo-sub">Química del Campo S.p.A</div>
+      <div class="sb-logo-line"></div>
+    </div>
+    <div class="sb-nav">
+      <div class="nav-sec">Principal</div>
+      <a class="nav-item" href="qdc_dashboard.html"><span class="nav-icon">▦</span><span class="nav-label">Dashboard</span></a>
+      <a class="nav-item" href="qdc_ot.html"><span class="nav-icon">📋</span><span class="nav-label">Órdenes de trabajo</span></a>
+      <div class="nav-sec">Mantenimiento</div>
+      <a class="nav-item" href="qdc_pm.html"><span class="nav-icon">🔄</span><span class="nav-label">Plan preventivo</span></a>
+      <a class="nav-item active" href="qdc_calendario.html"><span class="nav-icon">📅</span><span class="nav-label">Calendario</span></a>
+      <a class="nav-item" href="qdc_responsables.html"><span class="nav-icon">👥</span><span class="nav-label">Responsables</span></a>
+      <div class="nav-sec">Recursos</div>
+      <a class="nav-item" href="qdc_activos.html"><span class="nav-icon">🏭</span><span class="nav-label">Activos y equipos</span></a>
+      <a class="nav-item" href="qdc_inventario.html"><span class="nav-icon">📦</span><span class="nav-label">Inventario</span></a>
+      <div class="nav-sec">Operaciones</div>
+      <a class="nav-item" href="qdc_embalajes.html"><span class="nav-icon">📫</span><span class="nav-label">Embalajes</span></a>
+      <div class="nav-sec">Análisis</div>
+      <a class="nav-item" href="qdc_kpis.html"><span class="nav-icon">📊</span><span class="nav-label">KPIs y reportes</span></a>
+      <div class="nav-sec">Sistema</div>
+      <a class="nav-item" href="qdc_alertas.html"><span class="nav-icon">🔔</span><span class="nav-label">Alertas</span></a>
+      <a class="nav-item" id="nav-usuarios" href="qdc_usuarios.html" style="display:none"><span class="nav-icon">🔑</span><span class="nav-label">Gestión usuarios</span></a>
+      <a class="nav-item" id="nav-config" href="qdc_config.html" style="display:none"><span class="nav-icon">⚙️</span><span class="nav-label">Configuración</span></a>
+    </div>
+    <div class="sb-user" id="sb-user"></div>
+  </nav>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="page-title">📅 Calendario de Mantenciones</div>
+      <button class="tb-btn btn-g" onclick="goToday()">Hoy</button>
+      <a href="qdc_pm.html" class="tb-btn btn-p" style="text-decoration:none">Ver Plan PM</a>
+    </div>
+    <div class="cal-controls">
+      <button class="cal-nav" onclick="prevMonth()">‹</button>
+      <div class="cal-month"><span id="cal-month-name">—</span><span class="cal-year" id="cal-year-name"></span></div>
+      <button class="cal-nav" onclick="nextMonth()">›</button>
+      <div class="view-toggle">
+        <button class="vt-btn on" id="vt-mes" onclick="setView('mes',this)">Mes</button>
+        <button class="vt-btn" id="vt-año" onclick="setView('año',this)">Año</button>
+      </div>
+      <select id="filter-cat" style="background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.1);border-radius:5px;color:rgba(200,210,225,0.7);font-size:11px;font-family:var(--font);padding:5px 10px;outline:none;cursor:pointer">
+        <option value="">Todas las categorías</option>
+        <option value="Medicion y Control">Medición y Control</option>
+        <option value="Energia e Instalaciones">Energía e Instalaciones</option>
+        <option value="Seguridad">Seguridad</option>
+        <option value="HVAC y Clima">HVAC y Clima</option>
+        <option value="Transporte y Almacenamiento">Transporte y Almacenamiento</option>
+        <option value="Produccion">Producción</option>
+        <option value="Infraestructura">Infraestructura</option>
+      </select>
+    </div>
+    <div class="legend">
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4)">Referencias:</span>
+      <div class="leg-item"><div class="leg-dot" style="background:rgba(226,75,74,0.4)"></div>Vencida</div>
+      <div class="leg-item"><div class="leg-dot" style="background:rgba(239,159,39,0.4)"></div>Próxima (≤14 días)</div>
+      <div class="leg-item"><div class="leg-dot" style="background:rgba(127,119,221,0.4)"></div>Programada</div>
+      <div class="leg-item"><div class="leg-dot" style="background:rgba(93,202,165,0.4)"></div>Externa</div>
+      <span style="margin-left:auto;font-size:11px;color:rgba(131,131,139,0.4)" id="cal-count">—</span>
+    </div>
+    <div class="cal-wrap" id="cal-wrap">
+      <div class="loading"><div class="spinner"></div><span>Cargando calendario…</span></div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<div class="detail-overlay hidden" id="detail-overlay">
+  <div class="detail-card" id="detail-card"></div>
+</div>
+
+<script>
+const SB_URL='https://aaugeuydymhwlcpklbmt.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhdWdldXlkeW1od2xjcGtsYm10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2NTg5MzksImV4cCI6MjA5MjIzNDkzOX0.Q2GeJKuf7l51Hsv3hUEeaO0NHaFeWXLIBrRUPgkQ0gw';
+let db,USER,PMS=[],VIEW='mes';
+const TODAY=new Date(); TODAY.setHours(0,0,0,0);
+let CUR_YEAR=TODAY.getFullYear(), CUR_MONTH=TODAY.getMonth();
+
+const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DIAS=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+
+(function(){
+  const s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+  s.onload=init;document.head.appendChild(s);
+})();
+
+function ini(e){const p=(e||'').split('@')[0].split(/[._-]/);return p.slice(0,2).map(x=>x[0]?.toUpperCase()||'').join('')||'QD';}
+function init(){
+  db=window.supabase.createClient(SB_URL,SB_KEY);
+  USER=JSON.parse(localStorage.getItem('qdc_user')||'{}');
+  if(!USER.rol){window.location.href='index.html';return;}
+  buildSidebar();
+  if(USER.rol==='g'||USER.rol==='s'){
+    document.getElementById('nav-config').style.display='flex';
+    document.getElementById('nav-usuarios').style.display='flex';
+  }
+  loadPMs();
+}
+function buildSidebar(){
+  const C={t:'#185FA5',s:'#854F0B',g:'#27500A'},T={t:'#B5D4F4',s:'#FAC775',g:'#C0DD97'},R={t:'Técnico',s:'Supervisor',g:'Gerente'};
+  document.getElementById('sb-user').innerHTML=`<div class="u-av" style="background:${C[USER.rol]};color:${T[USER.rol]}">${ini(USER.email||USER.nombre)}</div><div style="min-width:0;flex:1"><div class="u-name">${USER.nombre||USER.email}</div><div class="u-role">${R[USER.rol]||''}</div></div><button class="u-logout" onclick="doLogout()">⏏</button>`;
+}
+function doLogout(){localStorage.removeItem('qdc_user');window.location.href='index.html';}
+
+async function loadPMs(){
+  try{
+    const{data,error}=await db.from('plan_pm').select('*').order('proxima_fecha');
+    if(error)throw error;
+    PMS=data||[];
+  }catch(e){ PMS=getDemoPMs(); showToast('Mostrando datos demo'); }
+  document.getElementById('cal-count').textContent=PMS.length+' rutinas PM';
+  render();
+}
+
+function getDemoPMs(){
+  const y=CUR_YEAR;
+  return[
+    {id:'p1',nombre:'Inspección Balanzas',activo:'Balanzas',frecuencia:'Quincenal',proxima_fecha:`${y}-05-04`,responsable:'Equipo Interno',es_externo:false},
+    {id:'p2',nombre:'Mantención Generador Vielco',activo:'Generador Vielco / ATS',frecuencia:'Mensual',proxima_fecha:`${y}-05-04`,responsable:'Proveedor Externo',es_externo:true},
+    {id:'p3',nombre:'Inspección Portones eléctricos',activo:'Portones eléctricos',frecuencia:'Trimestral',proxima_fecha:`${y}-05-11`,responsable:'Equipo Interno',es_externo:false},
+    {id:'p4',nombre:'Cerco eléctrico',activo:'Cerco eléctrico',frecuencia:'Cuatrimestral',proxima_fecha:`${y}-06-09`,responsable:'Proveedor Externo',es_externo:true},
+    {id:'p5',nombre:'Sistema agua potable',activo:'Sistema agua potable',frecuencia:'Semestral',proxima_fecha:`${y}-08-10`,responsable:'Equipo Interno',es_externo:false},
+    {id:'p6',nombre:'Revisión Cámaras seguridad',activo:'Cámaras de seguridad',frecuencia:'Semestral',proxima_fecha:`${y}-08-10`,responsable:'Soporte Externo',es_externo:true},
+    {id:'p7',nombre:'Mantención Climatización',activo:'Climatización',frecuencia:'Anual',proxima_fecha:`${y+1}-02-09`,responsable:'Proveedor Externo',es_externo:true},
+    {id:'p8',nombre:'Recarga Extintores',activo:'Extintores',frecuencia:'Anual',proxima_fecha:`${y+1}-02-09`,responsable:'Proveedor Externo',es_externo:true},
+  ];
+}
+
+function calcEst(fecha){
+  if(!fecha)return'prog';
+  const d=new Date(fecha),h=new Date(TODAY);
+  const diff=Math.floor((d-h)/86400000);
+  return diff<0?'overdue':diff<=14?'soon':'prog';
+}
+
+function getFilteredPMs(){
+  const cat=document.getElementById('filter-cat')?.value||'';
+  if(!cat)return PMS;
+  // Simple category mapping
+  const CAT={
+    'Medicion y Control':['Balanzas','Sensores'],
+    'Energia e Instalaciones':['Generador','Tablero','Iluminaci','agua potable','aguas servidas','regadio','Luminaria'],
+    'Seguridad':['Cerco','Camara','Cierre','Ducha','Extintor','incendio','Porton'],
+    'HVAC y Clima':['Climatizaci','Ventilaci'],
+    'Transporte y Almacenamiento':['Vehiculo','Grua','Rack'],
+    'Produccion':['Maquina'],
+    'Infraestructura':['Rack'],
+  };
+  const keys=CAT[cat]||[];
+  return PMS.filter(p=>keys.some(k=>(p.activo||'').toLowerCase().includes(k.toLowerCase())));
+}
+
+// ── VIEWS ──
+function setView(v,el){
+  VIEW=v;
+  document.querySelectorAll('.vt-btn').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+  render();
+}
+
+function render(){
+  if(VIEW==='mes')renderMonth();
+  else renderYear();
+}
+
+function prevMonth(){
+  if(VIEW==='año'){CUR_YEAR--;render();return;}
+  CUR_MONTH--;if(CUR_MONTH<0){CUR_MONTH=11;CUR_YEAR--;}
+  render();
+}
+function nextMonth(){
+  if(VIEW==='año'){CUR_YEAR++;render();return;}
+  CUR_MONTH++;if(CUR_MONTH>11){CUR_MONTH=0;CUR_YEAR++;}
+  render();
+}
+function goToday(){
+  CUR_YEAR=TODAY.getFullYear();CUR_MONTH=TODAY.getMonth();render();
+}
+
+// ── MONTH VIEW ──
+function renderMonth(){
+  document.getElementById('cal-month-name').textContent=MESES[CUR_MONTH];
+  document.getElementById('cal-year-name').textContent=' '+CUR_YEAR;
+
+  const filtered=getFilteredPMs();
+  // Build date->events map
+  const evMap={};
+  filtered.forEach(p=>{
+    if(!p.proxima_fecha)return;
+    const d=p.proxima_fecha.substring(0,10);
+    if(!evMap[d])evMap[d]=[];
+    evMap[d].push(p);
+  });
+
+  // Calendar grid
+  const firstDay=new Date(CUR_YEAR,CUR_MONTH,1);
+  const lastDay=new Date(CUR_YEAR,CUR_MONTH+1,0);
+  const startDow=firstDay.getDay();
+
+  let html=`<div class="month-grid">`;
+  DIAS.forEach(d=>html+=`<div class="day-header">${d}</div>`);
+
+  // Empty cells before
+  for(let i=0;i<startDow;i++){
+    const prevDate=new Date(CUR_YEAR,CUR_MONTH,-(startDow-i-1));
+    html+=`<div class="day-cell other-month"><div class="day-num">${prevDate.getDate()}</div></div>`;
+  }
+
+  // Days of month
+  for(let d=1;d<=lastDay.getDate();d++){
+    const dateStr=`${CUR_YEAR}-${String(CUR_MONTH+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const events=evMap[dateStr]||[];
+    const isToday=TODAY.getFullYear()===CUR_YEAR&&TODAY.getMonth()===CUR_MONTH&&TODAY.getDate()===d;
+    const hasEv=events.length>0;
+
+    let evHtml='';
+    const show=events.slice(0,3);
+    const more=events.length-3;
+    show.forEach(p=>{
+      const est=calcEst(p.proxima_fecha);
+      const cls=p.es_externo?'ext':est;
+      const name=p.activo?.length>20?p.activo.substring(0,18)+'…':p.activo||p.nombre;
+      evHtml+=`<div class="pm-chip ${cls}" title="${p.nombre} — ${p.responsable||''}" onclick="showDetail('${dateStr}');event.stopPropagation()">${name}</div>`;
+    });
+    if(more>0)evHtml+=`<div class="more-chip" onclick="showDetail('${dateStr}');event.stopPropagation()">+${more} más</div>`;
+
+    html+=`<div class="day-cell${isToday?' today':''}${hasEv?' has-events':''}" ${hasEv?`onclick="showDetail('${dateStr}')"`:''}">
+      <div class="day-num">${d}</div>
+      ${evHtml}
+    </div>`;
+  }
+
+  // Fill remaining cells
+  const totalCells=startDow+lastDay.getDate();
+  const remaining=(7-totalCells%7)%7;
+  for(let i=1;i<=remaining;i++){
+    html+=`<div class="day-cell other-month"><div class="day-num">${i}</div></div>`;
+  }
+  html+='</div>';
+  document.getElementById('cal-wrap').innerHTML=html;
+}
+
+// ── YEAR VIEW ──
+function renderYear(){
+  document.getElementById('cal-month-name').textContent='Año';
+  document.getElementById('cal-year-name').textContent=' '+CUR_YEAR;
+
+  const filtered=getFilteredPMs();
+  const evMap={};
+  filtered.forEach(p=>{
+    if(!p.proxima_fecha)return;
+    const d=p.proxima_fecha.substring(0,10);
+    if(!evMap[d])evMap[d]=[];
+    evMap[d].push(p);
+  });
+
+  let html='<div class="year-grid">';
+  for(let m=0;m<12;m++){
+    const firstDay=new Date(CUR_YEAR,m,1);
+    const lastDay=new Date(CUR_YEAR,m+1,0).getDate();
+    const startDow=firstDay.getDay();
+    const monthStr=String(m+1).padStart(2,'0');
+
+    let miniHtml='<div class="mini-grid">';
+    DIAS.forEach(d=>miniHtml+=`<div class="mini-day" style="font-size:7px;color:rgba(131,131,139,0.3)">${d[0]}</div>`);
+    for(let i=0;i<startDow;i++)miniHtml+='<div class="mini-day"></div>';
+    for(let d=1;d<=lastDay;d++){
+      const dateStr=`${CUR_YEAR}-${monthStr}-${String(d).padStart(2,'0')}`;
+      const evs=evMap[dateStr]||[];
+      const isToday=TODAY.getFullYear()===CUR_YEAR&&TODAY.getMonth()===m&&TODAY.getDate()===d;
+      const hasOverdue=evs.some(p=>calcEst(p.proxima_fecha)==='overdue');
+      const hasPM=evs.length>0;
+      miniHtml+=`<div class="mini-day${isToday?' today':hasPM?(hasOverdue?' overdue':' has-pm'):''}" title="${evs.map(p=>p.activo).join(', ')}">${d}</div>`;
+    }
+    miniHtml+='</div>';
+
+    const monthPMs=filtered.filter(p=>p.proxima_fecha?.startsWith(`${CUR_YEAR}-${monthStr}`));
+    html+=`<div class="mini-month" onclick="CUR_MONTH=${m};setView('mes',document.getElementById('vt-mes'))">
+      <div class="mini-month-title">${MESES[m]} <span style="font-size:11px;font-weight:400;color:${monthPMs.length?'#AFA9EC':'rgba(131,131,139,0.3)'}">${monthPMs.length?monthPMs.length+' PM':''}</span></div>
+      ${miniHtml}
+    </div>`;
+  }
+  html+='</div>';
+  document.getElementById('cal-wrap').innerHTML=html;
+}
+
+// ── DAY DETAIL ──
+function showDetail(dateStr){
+  const filtered=getFilteredPMs();
+  const events=filtered.filter(p=>p.proxima_fecha?.startsWith(dateStr));
+  if(!events.length)return;
+
+  const d=new Date(dateStr+'T12:00:00');
+  const dateLabel=d.toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const EST_COL={overdue:'var(--crit)',soon:'var(--warn)',prog:'var(--pm)',ext:'var(--ext)'};
+  const EST_LBL={overdue:'Vencida',soon:'Próxima',prog:'Programada'};
+
+  const canCreate=USER.rol==='s'||USER.rol==='g';
+
+  document.getElementById('detail-card').innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="detail-date">${dateLabel}</div>
+      <button onclick="closeDetail()" style="background:none;border:none;color:rgba(131,131,139,0.6);cursor:pointer;font-size:18px">✕</button>
+    </div>
+    <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:10px">${events.length} mantención${events.length>1?'es':''} programada${events.length>1?'s':''}</div>
+    ${events.map(p=>{
+      const est=p.es_externo?'ext':calcEst(p.proxima_fecha);
+      const col=EST_COL[est]||'var(--pm)';
+      return`<div class="pm-detail-item" style="border-left-color:${col}">
+        <div style="flex:1">
+          <div style="font-size:12px;font-weight:600;color:var(--white);margin-bottom:3px">${p.nombre}</div>
+          <div style="font-size:11px;color:rgba(200,210,225,0.6)">${p.activo||'—'}</div>
+          <div style="display:flex;gap:8px;margin-top:5px;flex-wrap:wrap">
+            <span style="font-size:10px;padding:1px 7px;border-radius:8px;background:rgba(127,119,221,0.12);color:#AFA9EC">${p.frecuencia||'—'}</span>
+            <span style="font-size:10px;color:${p.es_externo?'var(--ext)':'rgba(131,131,139,0.5)'}">${p.responsable||'—'}</span>
+            <span style="font-size:10px;color:${col};font-weight:500">${p.es_externo?'Externa':EST_LBL[est]||est}</span>
+          </div>
+        </div>
+        ${canCreate?`<button onclick="crearOTdesdePM('${p.id}')" style="padding:5px 10px;border-radius:5px;border:0.5px solid rgba(33,150,243,0.3);background:rgba(33,150,243,0.1);color:#85B7EB;cursor:pointer;font-size:10px;font-family:var(--font);white-space:nowrap;flex-shrink:0">📋 Crear OT</button>`:''}
+      </div>`;
+    }).join('')}`;
+  document.getElementById('detail-overlay').classList.remove('hidden');
+}
+
+function closeDetail(){document.getElementById('detail-overlay').classList.add('hidden');}
+document.getElementById('detail-overlay').addEventListener('click',function(e){if(e.target===this)closeDetail();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDetail();});
+
+// ── CREAR OT DESDE CALENDARIO ──
+function crearOTdesdePM(pmId){
+  const p=PMS.find(x=>x.id===pmId);
+  if(!p)return;
+  // Store PM data and redirect to OT with prefill
+  localStorage.setItem('qdc_ot_prefill',JSON.stringify({
+    desc:'PM: '+p.nombre,
+    activo:p.activo||'',
+    tipo:'Preventivo',
+    responsable:p.responsable||'',
+    es_externo:p.es_externo||false,
+    pm_id:p.id,
+  }));
+  window.location.href='qdc_ot.html';
+}
+
+document.getElementById('filter-cat').addEventListener('change',render);
+
+function goToday(){CUR_YEAR=TODAY.getFullYear();CUR_MONTH=TODAY.getMonth();render();}
+
+let tT;
+function showToast(msg,col){
+  const t=document.getElementById('toast');t.textContent=msg;t.style.borderColor=col||'rgba(127,119,221,0.3)';
+  t.classList.add('show');clearTimeout(tT);tT=setTimeout(()=>t.classList.remove('show'),3200);
+}
+</script>
+</body>
+</html>

@@ -110,6 +110,7 @@ tr:hover td{background:rgba(255,255,255,0.03);}
       <a class="nav-item" href="qdc_dashboard.html"><span class="nav-icon">▦</span><span class="nav-label">Dashboard</span></a>
       <a class="nav-item" href="qdc_ot.html"><span class="nav-icon">📋</span><span class="nav-label">Ordenes de trabajo</span></a>
       <div class="nav-sec">Mantenimiento</div>
+      <a class="nav-item" href="qdc_calendario.html"><span class="nav-icon">📅</span><span class="nav-label">Calendario</span></a>
       <a class="nav-item active" href="qdc_pm.html"><span class="nav-icon">🔄</span><span class="nav-label">Plan preventivo</span></a>
       <a class="nav-item" href="qdc_responsables.html"><span class="nav-icon">👥</span><span class="nav-label">Responsables</span></a>
       <a class="nav-item" href="qdc_contratistas.html"><span class="nav-icon">🏢</span><span class="nav-label">Contratistas</span></a>
@@ -395,6 +396,7 @@ function renderPM(list){
       <td><span class="badge ${badge}">${label}</span></td>
       <td style="font-size:11px;color:${p.es_externo?'var(--ext)':'rgba(200,210,225,0.6)'}">${p.responsable||'—'}</td>
       ${accionCell}
+      <td><button onclick="crearOTdesdePM('${p.id}')" style="padding:4px 9px;border-radius:4px;border:0.5px solid rgba(33,150,243,0.3);background:rgba(33,150,243,0.08);color:#85B7EB;cursor:pointer;font-size:10px;font-family:var(--font)">📋 OT</button></td>
     </tr>`;
   }).join('');
 
@@ -583,6 +585,22 @@ document.getElementById('modal-overlay').addEventListener('click', function(e){ 
 
 async function audit(tipo, accion, detalle){
   try{ await db.from('auditoria').insert({usuario_id:USER.id, usuario_nombre:USER.nombre||USER.email, tipo, accion, detalle}); }catch(e){}
+}
+
+
+// ── CREAR OT DESDE PM ──
+function crearOTdesdePM(pmId){
+  const p = PMS.find(x=>x.id===pmId);
+  if(!p) return;
+  localStorage.setItem('qdc_ot_prefill', JSON.stringify({
+    desc: 'PM: ' + p.nombre,
+    activo: p.activo||'',
+    tipo: 'Preventivo',
+    responsable: p.responsable||'',
+    es_externo: p.es_externo||false,
+    pm_id: p.id,
+  }));
+  window.location.href = 'qdc_ot.html';
 }
 
 let tT;
