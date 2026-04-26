@@ -189,15 +189,30 @@ function buildCatFilter(){
   CATEGORIAS.forEach(c => { const o=document.createElement('option'); o.value=c; o.textContent=c; sel.appendChild(o); });
 }
 
+let PMS_DATA = []; // PM data for health calculation
+
 async function loadActivos(){
   document.getElementById('act-content').innerHTML = '<div class="loading"><div class="spinner"></div><span>Cargando...</span></div>';
   try{
-    const{data,error}=await db.from('activos').select('*').order('nombre');
-    if(error) throw error;
-    ACTS = data && data.length ? data : getDemoActivos();
-  }catch(e){ ACTS=getDemoActivos(); showToast('Mostrando datos demo'); }
+    // Load activos and PM data in parallel
+    const [r1, r2, r3] = await Promise.all([
+      db.from('activos').select('*').order('nombre'),
+      db.from('plan_pm').select('activo,nombre,proxima_fecha,frecuencia').order('proxima_fecha'),
+      db.from('ots').select('activo,estado,actualizado_en,creado_en').eq('estado','done').order('actualizado_en',{ascending:false}),
+    ]);
+    ACTS     = r1.data && r1.data.length ? r1.data : getDemoActivos();
+    PMS_DATA = r2.data || [];
+    OTS_DONE = r3.data || [];
+  }catch(e){
+    ACTS=getDemoActivos();
+    PMS_DATA=[];
+    OTS_DONE=[];
+    showToast('Mostrando datos demo');
+  }
   applyFilters();
 }
+
+let OTS_DONE = [];
 
 function getDemoActivos(){return[
   {id:'d1', nombre:'Balanzas',                  codigo:'ACT-001', ubicacion:'Planta',           categoria:'Medicion y Control',         estado:'ok',  salud:95, icono:'⚖️'},
@@ -237,53 +252,150 @@ function applyFilters(){
   renderActivos(list);
 }
 
+// ── CÁLCULO DE SALUD DINÁMICA ──
+// Salud = % de tiempo restante hasta próxima mantención
+// 100% = justo después de mantención completada
+// 0%  = día de la próxima mantención programada
+
+const FREQ_DIAS = {
+  'Quincenal':15,'Mensual':30,'Trimestral':90,
+  'Cuatrimestral':120,'Semestral':180,'Anual':365
+};
+
+function calcSalud(activo_nombre){
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+
+  // Find PM for this activo
+  const pm = PMS_DATA.find(p =>
+    p.activo && activo_nombre &&
+    (p.activo.toLowerCase().includes(activo_nombre.toLowerCase().substring(0,8)) ||
+     activo_nombre.toLowerCase().includes((p.activo||'').toLowerCase().substring(0,8)))
+  );
+
+  if(!pm || !pm.proxima_fecha) return { pct:85, dias_restantes:null, proxima:null, ciclo:null };
+
+  const proxima = new Date(pm.proxima_fecha + 'T00:00:00');
+  const ciclo = FREQ_DIAS[pm.frecuencia] || 180;
+
+  // Find last completed OT for this activo
+  const lastOT = OTS_DONE.find(o =>
+    o.activo && activo_nombre &&
+    (o.activo.toLowerCase().includes(activo_nombre.toLowerCase().substring(0,8)) ||
+     activo_nombre.toLowerCase().includes((o.activo||'').toLowerCase().substring(0,8)))
+  );
+
+  // Start date = proxima - ciclo (or last OT completion date)
+  let inicio;
+  if(lastOT && lastOT.actualizado_en){
+    inicio = new Date(lastOT.actualizado_en); inicio.setHours(0,0,0,0);
+  } else {
+    inicio = new Date(proxima); inicio.setDate(inicio.getDate() - ciclo);
+  }
+
+  const totalDias = Math.max(1, Math.floor((proxima - inicio) / 86400000));
+  const diasRestantes = Math.floor((proxima - hoy) / 86400000);
+  const pct = Math.max(0, Math.min(100, Math.round((diasRestantes / totalDias) * 100)));
+
+  return { pct, dias_restantes: diasRestantes, proxima: pm.proxima_fecha, ciclo, frecuencia: pm.frecuencia };
+}
+
 function getColor(a){
-  const s=a.salud||90;
-  if(a.estado==='crit'||s<60) return 'var(--crit)';
-  if(a.estado==='warn'||s<85) return 'var(--warn)';
+  const health = calcSalud(a.nombre);
+  const s = health.pct;
+  if(s <= 0)  return 'var(--crit)';
+  if(s <= 25) return 'var(--crit)';
+  if(s <= 50) return 'var(--warn)';
   return 'var(--ok)';
+}
+
+function getHealthLabel(pct, dias){
+  if(dias === null) return { est:'ok', label:'Operativo', badge:'b-ok' };
+  if(dias < 0)  return { est:'crit', label:'PM Vencido', badge:'b-crit' };
+  if(pct <= 25) return { est:'warn', label:'PM Próximo', badge:'b-warn' };
+  return { est:'ok', label:'Operativo', badge:'b-ok' };
 }
 
 function renderActivos(list){
   if(!list.length){ document.getElementById('act-content').innerHTML='<div class="empty"><span style="font-size:32px;opacity:0.2">🏭</span><span>Sin activos para los filtros aplicados</span></div>'; return; }
   const cols = list.length > 9 ? 'repeat(4,1fr)' : list.length > 4 ? 'repeat(3,1fr)' : 'repeat(2,1fr)';
   document.getElementById('act-content').innerHTML=`<div class="kpi-grid" style="grid-template-columns:${cols}">${list.map(a=>{
-    const c=getColor(a);
-    const s=a.salud||90;
+    const health = calcSalud(a.nombre);
+    const s = health.pct;
+    const c = getColor(a);
+    const hl = getHealthLabel(s, health.dias_restantes);
+    const diasLabel = health.dias_restantes === null
+      ? 'Sin PM programado'
+      : health.dias_restantes < 0
+        ? 'PM vencido hace '+Math.abs(health.dias_restantes)+' días'
+        : health.dias_restantes === 0
+          ? 'PM hoy'
+          : 'PM en '+health.dias_restantes+' días';
     return`<div class="kpi" style="border-left:3px solid ${c}" onclick="verActivo('${a.id}')">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
         <div style="font-size:22px">${a.icono||'🏭'}</div>
-        <div style="min-width:0">
+        <div style="min-width:0;flex:1">
           <div style="font-family:var(--head);font-size:13px;font-weight:600;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.nombre}</div>
           <div style="font-size:9px;font-family:monospace;color:rgba(131,131,139,0.5)">${a.codigo||'—'} · ${a.ubicacion||'—'}</div>
         </div>
       </div>
-      <div style="font-size:9px;color:rgba(131,131,139,0.4);margin-bottom:5px;padding:2px 6px;background:rgba(255,255,255,0.04);border-radius:4px;display:inline-block">${a.categoria||'General'}</div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-        <span style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5)">Salud</span>
-        <span style="font-family:var(--head);font-size:15px;font-weight:600;color:${c}">${s}%</span>
+      <div style="font-size:9px;color:rgba(131,131,139,0.4);margin-bottom:7px;padding:2px 6px;background:rgba(255,255,255,0.04);border-radius:4px;display:inline-block">${a.categoria||'General'}</div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px">
+        <span style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5)">Operatividad</span>
+        <span style="font-family:var(--head);font-size:17px;font-weight:700;color:${c}">${s}%</span>
       </div>
-      <div style="height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;margin-bottom:6px">
-        <div style="height:100%;width:${s}%;background:${c};border-radius:2px;transition:width .4s"></div>
+      <div style="height:6px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden;margin-bottom:5px;position:relative">
+        <div style="height:100%;width:${s}%;background:${c};border-radius:3px;transition:width .6s"></div>
       </div>
-      <span class="badge ${a.estado==='crit'?'b-crit':a.estado==='warn'?'b-warn':'b-ok'}">${a.estado==='crit'?'Critico':a.estado==='warn'?'Alerta':'Operativo'}</span>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:9px;color:rgba(131,131,139,0.4)">${diasLabel}</span>
+        <span class="badge ${hl.badge}">${hl.label}</span>
+      </div>
     </div>`;
   }).join('')}</div>`;
 }
 
 function verActivo(id){
   const a=ACTS.find(x=>x.id===id); if(!a) return;
+  const health=calcSalud(a.nombre);
+  const s=health.pct;
   const c=getColor(a);
+  const hl=getHealthLabel(s, health.dias_restantes);
+
+  const diasLabel = health.dias_restantes===null
+    ? 'Sin PM programado'
+    : health.dias_restantes<0
+      ? 'PM vencido hace '+Math.abs(health.dias_restantes)+' días'
+      : health.dias_restantes===0
+        ? 'PM programado para hoy'
+        : 'Próxima mantención en '+health.dias_restantes+' días';
+
   document.getElementById('modal-inner').innerHTML=`
     <div class="modal-header"><div class="modal-title">${a.icono||'🏭'} ${a.nombre}</div><button class="modal-close" onclick="closeModal()">✕</button></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px">
-      <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;color:rgba(131,131,139,0.4);margin-bottom:3px">Codigo</div><div style="font-size:12px;font-family:monospace;color:var(--white)">${a.codigo||'—'}</div></div>
-      <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;color:rgba(131,131,139,0.4);margin-bottom:3px">Ubicacion</div><div style="font-size:12px;color:var(--white)">${a.ubicacion||'—'}</div></div>
-      <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;color:rgba(131,131,139,0.4);margin-bottom:3px">Categoria</div><div style="font-size:12px;color:var(--white)">${a.categoria||'General'}</div></div>
-      <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;color:rgba(131,131,139,0.4);margin-bottom:3px">Salud</div><div style="font-size:16px;font-weight:700;font-family:var(--head);color:${c}">${a.salud||90}%</div></div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px">
+      <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;color:rgba(131,131,139,0.4);margin-bottom:3px">Código</div><div style="font-size:12px;font-family:monospace;color:var(--white)">${a.codigo||'—'}</div></div>
+      <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;color:rgba(131,131,139,0.4);margin-bottom:3px">Ubicación</div><div style="font-size:12px;color:var(--white)">${a.ubicacion||'—'}</div></div>
+      <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;color:rgba(131,131,139,0.4);margin-bottom:3px">Categoría</div><div style="font-size:12px;color:var(--white)">${a.categoria||'General'}</div></div>
+      <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;color:rgba(131,131,139,0.4);margin-bottom:3px">Frecuencia PM</div><div style="font-size:12px;color:var(--white)">${health.frecuencia||'—'}</div></div>
     </div>
-    <div style="height:6px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden;margin-bottom:14px"><div style="height:100%;width:${a.salud||90}%;background:${c}"></div></div>
-    <div class="modal-footer"><button class="btn-cancel" onclick="closeModal()">Cerrar</button></div>`;
+
+    <div style="background:rgba(255,255,255,0.03);border-radius:7px;padding:14px;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
+        <span style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5)">Operatividad hasta próximo PM</span>
+        <span style="font-family:var(--head);font-size:24px;font-weight:700;color:${c}">${s}%</span>
+      </div>
+      <div style="height:8px;background:rgba(255,255,255,0.07);border-radius:4px;overflow:hidden;margin-bottom:8px">
+        <div style="height:100%;width:${s}%;background:${c};border-radius:4px;transition:width .6s"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:11px">
+        <span style="color:rgba(131,131,139,0.5)">${diasLabel}</span>
+        <span style="color:${c};font-weight:500">${health.proxima?'Próximo PM: '+health.proxima:'—'}</span>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cerrar</button>
+    </div>`;
   document.getElementById('modal-overlay').classList.remove('hidden');
 }
 
