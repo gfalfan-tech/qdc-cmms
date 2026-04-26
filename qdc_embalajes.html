@@ -250,10 +250,16 @@ function verEmb(id){
         <button class="ab" style="color:#C0DD97;border-color:rgba(99,153,34,0.3)" onclick="completarEmb('${e.id}')">✓ Completar embalaje</button>
       </div>
     </div>`
-    :e.estado==='completo'?`<div style="padding:10px 12px;background:rgba(99,153,34,0.07);border-radius:6px;font-size:12px;color:#C0DD97;margin-bottom:12px">✓ Completado${e.completado_por?' por '+e.completado_por:''}</div>`
+    :e.estado==='completo'?`<div style="padding:10px 12px;background:rgba(99,153,34,0.07);border-radius:6px;font-size:12px;color:#C0DD97;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
+      <span>✓ Completado${e.completado_por?' por '+e.completado_por:''}</span>
+      ${canComplete?`<button class="ab" onclick="reactivarEmb('${e.id}')" style="font-size:10px;color:var(--warn);border-color:rgba(239,159,39,0.3)">↩ Reactivar</button>`:''}
+    </div>`
     :`<div style="padding:8px 12px;font-size:11px;color:rgba(131,131,139,0.4);margin-bottom:12px">Solo el supervisor puede completar el embalaje</div>`}
     <div style="display:flex;justify-content:space-between;align-items:center">
-      <button onclick="imprimirEmb('${e.id}')" style="padding:7px 12px;border-radius:5px;border:0.5px solid rgba(33,150,243,0.3);background:rgba(33,150,243,0.1);color:#85B7EB;cursor:pointer;font-size:12px;font-family:var(--font)">🖨️ Imprimir ficha</button>
+      <div style="display:flex;gap:6px">
+        <button onclick="imprimirEmb('${e.id}')" style="padding:7px 12px;border-radius:5px;border:0.5px solid rgba(33,150,243,0.3);background:rgba(33,150,243,0.1);color:#85B7EB;cursor:pointer;font-size:12px;font-family:var(--font)">🖨️ Imprimir ficha</button>
+        ${canComplete?`<button onclick="anularEmb('${e.id}')" style="padding:7px 10px;border-radius:5px;border:0.5px solid rgba(226,75,74,0.3);background:rgba(226,75,74,0.07);color:#F09595;cursor:pointer;font-size:11px;font-family:var(--font)">✕ Anular</button>`:''}
+      </div>
       <button style="padding:7px 14px;border-radius:5px;border:0.5px solid rgba(255,255,255,0.1);background:transparent;color:rgba(200,210,225,0.7);cursor:pointer;font-size:12px;font-family:var(--font)" onclick="closeModal()">Cerrar</button>
     </div>`;
 }
@@ -335,6 +341,46 @@ function uploadEmbPDF(id){
   input.click();
 }
 
+
+// ── REACTIVAR EMBALAJE (supervisor/gerencia) ──
+async function reactivarEmb(id){
+  const e=EMBS.find(x=>x.id===id);
+  if(!confirm('¿Reactivar el embalaje '+(e?.codigo||id)+'? Volverá a estado "En proceso".')) return;
+  try{
+    const{error}=await db.from('embalajes').update({
+      estado:'en_proceso',
+      completado_en:null,
+      completado_por:null,
+    }).eq('id',id);
+    if(error) throw error;
+    if(e){ e.estado='en_proceso'; e.completado_en=null; e.completado_por=null; }
+    showToast('Embalaje reactivado — estado: En proceso','rgba(239,159,39,0.4)');
+    closeModal();
+    updateStats();
+    renderEmb(EMBS);
+    await audit('emb','Reactivó embalaje '+(e?.codigo||id),e?.cliente||'');
+  }catch(err){ showToast('Error: '+err.message,'rgba(226,75,74,0.4)'); }
+}
+
+// ── ANULAR EMBALAJE — el folio se libera para reutilizar ──
+async function anularEmb(id){
+  const e=EMBS.find(x=>x.id===id);
+  if(!confirm('¿Anular el embalaje '+(e?.codigo||id)+'?\nEl folio '+( e?.folio||'')+ ' quedará disponible para el próximo embalaje.')) return;
+  try{
+    const{error}=await db.from('embalajes').update({
+      estado:'anulado',
+      anulado:true,
+    }).eq('id',id);
+    if(error) throw error;
+    if(e){ e.estado='anulado'; e.anulado=true; }
+    showToast('Embalaje anulado. Folio '+(e?.folio||'')+' liberado.','rgba(239,159,39,0.4)');
+    closeModal();
+    updateStats();
+    renderEmb(EMBS);
+    await audit('emb','Anuló embalaje '+(e?.codigo||id),'Folio '+(e?.folio||'')+' liberado');
+  }catch(err){ showToast('Error: '+err.message,'rgba(226,75,74,0.4)'); }
+}
+
 function imprimirEmb(id){
   const e=EMBS.find(x=>x.id===id); if(!e) return;
   const fecha=new Date(e.creado_en).toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
@@ -398,7 +444,7 @@ function renderEmb(list){
     <tbody>${list.map(e=>{
       const fecha=new Date(e.creado_en).toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit'});
       return`<tr>
-        <td style="font-family:monospace;font-size:11px;color:rgba(131,131,139,0.5)">${e.codigo||e.id.substring(0,8)}</td>
+        <td style="font-family:monospace;font-size:11px;color:rgba(131,131,139,0.5)">${e.folio?'EMB-'+String(e.folio).padStart(4,'0'):e.codigo||e.id.substring(0,8)}</td>
         <td><div style="font-size:12px;font-weight:500;color:var(--white)">${e.nota_venta||'—'}</div><div style="font-size:10px;color:rgba(131,131,139,0.5)">${e.cliente||'—'}</div></td>
         <td style="font-size:11px;color:rgba(200,210,225,0.6)">${e.tipo_cajon||'—'}</td>
         <td style="font-size:11px;color:rgba(200,210,225,0.6)">${e.destino||'—'}</td>
@@ -412,7 +458,7 @@ function renderEmb(list){
             ${e.pdf_url?'📄✓':'<span style="color:var(--warn)">📄?</span>'}
           </span>
         </td>
-        <td><span class="badge ${e.estado==='completo'?'b-ok':'b-warn'}">${e.estado==='completo'?'Completo':'Pendiente'}</span></td>
+        <td><span class="badge ${e.estado==='completo'?'b-ok':'b-warn'}">${e.estado==='completo'?'Completo':e.estado==='anulado'?'Anulado':e.estado==='en_proceso'?'En proceso':'Pendiente'}</span></td>
         <td style="font-size:11px;font-family:monospace;color:rgba(131,131,139,0.5)">${fecha}</td>
         <td><button class="tb-btn btn-g" style="padding:3px 10px;font-size:11px" onclick="verEmb('${e.id}')">Ver</button></td>
       </tr>`;
@@ -457,8 +503,23 @@ async function guardarEmb(){
   const cliente=document.getElementById('ne-cliente').value.trim();
   const costo=parseInt(document.getElementById('ne-costo').value)||0;
   if(!nv||!cliente){showToast('⚠️ NV y cliente son obligatorios','rgba(226,75,74,0.4)');return;}
-  const codigo='EMB-'+Date.now().toString().slice(-6);
-  const nuevo={codigo,nota_venta:nv,cliente,tipo_cajon:document.getElementById('ne-kit').value,destino:document.getElementById('ne-destino').value.trim(),costo_total:costo,estado:'pendiente',tecnico_nombre:USER.nombre||USER.email};
+  // Obtener siguiente folio — reutiliza folios de embalajes anulados
+  let folio = 1;
+  try{
+    // First check for gaps (anulled folios to reuse)
+    const{data:allFolios}=await db.from('embalajes').select('folio,anulado').order('folio');
+    if(allFolios&&allFolios.length){
+      const anulados=allFolios.filter(x=>x.anulado&&x.folio).map(x=>x.folio).sort((a,b)=>a-b);
+      const maxFolio=Math.max(...allFolios.map(x=>x.folio||0));
+      if(anulados.length>0){
+        folio = anulados[0]; // Reuse lowest anulled folio
+      } else {
+        folio = maxFolio+1;
+      }
+    }
+  }catch(e){ folio = Date.now()%10000; }
+  const codigo = 'EMB-'+String(folio).padStart(4,'0');
+  const nuevo={codigo,folio,nota_venta:nv,cliente,tipo_cajon:document.getElementById('ne-kit').value,destino:document.getElementById('ne-destino').value.trim(),costo_total:costo,estado:'pendiente',anulado:false,tecnico_nombre:USER.nombre||USER.email};
   try{
     const{data,error}=await db.from('embalajes').insert(nuevo).select().single();
     if(error) throw error;
