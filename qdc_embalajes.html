@@ -189,6 +189,175 @@ function doLogout(){localStorage.removeItem('qdc_user');window.location.href='in
 async function audit(tipo,accion,detalle){
   try{await db.from('auditoria').insert({usuario_id:USER.id,usuario_nombre:USER.nombre||USER.email,tipo,accion,detalle});}catch(e){}
 }
+
+// ── VER DETALLE EMBALAJE ──
+function verEmb(id){
+  const e=EMBS.find(x=>x.id===id);
+  if(!e) return;
+  const fecha=new Date(e.creado_en).toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit',year:'numeric'});
+  const canComplete=USER.rol==='s'||USER.rol==='g';
+  const estBadge=e.estado==='completo'?'b-ok':e.estado==='en_proceso'?'b-warn':'b-open';
+  const estLabel=e.estado==='completo'?'Completo':e.estado==='en_proceso'?'En proceso':'Pendiente';
+
+  const fotoSlots=['foto1_url','foto2_url','foto3_url'];
+  const fotosHtml=fotoSlots.map((slot,i)=>{
+    if(e[slot]) return `<div><img src="${e[slot]}" style="width:80px;height:80px;object-fit:cover;border-radius:6px;border:0.5px solid rgba(255,255,255,0.1);cursor:pointer" onclick="window.open('${e[slot]}','_blank')"/></div>`;
+    return `<div onclick="triggerFotoUpload('${e.id}','${slot}')" style="width:80px;height:80px;border:2px dashed rgba(255,255,255,0.12);border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:rgba(131,131,139,0.45)" onmouseover="this.style.borderColor='rgba(33,150,243,0.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.12)'"><div style="font-size:20px">📷</div><div style="font-size:9px;margin-top:2px">Foto ${i+1}</div><input type="file" id="fi-${e.id}-${slot}" accept="image/*" style="display:none" onchange="handleFotoUpload(event,'${e.id}','${slot}')"/></div>`;
+  }).join('');
+
+  document.getElementById('modal-overlay').classList.remove('hidden');
+  document.getElementById('modal-inner').innerHTML=`
+    <div class="modal-header">
+      <div class="modal-title">${e.codigo||'EMB'} — ${e.cliente}</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <span class="badge ${estBadge}">${estLabel}</span>
+      <span class="badge" style="background:rgba(255,255,255,0.07);color:rgba(200,210,225,0.6)">${e.tipo_cajon||'—'}</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px;font-size:12px">
+      <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Nota de venta</div><div style="color:var(--white)">${e.nota_venta||'—'}</div></div>
+      <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Cliente</div><div style="color:var(--white)">${e.cliente||'—'}</div></div>
+      <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Destino</div><div style="color:var(--white)">${e.destino||'—'}</div></div>
+      <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Costo total</div><div style="font-family:var(--head);font-size:16px;font-weight:700;color:var(--ok)">$${(e.costo_total||0).toLocaleString('es-CL')}</div></div>
+      <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Registrado</div><div style="color:var(--white)">${fecha}</div></div>
+      <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Técnico</div><div style="color:var(--white)">${e.tecnico_nombre||'—'}</div></div>
+    </div>
+    <div style="margin-bottom:12px">
+      <div style="font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);margin-bottom:8px">Registro fotográfico <span style="font-weight:400;text-transform:none;color:rgba(131,131,139,0.3)">— opcional</span></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">${fotosHtml}</div>
+    </div>
+    <div style="background:rgba(255,255,255,0.03);border-radius:7px;padding:12px 14px;margin-bottom:12px;border:0.5px solid ${e.pdf_url?'rgba(99,153,34,0.2)':'rgba(255,255,255,0.07)'}">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:8px">Documento adjunto</div>
+      ${e.pdf_url
+        ?`<div style="display:flex;align-items:center;gap:10px"><span style="font-size:18px">📄</span><div style="flex:1"><div style="font-size:12px;font-weight:500;color:var(--ok)">Documento adjunto</div></div><a href="${e.pdf_url}" target="_blank" style="padding:5px 12px;border-radius:5px;background:rgba(99,153,34,0.15);color:#C0DD97;border:0.5px solid rgba(99,153,34,0.3);font-size:11px;text-decoration:none">Ver PDF</a><button onclick="uploadEmbPDF('${e.id}')" style="padding:5px 10px;border-radius:5px;background:rgba(255,255,255,0.06);color:rgba(200,210,225,0.6);border:0.5px solid rgba(255,255,255,0.1);font-size:11px;cursor:pointer;font-family:var(--font)">Reemplazar</button></div>`
+        :`<div style="border:2px dashed rgba(255,255,255,0.1);border-radius:6px;padding:12px;text-align:center;cursor:pointer" onclick="uploadEmbPDF('${e.id}')"><div style="font-size:18px;margin-bottom:4px">📄</div><div style="font-size:12px;color:rgba(131,131,139,0.5)">Adjuntar guía de despacho o documento</div></div>`
+      }
+    </div>
+    <div style="margin-bottom:14px">
+      <div style="font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);margin-bottom:6px">Observaciones <span style="font-weight:400;text-transform:none;font-size:10px;color:rgba(131,131,139,0.35)">— máx. 1000 caracteres</span></div>
+      <textarea id="emb-obs-${e.id}" maxlength="1000" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:var(--white);font-size:12px;font-family:var(--font);padding:10px 12px;outline:none;width:100%;resize:vertical;min-height:72px" placeholder="Materiales usados, estado del embalaje, notas de despacho…" oninput="document.getElementById('emb-obs-cnt-${e.id}').textContent=(1000-this.value.length)+' rest.'" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'">${e.observaciones||''}</textarea>
+      <div style="display:flex;justify-content:space-between;margin-top:4px">
+        <span id="emb-obs-cnt-${e.id}" style="font-size:10px;color:rgba(131,131,139,0.4)">${1000-(e.observaciones||'').length} rest.</span>
+        <button onclick="guardarObsEmb('${e.id}')" style="padding:4px 12px;border-radius:4px;border:0.5px solid rgba(33,150,243,0.3);background:rgba(33,150,243,0.1);color:#85B7EB;cursor:pointer;font-size:11px;font-family:var(--font)">Guardar obs.</button>
+      </div>
+    </div>
+    ${canComplete&&e.estado!=='completo'?`
+    <div style="border-top:1px solid rgba(255,255,255,0.07);padding-top:12px;margin-bottom:12px">
+      <div style="font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);margin-bottom:8px">Cambiar estado</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        ${e.estado!=='en_proceso'?`<button class="ab" onclick="cambiarEstadoEmb('${e.id}','en_proceso')">⚙️ En proceso</button>`:''}
+        <button class="ab" style="color:#C0DD97;border-color:rgba(99,153,34,0.3)" onclick="completarEmb('${e.id}')">✓ Completar embalaje</button>
+      </div>
+    </div>`
+    :e.estado==='completo'?`<div style="padding:10px 12px;background:rgba(99,153,34,0.07);border-radius:6px;font-size:12px;color:#C0DD97;margin-bottom:12px">✓ Completado${e.completado_por?' por '+e.completado_por:''}</div>`
+    :`<div style="padding:8px 12px;font-size:11px;color:rgba(131,131,139,0.4);margin-bottom:12px">Solo el supervisor puede completar el embalaje</div>`}
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <button onclick="imprimirEmb('${e.id}')" style="padding:7px 12px;border-radius:5px;border:0.5px solid rgba(33,150,243,0.3);background:rgba(33,150,243,0.1);color:#85B7EB;cursor:pointer;font-size:12px;font-family:var(--font)">🖨️ Imprimir ficha</button>
+      <button style="padding:7px 14px;border-radius:5px;border:0.5px solid rgba(255,255,255,0.1);background:transparent;color:rgba(200,210,225,0.7);cursor:pointer;font-size:12px;font-family:var(--font)" onclick="closeModal()">Cerrar</button>
+    </div>`;
+}
+
+async function guardarObsEmb(id){
+  const obs=document.getElementById('emb-obs-'+id)?.value||'';
+  try{
+    const{error}=await db.from('embalajes').update({observaciones:obs}).eq('id',id);
+    if(error) throw error;
+    const e=EMBS.find(x=>x.id===id); if(e) e.observaciones=obs;
+    showToast('Observaciones guardadas','rgba(99,153,34,0.4)');
+  }catch(err){showToast('Error: '+err.message,'rgba(226,75,74,0.4)');}
+}
+
+async function cambiarEstadoEmb(id,nuevoEstado){
+  try{
+    const{error}=await db.from('embalajes').update({estado:nuevoEstado}).eq('id',id);
+    if(error) throw error;
+    const e=EMBS.find(x=>x.id===id); if(e) e.estado=nuevoEstado;
+    showToast('Estado actualizado','rgba(99,153,34,0.4)');
+    closeModal(); updateStats(); renderEmb(EMBS);
+  }catch(err){showToast('Error: '+err.message,'rgba(226,75,74,0.4)');}
+}
+
+async function completarEmb(id){
+  const e=EMBS.find(x=>x.id===id);
+  try{
+    const{error}=await db.from('embalajes').update({estado:'completo',completado_en:new Date().toISOString(),completado_por:USER.nombre||USER.email}).eq('id',id);
+    if(error) throw error;
+    if(e){e.estado='completo';e.completado_por=USER.nombre||USER.email;}
+    showToast('Embalaje completado','rgba(99,153,34,0.4)');
+    closeModal(); updateStats(); renderEmb(EMBS);
+  }catch(err){showToast('Error: '+err.message,'rgba(226,75,74,0.4)');}
+}
+
+function triggerFotoUpload(id,slot){
+  document.getElementById('fi-'+id+'-'+slot)?.click();
+}
+
+async function handleFotoUpload(event,id,slot){
+  const file=event.target.files[0]; if(!file) return;
+  if(file.size>5*1024*1024){showToast('Máximo 5MB','rgba(226,75,74,0.4)');return;}
+  showToast('Subiendo foto…','rgba(33,150,243,0.4)');
+  try{
+    const ext=file.name.split('.').pop();
+    const{error:upErr}=await db.storage.from('fotos').upload('embalajes/'+id+'/'+slot+'_'+Date.now()+'.'+ext,file,{cacheControl:'3600',upsert:true});
+    if(upErr) throw upErr;
+    const{data:u}=db.storage.from('fotos').getPublicUrl('embalajes/'+id+'/'+slot+'_'+Date.now()+'.'+ext);
+    // Re-upload to get correct URL
+    const fname='embalajes/'+id+'/'+slot+'_'+Date.now()+'.'+ext;
+    await db.storage.from('fotos').upload(fname,file,{cacheControl:'3600',upsert:true});
+    const{data:urlD}=db.storage.from('fotos').getPublicUrl(fname);
+    const{error:updErr}=await db.from('embalajes').update({[slot]:urlD.publicUrl}).eq('id',id);
+    if(updErr) throw updErr;
+    const emb=EMBS.find(x=>x.id===id); if(emb) emb[slot]=urlD.publicUrl;
+    showToast('Foto subida','rgba(99,153,34,0.4)');
+    verEmb(id);
+  }catch(err){showToast('Error: '+err.message,'rgba(226,75,74,0.4)');}
+}
+
+function uploadEmbPDF(id){
+  const input=document.createElement('input');
+  input.type='file'; input.accept='.pdf,.doc,.docx';
+  input.onchange=async e=>{
+    const file=e.target.files[0]; if(!file) return;
+    showToast('Subiendo documento…','rgba(33,150,243,0.4)');
+    try{
+      const fname='embalajes/'+id+'/pdf_'+Date.now()+'.'+file.name.split('.').pop();
+      const{error:upErr}=await db.storage.from('documentos').upload(fname,file,{cacheControl:'3600',upsert:true});
+      if(upErr) throw upErr;
+      const{data:u}=db.storage.from('documentos').getPublicUrl(fname);
+      const{error:updErr}=await db.from('embalajes').update({pdf_url:u.publicUrl}).eq('id',id);
+      if(updErr) throw updErr;
+      const emb=EMBS.find(x=>x.id===id); if(emb) emb.pdf_url=u.publicUrl;
+      showToast('Documento adjunto','rgba(99,153,34,0.4)');
+      verEmb(id);
+    }catch(err){showToast('Error: '+err.message,'rgba(226,75,74,0.4)');}
+  };
+  input.click();
+}
+
+function imprimirEmb(id){
+  const e=EMBS.find(x=>x.id===id); if(!e) return;
+  const fecha=new Date(e.creado_en).toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const hoy=new Date().toLocaleString('es-CL');
+  const estLabel=e.estado==='completo'?'Completo':e.estado==='en_proceso'?'En proceso':'Pendiente';
+  const win=window.open('','_blank','width=800,height=900');
+  win.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"/><title>Embalaje ${e.codigo||''}</title><style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Arial,sans-serif;padding:32px;color:#1a1a1a;}.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid #08223D;}.logo{font-size:28px;font-weight:900;color:#08223D;}.logo-sub{font-size:11px;color:#666;margin-top:3px;}.logo-line{width:28px;height:2px;background:#2196F3;margin-top:6px;}.emb-codigo{font-size:22px;font-weight:700;color:#08223D;}.title-bar{background:#08223D;color:#fff;padding:10px 16px;border-radius:6px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;}.section-title{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#2196F3;margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid #e0e0e0;margin-top:16px;}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}.field{background:#f8f9fa;border-radius:5px;padding:10px 12px;border-left:3px solid #2196F3;}.field-label{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#888;margin-bottom:4px;}.field-val{font-size:13px;font-weight:600;color:#1a1a1a;}.obs-box{background:#f8f9fa;border-radius:5px;padding:14px;border-left:3px solid #08223D;font-size:12px;color:#333;line-height:1.6;min-height:60px;}.fotos{display:flex;gap:12px;margin-bottom:16px;}.foto{width:120px;height:120px;border-radius:6px;overflow:hidden;border:1px solid #ddd;display:flex;align-items:center;justify-content:center;background:#f8f9fa;font-size:11px;color:#aaa;}.costo-box{background:#e8f5e9;border-radius:5px;padding:12px 16px;border-left:3px solid #4CAF50;display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}.firmas{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-top:24px;}.firma{border-top:1px solid #333;padding-top:8px;text-align:center;}.footer{margin-top:20px;padding-top:12px;border-top:1px solid #e0e0e0;display:flex;justify-content:space-between;font-size:9px;color:#aaa;}@media print{body{padding:20px;}@page{margin:1cm;}}</style></head><body>
+  <div class="header"><div><div class="logo">QDC</div><div class="logo-sub">Química del Campo S.p.A</div><div class="logo-line"></div></div><div style="text-align:right"><div class="emb-codigo">${e.codigo||'EMB'}</div><div style="font-size:12px;color:#666;margin-top:4px">Ficha de Embalaje</div><div style="font-size:11px;color:#999;margin-top:2px">${hoy}</div></div></div>
+  <div class="title-bar"><div style="font-size:14px;font-weight:600">${e.cliente} — ${e.nota_venta||'—'}</div><span style="padding:4px 12px;border-radius:10px;background:rgba(255,255,255,0.15);font-size:12px">${estLabel}</span></div>
+  <div class="section-title">Información del embalaje</div>
+  <div class="grid2"><div class="field"><div class="field-label">Nota de venta</div><div class="field-val">${e.nota_venta||'—'}</div></div><div class="field"><div class="field-label">Cliente</div><div class="field-val">${e.cliente||'—'}</div></div><div class="field"><div class="field-label">Tipo cajón</div><div class="field-val">${e.tipo_cajon||'—'}</div></div><div class="field"><div class="field-label">Destino</div><div class="field-val">${e.destino||'—'}</div></div><div class="field"><div class="field-label">Fecha</div><div class="field-val">${fecha}</div></div><div class="field"><div class="field-label">Técnico</div><div class="field-val">${e.tecnico_nombre||'—'}</div></div></div>
+  <div class="costo-box"><div style="font-size:11px;font-weight:600;color:#555">Costo total</div><div style="font-size:22px;font-weight:900;color:#2E7D32">$${(e.costo_total||0).toLocaleString('es-CL')}</div></div>
+  <div class="section-title">Observaciones</div>
+  <div class="obs-box">${e.observaciones||'<span style="color:#bbb">Sin observaciones</span>'}</div>
+  <div class="section-title">Registro fotográfico</div>
+  <div class="fotos">${['foto1_url','foto2_url','foto3_url'].map((s,i)=>e[s]?`<div class="foto"><img src="${e[s]}" style="width:100%;height:100%;object-fit:cover"/></div>`:`<div class="foto">Foto ${i+1}<br/>sin imagen</div>`).join('')}</div>
+  <div class="firmas"><div class="firma"><br/><br/><div style="font-size:10px;color:#666">Firma Técnico</div><div style="font-size:12px;font-weight:600;margin-top:3px">${e.tecnico_nombre||'_________________'}</div></div><div class="firma"><br/><br/><div style="font-size:10px;color:#666">Firma Supervisor</div><div style="font-size:12px;font-weight:600;margin-top:3px">_________________</div></div></div>
+  <div class="footer"><span>QDC CMMS Pro · Química del Campo S.p.A</span><span>${e.codigo||''}</span></div>
+  <div style="text-align:center;margin-top:20px;padding:16px;background:#f5f5f5;border-radius:8px"><button onclick="window.print()" style="padding:10px 24px;background:#08223D;color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;margin-right:10px">🖨️ Imprimir / Guardar PDF</button><button onclick="window.close()" style="padding:10px 18px;background:#e0e0e0;color:#333;border:none;border-radius:6px;font-size:14px;cursor:pointer">Cerrar</button></div>
+  </body></html>`);
+  win.document.close(); win.focus();
+}
+
 let _tT;
 function showToast(msg,col){const t=document.getElementById('toast');t.textContent=msg;t.style.borderColor=col||'rgba(33,150,243,0.3)';t.classList.add('show');clearTimeout(_tT);_tT=setTimeout(()=>t.classList.remove('show'),3200);}
 function openModal(html){document.getElementById('modal-inner').innerHTML=html;document.getElementById('modal-overlay').classList.remove('hidden');}
@@ -225,7 +394,7 @@ function updateStats(){
 function renderEmb(list){
   if(!list.length){document.getElementById('emb-content').innerHTML='<div class="empty"><span style="font-size:32px;opacity:0.2">📫</span><span>Sin embalajes registrados</span></div>';return;}
   document.getElementById('emb-content').innerHTML=`<table class="data-table">
-    <thead><tr><th>ID</th><th>NV / Cliente</th><th>Tipo cajón</th><th>Destino</th><th>Costo</th><th>Fotos</th><th>PDF</th><th>Estado</th><th>Fecha</th></tr></thead>
+    <thead><tr><th>ID</th><th>NV / Cliente</th><th>Tipo cajón</th><th>Destino</th><th>Costo</th><th>Fotos</th><th>PDF</th><th>Estado</th><th>Fecha</th><th></th></tr></thead>
     <tbody>${list.map(e=>{
       const fecha=new Date(e.creado_en).toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit'});
       return`<tr>
@@ -245,6 +414,7 @@ function renderEmb(list){
         </td>
         <td><span class="badge ${e.estado==='completo'?'b-ok':'b-warn'}">${e.estado==='completo'?'Completo':'Pendiente'}</span></td>
         <td style="font-size:11px;font-family:monospace;color:rgba(131,131,139,0.5)">${fecha}</td>
+        <td><button class="tb-btn btn-g" style="padding:3px 10px;font-size:11px" onclick="verEmb('${e.id}')">Ver</button></td>
       </tr>`;
     }).join('')}</tbody>
   </table>`;
@@ -288,7 +458,7 @@ async function guardarEmb(){
   const costo=parseInt(document.getElementById('ne-costo').value)||0;
   if(!nv||!cliente){showToast('⚠️ NV y cliente son obligatorios','rgba(226,75,74,0.4)');return;}
   const codigo='EMB-'+Date.now().toString().slice(-6);
-  const nuevo={codigo,nota_venta:nv,cliente,tipo_cajon:document.getElementById('ne-kit').value,destino:document.getElementById('ne-destino').value.trim(),costo_total:costo,estado:'pendiente',tecnico_id:USER.id};
+  const nuevo={codigo,nota_venta:nv,cliente,tipo_cajon:document.getElementById('ne-kit').value,destino:document.getElementById('ne-destino').value.trim(),costo_total:costo,estado:'pendiente',tecnico_nombre:USER.nombre||USER.email};
   try{
     const{data,error}=await db.from('embalajes').insert(nuevo).select().single();
     if(error) throw error;
