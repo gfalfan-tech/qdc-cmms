@@ -353,24 +353,35 @@ async function crearUsuario(){
     });
 
     if(error) throw error;
+    const userId = data.user?.id || null;
 
-    // Confirm email immediately via SQL update
-    // (user needs email confirmed to login)
-    showToast('✓ Usuario creado. Confirma el email en Supabase → Auth → Users', 'rgba(99,153,34,0.4)');
+    // Save to system_users table so loadUsers() picks it up persistently
+    const{error:dbErr} = await db.from('system_users').insert({
+      id:          userId,
+      email,
+      nombre,
+      rol,
+      activo:      true,
+      created_at:  new Date().toISOString(),
+    });
+    if(dbErr) console.warn('[system_users insert]', dbErr.message);
 
-    // Add to local list
+    // Add to local list immediately
     USERS_DATA.unshift({
-      id: data.user?.id || 'new',
+      id: userId || 'new-'+Date.now(),
       email, nombre, rol, activo: true,
       ultimo_acceso: 'Nunca'
     });
 
-    // Add as responsable if técnico
+    // Add as responsable interno if tecnico or supervisor
     if(rol === 't' || rol === 's'){
-      await db.from('responsables').insert({
+      const{error:rErr} = await db.from('responsables').insert({
         nombre, email, tipo: 'interno', activo: true
       });
+      if(rErr) console.warn('[responsables insert]', rErr.message);
     }
+
+    showToast('✓ Usuario creado correctamente', 'rgba(99,153,34,0.4)');
 
     await audit('create', 'Creó usuario: '+email, 'Rol: '+ROL_LABEL[rol]);
     closeModal();
@@ -579,7 +590,16 @@ document.addEventListener('DOMContentLoaded',()=>{
 });
 
 async function audit(tipo,accion,detalle){
-  try{await db.from('auditoria').insert({usuario_id:USER.id,usuario_nombre:USER.nombre||USER.email,tipo,accion,detalle});}catch(e){}
+  try{
+    const{error}=await db.from('auditoria').insert({
+      usuario_id:USER.id||null,
+      usuario_nombre:USER.nombre||USER.email||'Sistema',
+      tipo:tipo||'sistema',
+      accion:accion||'',
+      detalle:detalle||''
+    });
+    if(error) console.warn('[AUDIT ERROR]',error.message,{tipo,accion});
+  }catch(e){ console.warn('[AUDIT CATCH]',e.message); }
 }
 
 let _tT;

@@ -680,6 +680,10 @@ function waitAndRender(){
   }
 }
 waitAndRender();
+function doLogout(){
+  localStorage.removeItem('qdc_user');
+  window.location.href = 'index.html';
+}
 </script>
 </body>
 </html>
