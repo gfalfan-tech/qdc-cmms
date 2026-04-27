@@ -517,7 +517,9 @@ async function openNuevoPM(){
   }catch(e){}
   // Fallback con los 22 equipos base si Supabase falla
   if(!activos.length){
-    activos = ['Balanzas','Generador Vielco / ATS','Portones eléctricos','Vehículos de planta','Cerco eléctrico','Sistema agua potable','Iluminación interior','Sensores de movimiento','Cámaras de seguridad','Cierres magnéticos','Duchas de emergencia','Sistema de regadío','Climatización','Ventilación (extractores)','Sistema aguas servidas','Racks almacenamiento','Extintores','Sistema detección incendios','Tableros eléctricos','Luminarias','Máquinas de fabricación','Grúas horquillas'];
+    // Fallback: extract unique activos already in PM plan
+    const fromPM = [...new Set(PMS.filter(p=>p.activo).map(p=>p.activo))].sort();
+    activos = fromPM.length ? fromPM : ['Balanzas','Generador Vielco / ATS','Portones eléctricos','Vehículos de planta','Cerco eléctrico','Sistema agua potable','Iluminación interior','Sensores de movimiento','Cámaras de seguridad','Cierres magnéticos','Duchas de emergencia','Sistema de regadío','Climatización','Ventilación (extractores)','Sistema aguas servidas','Racks almacenamiento','Extintores','Sistema detección incendios','Tableros eléctricos','Luminarias','Máquinas de fabricación','Grúas horquillas'];
   }
   activos.push('Otro equipo');
   document.getElementById('modal-inner').innerHTML = `
