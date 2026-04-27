@@ -259,8 +259,14 @@ async function renderAuditoria(body){
     const logs=data||[];
     const cls={create:'rgba(99,153,34,0.5)',edit:'rgba(33,150,243,0.5)',deact:'rgba(239,159,39,0.5)',login:'rgba(131,131,139,0.3)',ot:'rgba(33,150,243,0.4)',emb:'rgba(216,90,48,0.4)',pm:'rgba(127,119,221,0.4)',default:'rgba(131,131,139,0.3)'};
     body.innerHTML=`
-      <div style="font-family:var(--head);font-size:18px;font-weight:600;color:var(--white);margin-bottom:4px">Log de auditoría</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <div style="font-family:var(--head);font-size:18px;font-weight:600;color:var(--white)">Log de auditoría</div>
+        <button onclick="testAudit()" style="padding:6px 14px;border-radius:5px;border:0.5px solid rgba(33,150,243,0.3);background:rgba(33,150,243,0.1);color:#85B7EB;cursor:pointer;font-size:11px;font-family:var(--font)">🧪 Probar registro</button>
+      </div>
       <div style="font-size:12px;color:rgba(131,131,139,0.6);margin-bottom:16px">Registro completo — quién hizo qué y cuándo.</div>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
+        <button onclick="renderAuditoria(document.getElementById('cfg-body'))" style="padding:5px 12px;border-radius:4px;border:0.5px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:rgba(200,210,225,0.5);cursor:pointer;font-size:11px;font-family:var(--font)">↻ Actualizar</button>
+      </div>
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">
         <div class="card" style="padding:10px"><div style="font-size:9px;text-transform:uppercase;color:rgba(131,131,139,0.5);margin-bottom:4px">Total eventos</div><div style="font-family:var(--head);font-size:20px;color:#85B7EB">${logs.length}</div></div>
         <div class="card" style="padding:10px"><div style="font-size:9px;text-transform:uppercase;color:rgba(131,131,139,0.5);margin-bottom:4px">Accesos</div><div style="font-family:var(--head);font-size:20px;color:var(--ok)">${logs.filter(l=>l.tipo==='login').length}</div></div>
@@ -280,6 +286,32 @@ async function renderAuditoria(body){
       </div>`;
   }catch(err){ body.innerHTML=`<div style="padding:20px;font-size:12px;color:rgba(131,131,139,0.5)">Error cargando log: ${err.message}</div>`; }
 }
+
+// ── TEST DE AUDITORÍA ──
+async function testAudit(){
+  try{
+    const{error} = await db.from('auditoria').insert({
+      usuario_id:    USER.id||null,
+      usuario_nombre:USER.nombre||USER.email||'Test',
+      tipo:          'test',
+      accion:        'Prueba manual de auditoría',
+      detalle:       'Ejecutado desde Configuración por ' + (USER.nombre||USER.email)
+    });
+    if(error){
+      showToast('✕ Error en auditoría: ' + error.message, 'rgba(226,75,74,0.4)');
+      console.error('[AUDIT TEST ERROR]', error);
+    } else {
+      showToast('✓ Registro de auditoría funcionando correctamente', 'rgba(99,153,34,0.4)');
+      // Reload the log
+      const body = document.getElementById('cfg-body');
+      if(body) renderAuditoria(body);
+    }
+  }catch(e){
+    showToast('✕ Error crítico: ' + e.message, 'rgba(226,75,74,0.4)');
+    console.error('[AUDIT TEST CATCH]', e);
+  }
+}
+
 function renderSeguridad(body){
   body.innerHTML=`
     <div style="font-family:var(--head);font-size:18px;font-weight:600;color:var(--white);margin-bottom:4px">Políticas de seguridad</div>
