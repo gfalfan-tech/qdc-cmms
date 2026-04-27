@@ -186,7 +186,7 @@ function closeModal(){document.getElementById('modal-overlay').classList.add('hi
 
 
 function pageInit(){
-  if(USER.rol!=='g'){window.location.href='qdc_dashboard.html';return;}
+  if(USER.rol!=='g' && USER.rol!=='s'){window.location.href='qdc_dashboard.html';return;}
   cfgSec('usuarios',document.getElementById('cfgn-usuarios'));
 }
 function cfgSec(sec,el){

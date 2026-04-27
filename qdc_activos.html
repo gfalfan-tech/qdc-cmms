@@ -447,13 +447,19 @@ function openNuevoActivo(){
     <div class="modal-header"><div class="modal-title">Nuevo activo</div><button class="modal-close" onclick="closeModal()">✕</button></div>
     <div class="form-row" style="margin-bottom:12px">
       <div class="form-group"><label class="form-label">Nombre *</label><input type="text" class="form-input" id="na-nombre" placeholder="ej: Compresor C-102"/></div>
-      <div class="form-group"><label class="form-label">Codigo</label><input type="text" class="form-input" id="na-codigo" placeholder="ACT-XXX"/></div>
+      <div class="form-group">
+        <label class="form-label">Código <span style="font-size:9px;color:rgba(93,202,165,0.7);font-weight:400">— asignado automáticamente</span></label>
+        <input type="text" class="form-input" id="na-codigo"
+          style="font-family:monospace;color:var(--ext);background:rgba(93,202,165,0.06);border-color:rgba(93,202,165,0.2)"
+          placeholder="Se generará al guardar" readonly/>
+        <div id="na-codigo-hint" style="font-size:10px;color:rgba(93,202,165,0.5);margin-top:3px"></div>
+      </div>
     </div>
     <div class="form-row" style="margin-bottom:12px">
       <div class="form-group"><label class="form-label">Ubicacion</label><input type="text" class="form-input" id="na-ubic" placeholder="ej: Linea A, Bodega"/></div>
       <div class="form-group">
         <label class="form-label">Categoria</label>
-        <select class="form-select" id="na-cat">
+        <select class="form-select" id="na-cat" onchange="previewActCode()">
           ${CATEGORIAS.map(c=>`<option>${c}</option>`).join('')}
           <option>General</option>
         </select>
@@ -480,6 +486,48 @@ function openNuevoActivo(){
       <button class="btn-save" onclick="guardarActivo()">Crear activo</button>
     </div>`;
   document.getElementById('modal-overlay').classList.remove('hidden');
+  setTimeout(previewActCode, 80);
+}
+
+
+// ── CÓDIGO AUTOMÁTICO QDC ──
+const CAT_PREFIX = {
+  'Medición y Control':     'MED',
+  'Energía e Instalaciones':'ELE',
+  'Transporte':             'TRP',
+  'Seguridad':              'SEG',
+  'HVAC y Clima':           'CLM',
+  'Producción':             'PRD',
+  'Infraestructura':        'INF',
+  'General':                'GEN',
+};
+
+async function generateActCode(categoria){
+  const prefix = CAT_PREFIX[categoria] || 'GEN';
+  try{
+    // Get highest number for this prefix
+    const{data} = await db.from('activos').select('codigo').ilike('codigo','QDC-'+prefix+'-%').order('codigo',{ascending:false}).limit(1);
+    let next = 1;
+    if(data && data.length && data[0].codigo){
+      const m = data[0].codigo.match(/(\d+)$/);
+      if(m) next = parseInt(m[1]) + 1;
+    }
+    return 'QDC-' + prefix + '-' + String(next).padStart(3,'0');
+  }catch(e){
+    // Fallback: use total count
+    const existing = ACTS.filter(a=>(a.codigo||'').startsWith('QDC-'+prefix)).length;
+    return 'QDC-' + prefix + '-' + String(existing+1).padStart(3,'0');
+  }
+}
+
+async function previewActCode(){
+  const catEl = document.getElementById('na-cat');
+  if(!catEl) return;
+  const code = await generateActCode(catEl.value);
+  const input = document.getElementById('na-codigo');
+  const hint  = document.getElementById('na-codigo-hint');
+  if(input){ input.value = code; }
+  if(hint){  hint.textContent = '✓ Código asignado: ' + code; }
 }
 
 async function guardarActivo(){
@@ -487,7 +535,7 @@ async function guardarActivo(){
   if(!nombre){showToast('El nombre es obligatorio','rgba(226,75,74,0.4)');return;}
   const nuevo={
     nombre,
-    codigo:    document.getElementById('na-codigo').value.trim()||null,
+    codigo:    document.getElementById('na-codigo').value.trim() || await generateActCode(document.getElementById('na-cat').value),
     ubicacion: document.getElementById('na-ubic').value.trim()||null,
     categoria: document.getElementById('na-cat').value,
     estado:    document.getElementById('na-est').value,

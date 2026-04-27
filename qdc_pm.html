@@ -373,6 +373,8 @@ function renderPM(list){
     const badge = EST_BADGE[est];
     const label = EST_LABEL[est];
     const cat   = getCategoria(p.activo);
+    const alcanceLabel = (p.activo==='Planta General'||p.activo==='Otro equipo') && p.alcance
+      ? `<div style="font-size:9px;color:rgba(93,202,165,0.5);margin-top:1px">↳ ${p.alcance}</div>` : '';
     const fecha = p.proxima_fecha || '—';
 
     // Boton "Marcar hecho" SOLO si vencida o proxima
@@ -521,6 +523,8 @@ async function openNuevoPM(){
     const fromPM = [...new Set(PMS.filter(p=>p.activo).map(p=>p.activo))].sort();
     activos = fromPM.length ? fromPM : ['Balanzas','Generador Vielco / ATS','Portones eléctricos','Vehículos de planta','Cerco eléctrico','Sistema agua potable','Iluminación interior','Sensores de movimiento','Cámaras de seguridad','Cierres magnéticos','Duchas de emergencia','Sistema de regadío','Climatización','Ventilación (extractores)','Sistema aguas servidas','Racks almacenamiento','Extintores','Sistema detección incendios','Tableros eléctricos','Luminarias','Máquinas de fabricación','Grúas horquillas'];
   }
+  // Add special options at the top
+  if(!activos.includes('Planta General')) activos.unshift('Planta General');
   activos.push('Otro equipo');
   document.getElementById('modal-inner').innerHTML = `
     <div class="modal-header">
@@ -534,9 +538,18 @@ async function openNuevoPM(){
     <div class="form-row" style="margin-bottom:12px">
       <div class="form-group">
         <label class="form-label">Activo *</label>
-        <select class="form-select" id="np-activo">
+        <select class="form-select" id="np-activo" onchange="toggleAlcanceField(this.value)">
           ${activos.map(a => `<option>${a}</option>`).join('')}
         </select>
+      </div>
+      <div class="form-group" id="np-alcance-group" style="display:none">
+        <label class="form-label">Alcance / descripción 
+          <span style="font-size:9px;color:rgba(93,202,165,0.6);font-weight:400">— describe qué cubre esta mantención</span>
+        </label>
+        <input type="text" class="form-input" id="np-alcance" 
+          placeholder="ej: Fumigación completa planta, Jardinería sector norte, Limpieza vidrios"/>
+      </div>
+      <div style="display:none"><!-- alcance_placeholder -->
       </div>
       <div class="form-group">
         <label class="form-label">Frecuencia</label>
@@ -622,8 +635,23 @@ function validateWeekday(input){
   }
 }
 
+
+// ── CAMPO ALCANCE PARA PLANTA GENERAL ──
+function toggleAlcanceField(activo){
+  const group = document.getElementById('np-alcance-group');
+  if(!group) return;
+  const isGeneral = activo === 'Planta General' || activo === 'Otro equipo';
+  group.style.display = isGeneral ? 'block' : 'none';
+  if(!isGeneral) {
+    const inp = document.getElementById('np-alcance');
+    if(inp) inp.value = '';
+  }
+}
+
 async function guardarPM(){
   const nombre = document.getElementById('np-nombre').value.trim();
+  const activoVal = document.getElementById('np-activo').value;
+  const alcanceVal = document.getElementById('np-alcance')?.value.trim() || '';
   const fecha  = document.getElementById('np-fecha').value;
   if(!nombre || !fecha){ showToast('Nombre y fecha son obligatorios', 'rgba(226,75,74,0.4)'); return; }
   // Smart scheduler: enforce weekday + max 2 per week
@@ -633,7 +661,8 @@ async function guardarPM(){
 
   const nuevo = {
     nombre,
-    activo:       document.getElementById('np-activo').value,
+    activo:       activoVal,
+    alcance:      alcanceVal || null,
     frecuencia:   freq,
     proxima_fecha:fechaFinal,
     estado:       'ok',
@@ -691,6 +720,8 @@ async function editarPM(id){
   }catch(e){}
   if(!activos.length) activos = ['Balanzas','Generador Vielco / ATS','Portones eléctricos','Vehículos de planta','Cerco eléctrico','Sistema agua potable','Iluminación interior','Sensores de movimiento','Cámaras de seguridad','Cierres magnéticos','Duchas de emergencia','Sistema de regadío','Climatización','Ventilación (extractores)','Sistema aguas servidas','Racks almacenamiento','Extintores','Sistema detección incendios','Tableros eléctricos','Luminarias','Máquinas de fabricación','Grúas horquillas'];
   if(!activos.includes(p.activo||'')) activos.unshift(p.activo||'');
+  // Add special options at the top
+  if(!activos.includes('Planta General')) activos.unshift('Planta General');
   activos.push('Otro equipo');
 
   const freqs = ['Quincenal','Mensual','Trimestral','Cuatrimestral','Semestral','Anual'];
