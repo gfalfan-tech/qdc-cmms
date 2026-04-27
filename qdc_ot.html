@@ -681,6 +681,29 @@ function verOT(id){
     done:'<span class="badge b-done">Completada</span>',
   };
 
+  // Contratista section — only for external OTs
+  const canAssignContratista = canModify; // supervisor only
+  const contratistaSection = o.es_externo ? `
+    <div style="background:rgba(255,255,255,0.03);border-radius:7px;padding:12px 14px;margin-bottom:12px;border:0.5px solid ${o.contratista_id?'rgba(93,202,165,0.25)':'rgba(239,159,39,0.2)'}">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:8px">Empresa contratista asignada</div>
+      ${o.contratista_id
+        ? `<div style="display:flex;align-items:center;gap:10px;margin-bottom:${canAssignContratista?'10px':'0'}">
+            <span style="font-size:18px">🏢</span>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:600;color:var(--ext)">${o.contratista||'Contratista asignado'}</div>
+              ${o.contratista_rut?`<div style="font-size:10px;font-family:monospace;color:rgba(131,131,139,0.5)">${o.contratista_rut}</div>`:''}
+            </div>
+            ${canAssignContratista?`<button onclick="abrirAsignarContratista('${o.id}')" style="padding:5px 10px;border-radius:5px;background:rgba(255,255,255,0.06);color:rgba(200,210,225,0.6);border:0.5px solid rgba(255,255,255,0.1);font-size:11px;cursor:pointer;font-family:var(--font)">Cambiar</button>`:''}
+          </div>`
+        : canAssignContratista
+          ? `<div style="border:2px dashed rgba(239,159,39,0.3);border-radius:6px;padding:10px;display:flex;align-items:center;justify-content:space-between">
+              <span style="font-size:12px;color:rgba(131,131,139,0.5)">Sin contratista asignado</span>
+              <button onclick="abrirAsignarContratista('${o.id}')" style="padding:6px 14px;border-radius:5px;background:rgba(93,202,165,0.12);color:var(--ext);border:0.5px solid rgba(93,202,165,0.3);font-size:12px;cursor:pointer;font-family:var(--font)">+ Asignar contratista</button>
+            </div>`
+          : `<div style="font-size:12px;color:rgba(131,131,139,0.4);padding:6px 0">Sin contratista asignado aún</div>`
+      }
+    </div>` : '';
+
   // PDF section for external OTs
   const pdfSection = o.es_externo ? `
     <div style="background:rgba(255,255,255,0.03);border-radius:7px;padding:12px 14px;margin-bottom:12px;border:0.5px solid ${o.pdf_url?'rgba(99,153,34,0.2)':'rgba(239,159,39,0.2)'}">
@@ -757,6 +780,7 @@ function verOT(id){
       </div>
     </div>
 
+    ${contratistaSection}
     ${pdfSection}
 
     <!-- IMÁGENES DE EVIDENCIA -->
@@ -941,6 +965,17 @@ async function loadActivosForSearch(){
     }
   }catch(e){}
 }
+// ── CONTRATISTAS PARA ASIGNACIÓN EN OT ──
+let CONTRATISTAS_OT = [];
+
+async function loadContratistasForOT(){
+  try{
+    const{data,error}=await db.from('contratistas').select('id,nombre,rut,especialidad').eq('activo',true).order('nombre');
+    if(!error && data) CONTRATISTAS_OT = data;
+  }catch(e){ CONTRATISTAS_OT=[]; }
+  return CONTRATISTAS_OT;
+}
+
 // ── BÚSQUEDA PREDICTIVA DE RESPONSABLES ──
 let RESPONSABLES_DATA = [];
 
@@ -1066,6 +1101,96 @@ async function guardarObservaciones(id){
 }
 
 // ── IMPRIMIR BOLETA OT ──
+
+// ── ASIGNAR CONTRATISTA A OT (solo supervisor) ──
+async function abrirAsignarContratista(otId){
+  // Load contratistas list fresh
+  const conts = await loadContratistasForOT();
+  if(!conts.length){
+    showToast('No hay contratistas registrados. Agrega uno en el módulo Contratistas.','rgba(239,159,39,0.4)');
+    return;
+  }
+
+  const o = OTS_DATA.find(x=>x.id===otId);
+  const opts = conts.map(c=>
+    `<option value="${c.id}" ${o?.contratista_id===c.id?'selected':''}>${c.nombre}${c.rut?' ('+c.rut+')':''}</option>`
+  ).join('');
+
+  // Show inline selector — replace the button area temporarily
+  const modalInner = document.getElementById('modal-ver-inner');
+  // Create a mini overlay inside modal
+  const overlayId = 'cont-sel-overlay';
+  const existing = document.getElementById(overlayId);
+  if(existing) existing.remove();
+
+  const div = document.createElement('div');
+  div.id = overlayId;
+  div.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center';
+  div.innerHTML = `
+    <div style="background:#0B2545;border-radius:12px;padding:24px;width:400px;max-width:90vw;border:1px solid rgba(255,255,255,0.1)">
+      <div style="font-family:var(--head);font-size:16px;font-weight:700;color:var(--white);margin-bottom:16px">
+        🏢 Asignar contratista
+      </div>
+      <div style="font-size:12px;color:rgba(131,131,139,0.5);margin-bottom:8px">Selecciona empresa contratista</div>
+      <select id="cont-sel-dd" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:var(--white);font-size:13px;padding:10px 12px;width:100%;font-family:var(--font);outline:none;margin-bottom:4px">
+        <option value="">— Sin contratista —</option>
+        ${opts}
+      </select>
+      <div style="font-size:10px;color:rgba(131,131,139,0.4);margin-bottom:16px">Puedes dejarlo sin asignar y asignarlo después</div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button onclick="document.getElementById('${overlayId}').remove()"
+          style="padding:8px 16px;border-radius:6px;border:0.5px solid rgba(255,255,255,0.1);background:transparent;color:rgba(200,210,225,0.7);cursor:pointer;font-size:13px;font-family:var(--font)">
+          Cancelar
+        </button>
+        <button onclick="confirmarContratista('${otId}','${overlayId}')"
+          style="padding:8px 18px;border-radius:6px;border:none;background:var(--ext);color:#fff;cursor:pointer;font-size:13px;font-weight:600;font-family:var(--font)">
+          Guardar
+        </button>
+      </div>
+    </div>`;
+  document.body.appendChild(div);
+}
+
+async function confirmarContratista(otId, overlayId){
+  const sel = document.getElementById('cont-sel-dd');
+  const contId = sel.value;
+  const contNombre = contId ? sel.options[sel.selectedIndex].text.split(' (')[0] : null;
+
+  // Get rut from CONTRATISTAS_OT
+  const contData = CONTRATISTAS_OT.find(c=>c.id===contId);
+  const contRut = contData?.rut || null;
+
+  try{
+    const update = {
+      contratista_id:     contId || null,
+      contratista:        contNombre,
+      contratista_rut:    contRut,
+      // If contratista assigned, mark as external
+      es_externo: contId ? true : (OTS_DATA.find(x=>x.id===otId)?.es_externo || false),
+    };
+    const{error}=await db.from('ots').update(update).eq('id',otId);
+    if(error) throw error;
+
+    // Update local data
+    const o = OTS_DATA.find(x=>x.id===otId);
+    if(o){
+      o.contratista_id  = contId||null;
+      o.contratista     = contNombre;
+      o.contratista_rut = contRut;
+      if(contId) o.es_externo = true;
+    }
+
+    document.getElementById(overlayId)?.remove();
+    showToast(contId?'✓ Contratista asignado: '+contNombre:'Contratista removido','rgba(99,153,34,0.4)');
+    await audit('update','Asignó contratista a OT '+(o?.codigo||otId), contNombre||'sin contratista');
+
+    // Reload modal to reflect change
+    verOT(otId);
+  }catch(err){
+    showToast('✕ Error: '+err.message,'rgba(226,75,74,0.4)');
+  }
+}
+
 function imprimirOT(id){
   const o = OTS_DATA.find(x=>x.id===id);
   if(!o) return;
@@ -1154,6 +1279,7 @@ function imprimirOT(id){
     <div class="field"><div class="field-label">Activo / Equipo</div><div class="field-val">${o.activo||'—'}</div></div>
     <div class="field"><div class="field-label">Responsable</div><div class="field-val" style="color:${o.es_externo?'#00695C':'#1565C0'}">${o.responsable_nombre||o.asignado_nombre||'—'}</div></div>
     <div class="field"><div class="field-label">Tipo de intervención</div><div class="field-val">${o.es_externo?'🏢 Externa':'👤 Interna'} — ${o.tipo||'Correctivo'}</div></div>
+    ${o.es_externo&&o.contratista?`<div class="field" style="border-left:3px solid #00695C"><div class="field-label">Empresa contratista</div><div class="field-val" style="color:#00695C;font-weight:700">${o.contratista}${o.contratista_rut?' · RUT '+o.contratista_rut:''}</div></div>`:''}
     <div class="field"><div class="field-label">Estado</div><div class="field-val"><span class="status-chip st-${o.estado}">${EST_LABEL[o.estado]||o.estado}</span></div></div>
     <div class="field"><div class="field-label">Fecha creación</div><div class="field-val">${fecha}</div></div>
     <div class="field"><div class="field-label">Código OT</div><div class="field-val" style="font-family:monospace">${o.codigo||'—'}</div></div>
