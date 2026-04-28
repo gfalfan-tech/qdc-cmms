@@ -10,8 +10,8 @@
 
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{--navy:#08223D;--mid:#0B2545;--deep:#061C2E;--accent:#2196F3;--white:#EEF4FF;--ok:#97C459;--warn:#EF9F27;--crit:#E24B4A;--ext:#5DCAA5;--pm:#7F77DD;--emb:#D85A30;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.10);--font:'Barlow',sans-serif;--head:'Barlow Condensed',sans-serif;}
-body{font-family:var(--font);background:#050F1C;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;}
-.shell{display:flex;width:100%;max-width:1100px;min-height:900px;background:var(--mid);border-radius:12px;overflow:hidden;border:1px solid var(--border2);}
+body{font-family:var(--font);background:#050F1C;min-height:100vh;margin:0;padding:0;overflow:hidden;}
+.shell{display:flex;width:100vw;height:100vh;background:var(--mid);overflow:hidden;width:100vw;}
 .sidebar{width:210px;flex-shrink:0;background:var(--navy);display:flex;flex-direction:column;border-right:1px solid var(--border);}
 .sb-logo{padding:16px 14px 12px;border-bottom:1px solid var(--border);}
 .sb-logo-mark{font-family:var(--head);font-size:15px;font-weight:700;color:var(--white);letter-spacing:1px;}
@@ -207,7 +207,7 @@ function buildSidebar(){
 }
 function doLogout(){localStorage.removeItem('qdc_user');window.location.href='index.html';}
 async function audit(tipo,accion,detalle){
-  try{await db.from('auditoria').insert({usuario_id:USER.id,usuario_nombre:USER.nombre||USER.email,tipo,accion,detalle});}catch(e){ console.warn("[QDC Error]", e?.message || e); }
+  try{await db.from('auditoria').insert({usuario_id:USER.id,usuario_nombre:USER.nombre||USER.email,tipo,accion,detalle});}catch(e){ console.warn("[QDC Error]", e?.message || e)}
 }
 
 function exportarKPIsPDF(){
@@ -218,8 +218,8 @@ function exportarKPIsPDF(){
     weekday:'long', day:'numeric', month:'long', year:'numeric'
   });
 
-  const win = window.open('', '_blank', 'width=900,height=700');
-  win.document.write(`<!DOCTYPE html>
+  // Use Blob URL — works in Firefox, Chrome, Edge without popup blocker
+  const _html = `<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8"/>
@@ -292,9 +292,11 @@ function exportarKPIsPDF(){
     </button>
   </div>
 </body>
-</html>`);
-  win.document.close();
-  win.focus();
+</html>`;
+  const _blob = new Blob([_html], {type:'text/html'});
+  const _url = URL.createObjectURL(_blob);
+  const win = window.open(_url, '_blank');
+  if(!win){ const a=document.createElement('a');a.href=_url;a.target='_blank';a.click(); }
 }
 
 let _tT;
@@ -307,7 +309,7 @@ let PERIODO='mes';
 const MO=['Oct','Nov','Dic','Ene','Feb','Mar','Abr'];
 const GC='rgba(255,255,255,0.05)',TC='rgba(131,131,139,0.6)';
 let charts={};
-function pageInit(){ loadKPIs(); }
+function pageInit(){ loadKPIs()}
 function setPeriodo(p,el){
   PERIODO=p;
   document.querySelectorAll('[id^="btn-"]').forEach(b=>{b.style.background='rgba(255,255,255,0.06)';b.style.color='rgba(200,210,225,0.8)';b.style.border='0.5px solid rgba(255,255,255,0.1)';});
@@ -315,7 +317,7 @@ function setPeriodo(p,el){
   loadKPIs();
 }
 async function loadKPIs(){
-  Object.values(charts).forEach(c=>{try{c.destroy();}catch(e){ console.warn("[QDC Error]", e?.message || e); }});charts={};
+  Object.values(charts).forEach(c=>{try{c.destroy();}catch(e){ console.warn("[QDC Error]", e?.message || e)}});charts={};
   // Cargar datos reales desde Supabase
   let otTotal=0,otDone=0,otExt=0,otSinPDF=0,invCrit=0,pmVenc=0,pmTotal=0;
   try{
@@ -325,7 +327,7 @@ async function loadKPIs(){
     if(inv)invCrit=inv.filter(i=>i.stock===0).length;
     const{data:pms}=await db.from('plan_pm').select('estado,proxima_fecha');
     if(pms){pmTotal=pms.length;pmVenc=pms.filter(p=>p.estado==='overdue'||new Date(p.proxima_fecha)<new Date()).length;}
-  }catch(e){ console.warn("[QDC Error]", e?.message || e); }
+  }catch(e){ console.warn("[QDC Error]", e?.message || e)}
   const pctCumpl=pmTotal?Math.round(((pmTotal-pmVenc)/pmTotal)*100):83;
   const pctExt=otTotal?Math.round(otExt/otTotal*100):21;
   renderKPIs(otTotal,otDone,otExt,otSinPDF,invCrit,pmVenc,pctCumpl,pctExt);
