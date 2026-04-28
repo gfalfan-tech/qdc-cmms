@@ -179,11 +179,17 @@ tr.ext-row td{border-left:2px solid rgba(29,158,117,0.4);}
 
     <!-- STATS -->
     <div class="stats-bar" id="stats-bar">
-      <div class="stat on"><div class="stat-val" id="st-todas">—</div><div class="stat-label">Todas</div></div>
-      <div class="stat"><div class="stat-val" style="color:var(--warn)" id="st-abiertas">—</div><div class="stat-label">Abiertas</div></div>
-      <div class="stat"><div class="stat-val" style="color:var(--crit)" id="st-proceso">—</div><div class="stat-label">En proceso</div></div>
-      <div class="stat"><div class="stat-val" style="color:var(--ext)" id="st-externas">—</div><div class="stat-label">Externas</div></div>
-      <div class="stat"><div class="stat-val" style="color:var(--ok)" id="st-completadas">—</div><div class="stat-label">Completadas</div></div>
+      <div class="stat on" onclick="setEstadoFilter('',this)" style="cursor:pointer" title="Ver todas (excepto completadas)">
+        <div class="stat-val" id="st-todas">—</div><div class="stat-label">Todas</div></div>
+      <div class="stat" onclick="setEstadoFilter('open',this)" style="cursor:pointer" title="Ver solo abiertas">
+        <div class="stat-val" style="color:var(--warn)" id="st-abiertas">—</div><div class="stat-label">Abiertas</div></div>
+      <div class="stat" onclick="setEstadoFilter('prog',this)" style="cursor:pointer" title="Ver en proceso">
+        <div class="stat-val" style="color:var(--crit)" id="st-proceso">—</div><div class="stat-label">En proceso</div></div>
+      <div class="stat" onclick="setEstadoFilter('ext_only',this)" style="cursor:pointer" title="Ver externas">
+        <div class="stat-val" style="color:var(--ext)" id="st-externas">—</div><div class="stat-label">Externas</div></div>
+      <div class="stat" onclick="setEstadoFilter('done',this)" style="cursor:pointer" title="Ver OT completadas">
+        <div class="stat-val" style="color:var(--ok)" id="st-completadas">—</div>
+        <div class="stat-label">Completadas 🔒</div></div>
     </div>
 
     <!-- QUICK FORM (solo técnico y supervisor) -->
@@ -979,13 +985,43 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(mo) mo.addEventListener('click',function(e){if(e.target===this)closeModal();});
 });
 
+// ── FILTRO RÁPIDO POR ESTADO (chips superiores) ──
+function setEstadoFilter(estado, chipEl){
+  // Update chip active state
+  document.querySelectorAll('.stat').forEach(s=>s.classList.remove('on'));
+  chipEl.classList.add('on');
+
+  // Set the estado dropdown
+  const dd = document.getElementById('filter-estado');
+  if(dd){
+    if(estado === 'ext_only'){
+      // Externas: clear estado filter, set origen to externo
+      dd.value = '';
+      const origenDd = document.getElementById('filter-origen');
+      if(origenDd) origenDd.value = 'externo';
+    } else {
+      dd.value = estado;
+      // Reset origen filter when switching away from externas
+      if(estado !== 'ext_only'){
+        const origenDd = document.getElementById('filter-origen');
+        if(origenDd && origenDd.value === 'externo') origenDd.value = '';
+      }
+    }
+  }
+  filterTable();
+}
+
 function filterTable(){
   const search=(document.getElementById('search-input')?.value||'').toLowerCase();
   const estado=document.getElementById('filter-estado')?.value||'';
   const tipo=document.getElementById('filter-tipo')?.value||'';
   const origen=document.getElementById('filter-origen')?.value||'';
   const prio=document.getElementById('filter-prio')?.value||'';
+  // OT completadas ocultas por defecto — solo visibles si se filtra por 'done'
+  const mostrarCompletadas = estado === 'done';
   OTS_FILTERED=OTS_DATA.filter(o=>{
+    // Si no se filtra por completadas, excluir las OT con estado 'done'
+    if(!mostrarCompletadas && o.estado==='done') return false;
     const ms=!search||
       (o.descripcion||'').toLowerCase().includes(search)||
       (o.activo||'').toLowerCase().includes(search)||
@@ -1202,9 +1238,21 @@ async function abrirAsignarContratista(otId){
   }
 
   const o = OTS_DATA.find(x=>x.id===otId);
-  const opts = conts.map(c=>
-    `<option value="${c.id}" ${o?.contratista_id===c.id?'selected':''}>${c.nombre}${c.rut?' ('+c.rut+')':''}</option>`
-  ).join('');
+  // populate global list for search
+  window._contListaFull = conts;
+  const preselected = conts.find(c=>c.id===o?.contratista_id);
+  const preNombre = preselected
+    ? preselected.nombre+(preselected.rut?' ('+preselected.rut+')':'')
+    : '';
+  setTimeout(()=>{
+    const si = document.getElementById('cont-search-input');
+    if(si){ si.value = preNombre; }
+    const sd = document.getElementById('cont-sel-dd');
+    if(sd){ sd.value = o?.contratista_id||''; }
+    const disp = document.getElementById('cont-sel-display');
+    if(disp && preNombre) disp.textContent = '✓ '+preNombre;
+  }, 50);
+
 
   // Show inline selector — replace the button area temporarily
   const modalInner = document.getElementById('modal-ver-inner');
@@ -1222,10 +1270,16 @@ async function abrirAsignarContratista(otId){
         🏢 Asignar contratista
       </div>
       <div style="font-size:12px;color:rgba(131,131,139,0.5);margin-bottom:8px">Selecciona empresa contratista</div>
-      <select id="cont-sel-dd" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:var(--white);font-size:13px;padding:10px 12px;width:100%;font-family:var(--font);outline:none;margin-bottom:4px">
-        <option value="">— Sin contratista —</option>
-        ${opts}
-      </select>
+      <input type="text" id="cont-search-input"
+        placeholder="Buscar por nombre o RUT…"
+        autocomplete="off"
+        style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:var(--white);font-size:13px;padding:10px 12px;width:100%;font-family:var(--font);outline:none;"
+        oninput="filtrarContratistas(this.value)"
+        onfocus="mostrarListaCont()"
+      />
+      <div id="cont-search-list" style="display:none;max-height:180px;overflow-y:auto;background:#0B2545;border:1px solid rgba(255,255,255,0.12);border-radius:6px;margin-top:3px;"></div>
+      <input type="hidden" id="cont-sel-dd" value=""/>
+      <div id="cont-sel-display" style="font-size:11px;color:rgba(93,202,165,0.8);padding:3px 0;min-height:16px"></div>
       <div style="font-size:10px;color:rgba(131,131,139,0.4);margin-bottom:16px">Puedes dejarlo sin asignar y asignarlo después</div>
       <div style="display:flex;gap:8px;justify-content:flex-end">
         <button onclick="document.getElementById('${overlayId}').remove()"
@@ -1239,6 +1293,56 @@ async function abrirAsignarContratista(otId){
       </div>
     </div>`;
   document.body.appendChild(div);
+}
+
+
+// ─ Búsqueda contratista por nombre o RUT ─
+window._contListaFull = window._contListaFull || [];
+
+function mostrarListaCont(){
+  filtrarContratistas(document.getElementById('cont-search-input')?.value||'');
+}
+
+function filtrarContratistas(q){
+  const list = document.getElementById('cont-search-list');
+  if(!list) return;
+  const qn = (q||'').toLowerCase().replace(/[.\-]/g,'');
+  const matches = (window._contListaFull||[]).filter(c=>
+    !qn ||
+    (c.nombre||'').toLowerCase().includes(qn) ||
+    (c.rut||'').replace(/[.\-]/g,'').toLowerCase().includes(qn)
+  );
+  list.style.display = 'block';
+  if(!matches.length){
+    list.innerHTML = '<div style="padding:10px;font-size:12px;color:rgba(131,131,139,0.5)">Sin resultados</div>';
+    return;
+  }
+  const none = '<div onclick="elegirContratista(\'\',\'\u2014 Sin contratista —\',\'\')"    style="padding:9px 12px;cursor:pointer;font-size:12px;color:rgba(131,131,139,0.5);border-bottom:0.5px solid rgba(255,255,255,0.07)"    onmouseover="this.style.background=\'rgba(255,255,255,0.04)\'"    onmouseout="this.style.background=\'\'">— Sin contratista —</div>';
+  const rows = matches.map(c=>{
+    const id = c.id||'';
+    const nm = (c.nombre||'').replace(/'/g,"\\'");
+    const rut = (c.rut||'').replace(/'/g,"\\'");
+    return `<div onclick="elegirContratista('${id}','${nm}','${rut}')"
+      style="padding:9px 12px;cursor:pointer;font-size:12px;border-bottom:0.5px solid rgba(255,255,255,0.07)"
+      onmouseover="this.style.background='rgba(255,255,255,0.04)'"
+      onmouseout="this.style.background=''">
+      <div style="color:var(--white);font-weight:500">${c.nombre||''}</div>
+      ${c.rut?`<div style="font-size:10px;font-family:monospace;color:rgba(131,131,139,0.5)">${c.rut}</div>`:''}
+      ${c.especialidad?`<div style="font-size:10px;color:rgba(93,202,165,0.6)">${c.especialidad}</div>`:''}
+    </div>`;
+  }).join('');
+  list.innerHTML = none + rows;
+}
+
+function elegirContratista(id, nombre, rut){
+  const hidden = document.getElementById('cont-sel-dd');
+  if(hidden) hidden.value = id;
+  const input = document.getElementById('cont-search-input');
+  if(input) input.value = id ? nombre+(rut?' ('+rut+')':'') : '';
+  const disp = document.getElementById('cont-sel-display');
+  if(disp) disp.textContent = id ? '✓ '+nombre+(rut?' ('+rut+')':'') : '';
+  const list = document.getElementById('cont-search-list');
+  if(list) list.style.display = 'none';
 }
 
 async function confirmarContratista(otId, overlayId){
@@ -1529,6 +1633,13 @@ function showToast(msg,col){
 
 document.addEventListener('keydown',e=>{
   if(e.key==='Enter'&&document.activeElement.id==='q-desc') registrarOT();
+});
+
+// close contratista dropdown on outside click
+document.addEventListener('click',function(e){
+  var list=document.getElementById('cont-search-list');
+  var inp=document.getElementById('cont-search-input');
+  if(list&&inp&&!list.contains(e.target)&&e.target!==inp) list.style.display='none';
 });
 </script>
 </body>
