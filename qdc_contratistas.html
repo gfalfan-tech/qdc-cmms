@@ -10,9 +10,32 @@
 
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{--navy:#08223D;--mid:#0B2545;--deep:#061C2E;--accent:#2196F3;--white:#EEF4FF;--ok:#97C459;--warn:#EF9F27;--crit:#E24B4A;--ext:#5DCAA5;--pm:#7F77DD;--emb:#D85A30;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.10);--font:'Barlow',sans-serif;--head:'Barlow Condensed',sans-serif;}
-body{font-family:var(--font);background:#050F1C;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;}
-.shell{display:flex;width:100%;max-width:1100px;min-height:900px;background:var(--mid);border-radius:12px;overflow:hidden;border:1px solid var(--border2);}
-.sidebar{width:210px;flex-shrink:0;background:var(--navy);display:flex;flex-direction:column;border-right:1px solid var(--border);}
+
+/* ── ESCALA ADAPTATIVA PARA PANTALLA COMPLETA ── */
+/* El diseño base fue construido para 1100px — esto lo escala a cualquier pantalla */
+html {
+  font-size: clamp(13px, 1.2vw, 22px);
+}
+
+/* Shell ocupa todo el viewport */
+.shell{
+  width: 100vw !important;
+  height: 100vh !important;
+  min-height: 100vh !important;
+  overflow: hidden !important;
+}
+.sidebar{
+  flex-shrink: 0 !important;
+}
+.main{
+  flex: 1 !important;
+  min-width: 0 !important;
+  overflow-y: auto !important;
+}
+
+body{font-family:var(--font);background:#050F1C;min-height:100vh;margin:0;padding:0;overflow:hidden;}
+.shell{display:flex;width:100vw;height:100vh;background:var(--mid);overflow:hidden;width:100vw;}
+.sidebar{width:clamp(180px, 14vw, 260px);flex-shrink:0;background:var(--navy);display:flex;flex-direction:column;border-right:1px solid var(--border);}
 .sb-logo{padding:16px 14px 12px;border-bottom:1px solid var(--border);}
 .sb-logo-mark{font-family:var(--head);font-size:15px;font-weight:700;color:var(--white);letter-spacing:1px;}
 .sb-logo-sub{font-size:9px;color:rgba(131,131,139,0.6);margin-top:2px;}
@@ -212,7 +235,7 @@ function buildSidebar(){
 }
 function doLogout(){localStorage.removeItem('qdc_user');window.location.href='index.html';}
 async function audit(tipo,accion,detalle){
-  try{await db.from('auditoria').insert({usuario_id:USER.id,usuario_nombre:USER.nombre||USER.email,tipo,accion,detalle});}catch(e){ console.warn("[QDC Error]", e?.message || e); }
+  try{await db.from('auditoria').insert({usuario_id:USER.id,usuario_nombre:USER.nombre||USER.email,tipo,accion,detalle});}catch(e){ console.warn("[QDC Error]", e?.message || e)}
 }
 let _tT;
 function showToast(msg,col){const t=document.getElementById('toast');t.textContent=msg;t.style.borderColor=col||'rgba(33,150,243,0.3)';t.classList.add('show');clearTimeout(_tT);_tT=setTimeout(()=>t.classList.remove('show'),3200);}
@@ -230,7 +253,7 @@ async function loadCont(){
     const{data,error}=await db.from('contratistas').select('*').order('nombre');
     if(error) throw error;
     CONTS=data&&data.length?data:demosCont();
-  }catch(e){ CONTS=demosCont(); showToast('Mostrando datos demo'); }
+  }catch(e){ CONTS=demosCont(); showToast('Mostrando datos demo')}
   // Cargar OTs externas para stats
   updateStats(); renderCont(CONTS);
 }
@@ -309,7 +332,7 @@ async function guardarCont(){
     CONTS.unshift(data);
     await audit('create','Registró contratista',nombre);
     closeModal(); showToast('✓ Contratista registrado','rgba(99,153,34,0.4)'); updateStats(); renderCont(CONTS);
-  }catch(err){ showToast('✕ Error: '+err.message,'rgba(226,75,74,0.4)'); }
+  }catch(err){ showToast('✕ Error: '+err.message,'rgba(226,75,74,0.4)')}
 }
 
 </script>
