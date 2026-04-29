@@ -17,21 +17,16 @@
   --font:'Barlow',sans-serif;--head:'Barlow Condensed',sans-serif;
 }
 
-/* ── ESCALA PANTALLA COMPLETA ── */
-/* zoom escala todo sin reflow — más rápido que clamp/font-size */
-html { zoom: 1.3; }
+/* ── TAMAÑO DE FUENTE LEGIBLE ── */
+body { font-size: 14px !important; line-height: 1.5; }
 
-/* Firefox: zoom no soportado — usar transform scale */
-@supports (-moz-appearance: none) {
-  html { zoom: 1 !important; }
-  .shell {
-    transform: scale(1.3);
-    transform-origin: top left;
-    width: calc(100vw / 1.3) !important;
-    height: calc(100vh / 1.3) !important;
-  }
-}
 
+
+/* Aumenta tamaño base de texto sin afectar layout */
+
+.nav-label, .nav-section { font-size: 13px; }
+.u-name { font-size: 13px; }
+.u-role { font-size: 11px; }
 
 
 
@@ -59,7 +54,7 @@ body{font-family:var(--font);background:#050F1C;min-height:100vh;margin:0;paddin
 .nav-item:hover{background:rgba(255,255,255,0.04);}
 .nav-item.active{background:rgba(33,150,243,0.12);border-left-color:var(--accent);}
 .nav-icon{font-size:13px;width:16px;text-align:center;flex-shrink:0;}
-.nav-label{font-size:12px;color:rgba(200,210,225,0.7);flex:1;}
+.nav-label{font-size:14px;color:rgba(200,210,225,0.7);flex:1;}
 .nav-item.active .nav-label{color:var(--white);font-weight:500;}
 .nav-badge{font-size:9px;font-weight:600;padding:1px 5px;border-radius:8px;background:#A32D2D;color:#F7C1C1;}
 .nav-badge.w{background:#854F0B;color:#FAC775;}
@@ -106,7 +101,7 @@ body{font-family:var(--font);background:#050F1C;min-height:100vh;margin:0;paddin
 .kc-crit::before{background:var(--crit);}
 .kc-ext::before{background:var(--ext);}
 .kc-pm::before{background:var(--pm);}
-.kpi-label{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px;}
+.kpi-label{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px;}
 .kpi-val{font-size:24px;font-weight:600;font-family:var(--head);}
 .kpi-val.blue{color:#85B7EB;}
 .kpi-val.green{color:var(--ok);}
@@ -432,17 +427,17 @@ async function renderTecnico(){
     </div>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px">
       <div style="background:rgba(226,75,74,0.08);border:0.5px solid rgba(226,75,74,0.2);border-radius:8px;padding:12px 14px;border-top:2px solid var(--crit);cursor:pointer" onclick="window.location.href='qdc_ot.html'">
-        <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px">OT Urgentes</div>
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px">OT Urgentes</div>
         <div style="font-size:24px;font-weight:600;font-family:var(--head);color:var(--crit)">${urgentes.length}</div>
         <div style="font-size:10px;color:rgba(131,131,139,0.45);margin-top:3px">${urgentes.length?'Requieren atención inmediata':'Sin urgencias activas'}</div>
       </div>
       <div style="background:rgba(33,150,243,0.06);border:0.5px solid rgba(33,150,243,0.15);border-radius:8px;padding:12px 14px;border-top:2px solid var(--accent);cursor:pointer" onclick="window.location.href='qdc_ot.html'">
-        <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px">Mis OT abiertas</div>
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px">Mis OT abiertas</div>
         <div style="font-size:24px;font-weight:600;font-family:var(--head);color:#85B7EB">${abiertas.length}</div>
         <div style="font-size:10px;color:rgba(131,131,139,0.45);margin-top:3px">${abiertas.length?'Pendientes de cierre':'Todo al día'}</div>
       </div>
       <div style="background:rgba(127,119,221,0.08);border:0.5px solid rgba(127,119,221,0.2);border-radius:8px;padding:12px 14px;border-top:2px solid var(--pm);cursor:pointer" onclick="window.location.href='qdc_pm.html'">
-        <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px">PM pendientes</div>
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px">PM pendientes</div>
         <div style="font-size:24px;font-weight:600;font-family:var(--head);color:#AFA9EC">${pmVenc.length + pmProx.length}</div>
         <div style="font-size:10px;color:rgba(131,131,139,0.45);margin-top:3px">${pmVenc.length} vencidos · ${pmProx.length} próximos</div>
       </div>
@@ -487,22 +482,22 @@ async function renderSupervisor(){
     </div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px">
       <div style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:12px 14px;border-top:2px solid var(--accent);cursor:pointer" onclick="window.location.href='qdc_ot.html'">
-        <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px">OT activas</div>
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px">OT activas</div>
         <div style="font-size:24px;font-weight:600;font-family:var(--head);color:#85B7EB">${ots.filter(o=>o.estado!=='done').length}</div>
         <div style="font-size:10px;color:rgba(131,131,139,0.45);margin-top:3px">${ots.filter(o=>o.es_externo).length} externas</div>
       </div>
       <div style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:12px 14px;border-top:2px solid var(--ext);cursor:pointer" onclick="window.location.href='qdc_contratistas.html'">
-        <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px">PDF pendientes</div>
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px">PDF pendientes</div>
         <div style="font-size:24px;font-weight:600;font-family:var(--head);color:var(--ext)">${extSinPDF}</div>
         <div style="font-size:10px;color:${extSinPDF?'var(--warn)':'rgba(131,131,139,0.45)'};margin-top:3px">${extSinPDF?'Requieren acción':'Todo al día'}</div>
       </div>
       <div style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:12px 14px;border-top:2px solid var(--pm);cursor:pointer" onclick="window.location.href='qdc_pm.html'">
-        <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px">PM vencidos</div>
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px">PM vencidos</div>
         <div style="font-size:24px;font-weight:600;font-family:var(--head);color:${pmVenc?'var(--crit)':'#AFA9EC'}">${pmVenc}</div>
         <div style="font-size:10px;color:rgba(131,131,139,0.45);margin-top:3px">${pmVenc?'Programar urgente':'Plan al día'}</div>
       </div>
       <div style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:12px 14px;border-top:2px solid var(--warn);cursor:pointer" onclick="window.location.href='qdc_inventario.html'">
-        <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px">Stock critico</div>
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px">Stock critico</div>
         <div style="font-size:24px;font-weight:600;font-family:var(--head);color:${stockCrit?'var(--crit)':stockBajo?'var(--warn)':'var(--ok)'}">${stockCrit+stockBajo}</div>
         <div style="font-size:10px;color:rgba(131,131,139,0.45);margin-top:3px">${stockCrit} agotados · ${stockBajo} bajo mín.</div>
       </div>
@@ -581,22 +576,22 @@ async function renderGerencia(){
       <!-- KPIs principales -->
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px" id="g-kpis">
         <div style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:12px 14px;border-top:2px solid var(--accent);cursor:pointer" onclick="window.location.href='qdc_ot.html'">
-          <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px">OT activas</div>
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px">OT activas</div>
           <div style="font-size:24px;font-weight:600;font-family:var(--head);color:#85B7EB" id="g-ot-activas">${otActivas}</div>
           <div style="font-size:10px;color:rgba(131,131,139,0.45);margin-top:3px">${otExterno} externas · ${ots.length-otExterno} internas</div>
         </div>
         <div style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:12px 14px;border-top:2px solid var(--ok);cursor:pointer" onclick="window.location.href='qdc_ot.html'">
-          <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px">Costo total OT</div>
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px">Costo total OT</div>
           <div style="font-size:20px;font-weight:600;font-family:var(--head);color:var(--ok)" id="g-costo-total">$${Math.round(costoOTs/1000)}K</div>
           <div style="font-size:10px;color:rgba(131,131,139,0.45);margin-top:3px">${ots.filter(o=>o.costo>0).length} OT con costo</div>
         </div>
         <div style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:12px 14px;border-top:2px solid var(--pm);cursor:pointer" onclick="window.location.href='qdc_pm.html'">
-          <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px">Cumplimiento PM</div>
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px">Cumplimiento PM</div>
           <div style="font-size:24px;font-weight:600;font-family:var(--head);color:#AFA9EC">${pctPM}%</div>
           <div style="font-size:10px;color:rgba(131,131,139,0.45);margin-top:3px">${pmVenc} vencidos</div>
         </div>
         <div style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.07);border-radius:8px;padding:12px 14px;border-top:2px solid #F0997B;cursor:pointer" onclick="window.location.href='qdc_embalajes.html'">
-          <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px">Embalajes mes</div>
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:5px">Embalajes mes</div>
           <div style="font-size:24px;font-weight:600;font-family:var(--head);color:#F0997B">${embs.length}</div>
           <div style="font-size:10px;color:rgba(131,131,139,0.45);margin-top:3px">$${Math.round(costoEmb/1000)}K total</div>
         </div>

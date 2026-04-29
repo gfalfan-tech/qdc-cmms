@@ -15,21 +15,16 @@
   --font:'Barlow',sans-serif;--head:'Barlow Condensed',sans-serif;
 }
 
-/* ── ESCALA PANTALLA COMPLETA ── */
-/* zoom escala todo sin reflow — más rápido que clamp/font-size */
-html { zoom: 1.3; }
+/* ── TAMAÑO DE FUENTE LEGIBLE ── */
+body { font-size: 14px !important; line-height: 1.5; }
 
-/* Firefox: zoom no soportado — usar transform scale */
-@supports (-moz-appearance: none) {
-  html { zoom: 1 !important; }
-  .shell {
-    transform: scale(1.3);
-    transform-origin: top left;
-    width: calc(100vw / 1.3) !important;
-    height: calc(100vh / 1.3) !important;
-  }
-}
 
+
+/* Aumenta tamaño base de texto sin afectar layout */
+
+.nav-label, .nav-section { font-size: 13px; }
+.u-name { font-size: 13px; }
+.u-role { font-size: 11px; }
 
 
 
@@ -50,7 +45,7 @@ body{font-family:var(--font);background:#050F1C;min-height:100vh;margin:0;paddin
 .nav-item:hover{background:rgba(255,255,255,0.04);}
 .nav-item.active{background:rgba(33,150,243,0.12);border-left-color:var(--accent);}
 .nav-icon{font-size:13px;width:16px;text-align:center;flex-shrink:0;}
-.nav-label{font-size:12px;color:rgba(200,210,225,0.7);flex:1;}
+.nav-label{font-size:14px;color:rgba(200,210,225,0.7);flex:1;}
 .nav-item.active .nav-label{color:var(--white);font-weight:500;}
 .sb-user{padding:10px 12px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;}
 .u-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;}
@@ -70,13 +65,13 @@ body{font-family:var(--font);background:#050F1C;min-height:100vh;margin:0;paddin
 .stat:hover{background:rgba(255,255,255,0.03);}
 .stat.on{border-bottom-color:var(--accent);}
 .stat-val{font-size:18px;font-weight:500;color:var(--white);}
-.stat-label{font-size:9px;color:rgba(131,131,139,0.5);margin-top:2px;text-transform:uppercase;}
+.stat-label{font-size:11px;color:rgba(131,131,139,0.5);margin-top:2px;text-transform:uppercase;}
 
 /* QUICK FORM */
 .quick-form{padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0;background:rgba(33,150,243,0.03);}
 .qf-title{font-family:var(--head);font-size:13px;font-weight:600;color:var(--white);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
 .qf-grid{display:grid;grid-template-columns:1fr 1fr 130px 110px;gap:8px;align-items:end;}
-.qf-label{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:4px;}
+.qf-label{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:4px;}
 .qf-input,.qf-select{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:5px;color:var(--white);font-size:12px;font-family:var(--font);padding:8px 10px;outline:none;width:100%;transition:border-color .15s;}
 .qf-input:focus,.qf-select:focus{border-color:var(--accent);}
 .qf-input::placeholder{color:rgba(131,131,139,0.4);}
@@ -803,15 +798,15 @@ function verOT(id){
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px;font-size:12px">
       <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px">
-        <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Activo</div>
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Activo</div>
         <div style="color:var(--white)">${o.activo||'—'}</div>
       </div>
       <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px">
-        <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Responsable</div>
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Responsable</div>
         <div style="color:${o.es_externo?'var(--ext)':'var(--white)'}">${o.responsable_nombre||o.asignado_nombre||'—'}</div>
       </div>
       <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px">
-        <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Origen</div>
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Origen</div>
         <div style="display:flex;align-items:center;gap:8px">
           <span style="color:${o.es_externo?'var(--ext)':'var(--white)'};font-weight:500">${o.es_externo?'🏢 Externo':'👤 Interno'}</span>
           ${canModify?`<button onclick="toggleOrigen('${o.id}',${o.es_externo})"
@@ -821,16 +816,16 @@ function verOT(id){
         </div>
       </div>
       <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px">
-        <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Fecha creación</div>
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Fecha creación</div>
         <div style="color:var(--white)">${fecha}</div>
       </div>
       <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px">
-        <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Costo registrado</div>
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Costo registrado</div>
         <div style="color:${o.costo?'var(--ok)':'rgba(131,131,139,0.4)'};font-weight:${o.costo?'600':'400'}">${o.costo?'$'+(o.costo||0).toLocaleString('es-CL'):'Sin costo aún'}</div>
       </div>
     </div>
 
-    ${o.notas?`<div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px;font-size:12px;margin-bottom:12px;color:rgba(200,210,225,0.7)"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Notas</div>${o.notas}</div>`:''}
+    ${o.notas?`<div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px;font-size:12px;margin-bottom:12px;color:rgba(200,210,225,0.7)"><div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Notas</div>${o.notas}</div>`:''}
 
     <div style="margin-bottom:12px">
       <div style="font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);margin-bottom:6px">
