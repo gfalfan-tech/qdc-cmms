@@ -1341,8 +1341,16 @@ function filtrarContratistas(q){
   const list = document.getElementById('cont-search-list');
   if(!list) return;
   const qn = (q||'').toLowerCase().replace(/[.\-]/g,'');
+
+  // Show hint if < 4 chars
+  if(qn.length > 0 && qn.length < 4){
+    list.style.display = 'block';
+    list.innerHTML = '<div style="padding:10px;font-size:11px;color:rgba(131,131,139,0.4)">Escribe al menos 4 caracteres para buscar...</div>';
+    return;
+  }
+  if(qn.length === 0){ list.style.display = 'none'; return; }
+
   const matches = (window._contListaFull||[]).filter(c=>
-    !qn ||
     (c.nombre||'').toLowerCase().includes(qn) ||
     (c.rut||'').replace(/[.\-]/g,'').toLowerCase().includes(qn)
   );

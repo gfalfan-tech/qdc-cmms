@@ -147,18 +147,105 @@ body{font-family:var(--font);background:#050F1C;min-height:100vh;margin:0;paddin
 
     <div class="topbar">
       <div class="page-title">KPIs y Reportes</div>
-      <div style="display:flex;gap:6px">
-        <button class="tb-btn" style="background:rgba(33,150,243,0.15);color:#85B7EB;border:0.5px solid rgba(33,150,243,0.3)" id="btn-mes" onclick="setPeriodo('mes',this)">Este mes</button>
-        <button class="tb-btn btn-g" id="btn-trim" onclick="setPeriodo('trim',this)">Trimestre</button>
-        <button class="tb-btn btn-g" id="btn-año" onclick="setPeriodo('año',this)">Año</button>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+        <!-- Vista selector -->
+        <div style="display:flex;gap:4px;background:rgba(255,255,255,0.05);border-radius:6px;padding:3px">
+          <button class="tb-btn" id="btn-vista-kpi" onclick="setVista('kpi',this)"
+            style="background:rgba(33,150,243,0.2);color:#85B7EB;border:0.5px solid rgba(33,150,243,0.3)">
+            📊 KPIs
+          </button>
+          <button class="tb-btn btn-g" id="btn-vista-costos" onclick="setVista('costos',this)">
+            💰 Costos
+          </button>
+        </div>
+        <!-- Period filters (KPI view) -->
+        <div id="filtros-kpi" style="display:flex;gap:4px">
+          <button class="tb-btn" style="background:rgba(33,150,243,0.15);color:#85B7EB;border:0.5px solid rgba(33,150,243,0.3)" id="btn-mes" onclick="setPeriodo('mes',this)">Este mes</button>
+          <button class="tb-btn btn-g" id="btn-trim" onclick="setPeriodo('trim',this)">Trimestre</button>
+          <button class="tb-btn btn-g" id="btn-año" onclick="setPeriodo('año',this)">Año</button>
+        </div>
+        <!-- Costos filters (hidden by default) -->
+        <div id="filtros-costos" style="display:none;gap:6px;align-items:center;flex-wrap:wrap">
+          <input type="date" id="fc-desde" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);border-radius:5px;color:var(--white);font-size:11px;padding:5px 8px;font-family:var(--font)" onchange="loadCostos()"/>
+          <span style="color:rgba(131,131,139,0.5);font-size:11px">—</span>
+          <input type="date" id="fc-hasta" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);border-radius:5px;color:var(--white);font-size:11px;padding:5px 8px;font-family:var(--font)" onchange="loadCostos()"/>
+          <select id="fc-tipo" onchange="loadCostos()" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);border-radius:5px;color:var(--white);font-size:11px;padding:5px 8px;font-family:var(--font)">
+            <option value="">Todos los tipos</option>
+            <option value="Correctivo">Correctivo</option>
+            <option value="Preventivo">Preventivo</option>
+          </select>
+          <select id="fc-origen" onchange="loadCostos()" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);border-radius:5px;color:var(--white);font-size:11px;padding:5px 8px;font-family:var(--font)">
+            <option value="">Interno y externo</option>
+            <option value="interno">Solo interno</option>
+            <option value="externo">Solo externo</option>
+          </select>
+          <select id="fc-cat" onchange="loadCostos()" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);border-radius:5px;color:var(--white);font-size:11px;padding:5px 8px;font-family:var(--font)">
+            <option value="">Todas las categorías</option>
+          </select>
+          <select id="fc-activo" onchange="loadCostos()" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);border-radius:5px;color:var(--white);font-size:11px;padding:5px 8px;font-family:var(--font)">
+            <option value="">Todos los activos</option>
+          </select>
+        </div>
       </div>
       <button class="tb-btn btn-g" onclick="exportarKPIsPDF()">⬇ Exportar PDF</button>
     </div>
+    <div id="vista-kpi">
     <div class="content-pad" id="kpi-content">
       <div class="loading"><div class="spinner"></div><span>Calculando KPIs…</span></div>
     </div>
 
   </div>
+  </div><!-- /vista-kpi -->
+
+  <!-- ── VISTA COSTOS ── -->
+  <div id="vista-costos" style="display:none" class="content-pad">
+
+    <!-- Summary cards -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px" id="costos-summary">
+      <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:14px;border-top:2px solid var(--accent)">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:6px">Costo Total</div>
+        <div id="cs-total" style="font-size:24px;font-weight:700;color:var(--white)">—</div>
+        <div id="cs-total-sub" style="font-size:10px;color:rgba(131,131,139,0.4);margin-top:3px"></div>
+      </div>
+      <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:14px;border-top:2px solid var(--crit)">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:6px">Correctivo</div>
+        <div id="cs-correctivo" style="font-size:24px;font-weight:700;color:var(--crit)">—</div>
+        <div id="cs-correctivo-sub" style="font-size:10px;color:rgba(131,131,139,0.4);margin-top:3px"></div>
+      </div>
+      <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:14px;border-top:2px solid #7F77DD">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:6px">Preventivo</div>
+        <div id="cs-preventivo" style="font-size:24px;font-weight:700;color:#9B94E8">—</div>
+        <div id="cs-preventivo-sub" style="font-size:10px;color:rgba(131,131,139,0.4);margin-top:3px"></div>
+      </div>
+      <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:14px;border-top:2px solid var(--ext)">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:6px">Externo</div>
+        <div id="cs-externo" style="font-size:24px;font-weight:700;color:var(--ext)">—</div>
+        <div id="cs-externo-sub" style="font-size:10px;color:rgba(131,131,139,0.4);margin-top:3px"></div>
+      </div>
+    </div>
+
+    <!-- Charts row -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px">
+      <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:16px">
+        <div style="font-size:11px;font-weight:600;color:rgba(200,210,225,0.6);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Costo por mes</div>
+        <canvas id="chart-costos-mes" height="180"></canvas>
+      </div>
+      <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:16px">
+        <div style="font-size:11px;font-weight:600;color:rgba(200,210,225,0.6);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Top 10 activos por costo</div>
+        <canvas id="chart-costos-activo" height="180"></canvas>
+      </div>
+    </div>
+
+    <!-- Detail table -->
+    <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:16px">
+      <div style="font-size:11px;font-weight:600;color:rgba(200,210,225,0.6);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Detalle de OTs con costo</div>
+      <div id="costos-table" style="overflow-x:auto">
+        <div style="text-align:center;padding:24px;color:rgba(131,131,139,0.4)">Cargando...</div>
+      </div>
+    </div>
+
+  </div><!-- /vista-costos -->
+
 </div>
 <div id="toast"></div>
 <div class="modal-overlay hidden" id="modal-overlay"><div class="modal" id="modal-inner"></div></div>
@@ -222,6 +309,218 @@ function buildSidebar(){
 function doLogout(){localStorage.removeItem('qdc_user');window.location.href='index.html';}
 async function audit(tipo,accion,detalle){
   try{await db.from('auditoria').insert({usuario_id:USER.id,usuario_nombre:USER.nombre||USER.email,tipo,accion,detalle});}catch(e){ console.warn("[QDC Error]", e?.message || e)}
+}
+
+
+// ── VISTA SWITCHER ──
+let _vistaActual = 'kpi';
+function setVista(vista, btn){
+  _vistaActual = vista;
+  // Toggle button styles
+  document.getElementById('btn-vista-kpi').style.background = vista==='kpi' ? 'rgba(33,150,243,0.2)' : '';
+  document.getElementById('btn-vista-kpi').style.color = vista==='kpi' ? '#85B7EB' : '';
+  document.getElementById('btn-vista-costos').style.background = vista==='costos' ? 'rgba(151,196,89,0.2)' : '';
+  document.getElementById('btn-vista-costos').style.color = vista==='costos' ? '#97C459' : '';
+  // Toggle views and filters
+  document.getElementById('vista-kpi').style.display     = vista==='kpi' ? '' : 'none';
+  document.getElementById('vista-costos').style.display  = vista==='costos' ? '' : 'none';
+  document.getElementById('filtros-kpi').style.display   = vista==='kpi' ? 'flex' : 'none';
+  document.getElementById('filtros-costos').style.display = vista==='costos' ? 'flex' : 'none';
+  if(vista==='costos'){
+    initCostosFilters();
+    loadCostos();
+  }
+}
+
+// ── INIT COSTOS FILTERS ──
+async function initCostosFilters(){
+  // Set default date range: last 3 months to today
+  const hasta = new Date();
+  const desde = new Date(); desde.setMonth(desde.getMonth()-3);
+  const fmt = d => d.toISOString().split('T')[0];
+  const elDesde = document.getElementById('fc-desde');
+  const elHasta = document.getElementById('fc-hasta');
+  if(elDesde && !elDesde.value) elDesde.value = fmt(desde);
+  if(elHasta && !elHasta.value) elHasta.value = fmt(hasta);
+
+  // Load categories from activos
+  const catSel = document.getElementById('fc-cat');
+  const actSel = document.getElementById('fc-activo');
+  if(catSel && catSel.options.length <= 1){
+    try{
+      const{data:acts} = await db.from('activos').select('nombre,categoria').order('nombre');
+      if(acts){
+        const cats = [...new Set(acts.map(a=>a.categoria).filter(Boolean))].sort();
+        cats.forEach(cat => {
+          const o = document.createElement('option');
+          o.value = cat; o.textContent = cat;
+          catSel.appendChild(o);
+        });
+        acts.forEach(act => {
+          const o = document.createElement('option');
+          o.value = act.nombre; o.textContent = act.nombre;
+          actSel.appendChild(o);
+        });
+      }
+    }catch(e){}
+  }
+}
+
+// ── LOAD COSTOS ──
+async function loadCostos(){
+  const desde  = document.getElementById('fc-desde')?.value;
+  const hasta  = document.getElementById('fc-hasta')?.value;
+  const tipo   = document.getElementById('fc-tipo')?.value   || '';
+  const origen = document.getElementById('fc-origen')?.value || '';
+  const cat    = document.getElementById('fc-cat')?.value    || '';
+  const activo = document.getElementById('fc-activo')?.value || '';
+
+  document.getElementById('costos-table').innerHTML =
+    '<div style="text-align:center;padding:24px;color:rgba(131,131,139,0.4)">Cargando...</div>';
+
+  try{
+    let query = db.from('ots')
+      .select('id,codigo,descripcion,activo,tipo,es_externo,costo,estado,creado_en,responsable_nombre,contratista')
+      .eq('estado','done')
+      .gt('costo',0)
+      .order('creado_en',{ascending:false})
+      .limit(500);
+
+    if(desde) query = query.gte('creado_en', desde + 'T00:00:00');
+    if(hasta) query = query.lte('creado_en', hasta + 'T23:59:59');
+    if(tipo)  query = query.eq('tipo', tipo);
+    if(origen === 'interno')  query = query.eq('es_externo', false);
+    if(origen === 'externo')  query = query.eq('es_externo', true);
+    if(activo) query = query.eq('activo', activo);
+
+    const{data:ots, error} = await query;
+    if(error) throw error;
+
+    // Filter by category (need activos table)
+    let filtered = ots || [];
+    if(cat && filtered.length){
+      let activosDeCat = [];
+      try{
+        const{data:acts} = await db.from('activos').select('nombre').eq('categoria',cat);
+        activosDeCat = (acts||[]).map(a=>a.nombre);
+      }catch(e){}
+      if(activosDeCat.length) filtered = filtered.filter(o => activosDeCat.includes(o.activo));
+    }
+
+    renderCostos(filtered);
+
+  }catch(e){
+    document.getElementById('costos-table').innerHTML =
+      '<div style="text-align:center;padding:24px;color:rgba(226,75,74,0.5)">Error al cargar: '+e.message+'</div>';
+  }
+}
+
+// ── RENDER COSTOS ──
+function renderCostos(ots){
+  const fmt = n => '$' + Math.round(n).toLocaleString('es-CL');
+
+  // Summary
+  const total      = ots.reduce((s,o)=>s+(o.costo||0),0);
+  const correctivo = ots.filter(o=>o.tipo==='Correctivo').reduce((s,o)=>s+(o.costo||0),0);
+  const preventivo = ots.filter(o=>o.tipo==='Preventivo').reduce((s,o)=>s+(o.costo||0),0);
+  const externo    = ots.filter(o=>o.es_externo).reduce((s,o)=>s+(o.costo||0),0);
+
+  document.getElementById('cs-total').textContent      = fmt(total);
+  document.getElementById('cs-correctivo').textContent = fmt(correctivo);
+  document.getElementById('cs-preventivo').textContent = fmt(preventivo);
+  document.getElementById('cs-externo').textContent    = fmt(externo);
+  document.getElementById('cs-total-sub').textContent      = ots.length + ' OTs';
+  document.getElementById('cs-correctivo-sub').textContent = ots.filter(o=>o.tipo==='Correctivo').length + ' OTs · ' + (total?Math.round(correctivo/total*100):0) + '%';
+  document.getElementById('cs-preventivo-sub').textContent = ots.filter(o=>o.tipo==='Preventivo').length + ' OTs · ' + (total?Math.round(preventivo/total*100):0) + '%';
+  document.getElementById('cs-externo-sub').textContent    = ots.filter(o=>o.es_externo).length + ' OTs · ' + (total?Math.round(externo/total*100):0) + '%';
+
+  // Chart: cost by month
+  const byMonth = {};
+  ots.forEach(o=>{
+    const m = (o.creado_en||'').substring(0,7);
+    if(!byMonth[m]) byMonth[m]={correctivo:0,preventivo:0};
+    if(o.tipo==='Correctivo') byMonth[m].correctivo += o.costo||0;
+    else byMonth[m].preventivo += o.costo||0;
+  });
+  const months = Object.keys(byMonth).sort();
+
+  if(window._chartCostosMes){ try{window._chartCostosMes.destroy();}catch(e){} }
+  const ctxM = document.getElementById('chart-costos-mes');
+  if(ctxM && months.length){
+    window._chartCostosMes = new Chart(ctxM, {
+      type:'bar',
+      data:{
+        labels: months.map(m=>{ const[y,mo]=m.split('-'); return ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][parseInt(mo)-1]+' '+y.slice(2); }),
+        datasets:[
+          {label:'Correctivo',data:months.map(m=>(byMonth[m].correctivo||0)/1000),backgroundColor:'rgba(226,75,74,0.7)'},
+          {label:'Preventivo',data:months.map(m=>(byMonth[m].preventivo||0)/1000),backgroundColor:'rgba(127,119,221,0.7)'}
+        ]
+      },
+      options:{responsive:true,plugins:{legend:{labels:{color:'rgba(200,210,225,0.7)',font:{size:10}}}},scales:{x:{ticks:{color:'rgba(200,210,225,0.5)',font:{size:9}},grid:{color:'rgba(255,255,255,0.05)'},stacked:true},y:{ticks:{color:'rgba(200,210,225,0.5)',font:{size:9},callback:v=>v+'K'},grid:{color:'rgba(255,255,255,0.05)'},stacked:true,title:{display:true,text:'Miles CLP',color:'rgba(131,131,139,0.5)',font:{size:9}}}}}
+    });
+  } else if(ctxM){
+    const ctx=ctxM.getContext('2d');
+    ctx.fillStyle='rgba(131,131,139,0.3)';
+    ctx.font='12px sans-serif';
+    ctx.textAlign='center';
+    ctx.fillText('Sin datos para el período',ctxM.width/2,ctxM.height/2);
+  }
+
+  // Chart: top activos
+  const byActivo = {};
+  ots.forEach(o=>{
+    const k = o.activo||'Sin activo';
+    byActivo[k] = (byActivo[k]||0) + (o.costo||0);
+  });
+  const topActivos = Object.entries(byActivo).sort((a,b)=>b[1]-a[1]).slice(0,10);
+
+  if(window._chartCostosActivo){ try{window._chartCostosActivo.destroy();}catch(e){} }
+  const ctxA = document.getElementById('chart-costos-activo');
+  if(ctxA && topActivos.length){
+    window._chartCostosActivo = new Chart(ctxA, {
+      type:'bar',
+      data:{
+        labels: topActivos.map(([k])=>k.length>20?k.substring(0,18)+'…':k),
+        datasets:[{data:topActivos.map(([,v])=>v/1000),backgroundColor:'rgba(33,150,243,0.7)',borderRadius:3}]
+      },
+      options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'rgba(200,210,225,0.5)',font:{size:9},callback:v=>v+'K'},grid:{color:'rgba(255,255,255,0.05)'}},y:{ticks:{color:'rgba(200,210,225,0.7)',font:{size:10}},grid:{display:false}}}}
+    });
+  }
+
+  // Table
+  if(!ots.length){
+    document.getElementById('costos-table').innerHTML =
+      '<div style="text-align:center;padding:24px;color:rgba(131,131,139,0.4)">Sin OTs completadas con costo registrado en el período seleccionado.</div>';
+    return;
+  }
+
+  document.getElementById('costos-table').innerHTML =
+    '<table style="width:100%;border-collapse:collapse;font-size:12px">' +
+    '<thead><tr style="border-bottom:1px solid rgba(255,255,255,0.1)">' +
+    '<th style="text-align:left;padding:8px 10px;color:rgba(131,131,139,0.5);font-weight:600;font-size:10px;text-transform:uppercase">OT</th>' +
+    '<th style="text-align:left;padding:8px 10px;color:rgba(131,131,139,0.5);font-weight:600;font-size:10px;text-transform:uppercase">Descripción</th>' +
+    '<th style="text-align:left;padding:8px 10px;color:rgba(131,131,139,0.5);font-weight:600;font-size:10px;text-transform:uppercase">Activo</th>' +
+    '<th style="text-align:left;padding:8px 10px;color:rgba(131,131,139,0.5);font-weight:600;font-size:10px;text-transform:uppercase">Tipo</th>' +
+    '<th style="text-align:left;padding:8px 10px;color:rgba(131,131,139,0.5);font-weight:600;font-size:10px;text-transform:uppercase">Origen</th>' +
+    '<th style="text-align:right;padding:8px 10px;color:rgba(131,131,139,0.5);font-weight:600;font-size:10px;text-transform:uppercase">Costo</th>' +
+    '<th style="text-align:left;padding:8px 10px;color:rgba(131,131,139,0.5);font-weight:600;font-size:10px;text-transform:uppercase">Fecha</th>' +
+    '</tr></thead><tbody>' +
+    ots.map((o,i) => {
+      const fecha = new Date(o.creado_en).toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit',year:'2-digit'});
+      const bg = i%2===0 ? 'rgba(255,255,255,0.02)' : 'transparent';
+      const tipoBg = o.tipo==='Correctivo' ? 'rgba(226,75,74,0.12)' : 'rgba(127,119,221,0.12)';
+      const tipoClr = o.tipo==='Correctivo' ? '#F09595' : '#9B94E8';
+      return '<tr style="border-bottom:0.5px solid rgba(255,255,255,0.05);background:'+bg+'">' +
+        '<td style="padding:8px 10px;font-family:monospace;font-size:11px;color:rgba(131,131,139,0.5)">'+( o.codigo||o.id.slice(-6))+'</td>' +
+        '<td style="padding:8px 10px;color:var(--white);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(o.descripcion||'—')+'</td>' +
+        '<td style="padding:8px 10px;color:rgba(200,210,225,0.7)">'+(o.activo||'—')+'</td>' +
+        '<td style="padding:8px 10px"><span style="padding:2px 7px;border-radius:3px;font-size:10px;background:'+tipoBg+';color:'+tipoClr+'">'+o.tipo+'</span></td>' +
+        '<td style="padding:8px 10px;color:'+(o.es_externo?'var(--ext)':'rgba(200,210,225,0.5)')+'">'+( o.es_externo?'🏢 Ext':'👤 Int')+'</td>' +
+        '<td style="padding:8px 10px;text-align:right;font-weight:600;color:var(--ok)">'+fmt(o.costo)+'</td>' +
+        '<td style="padding:8px 10px;color:rgba(131,131,139,0.5)">'+fecha+'</td>' +
+        '</tr>';
+    }).join('') +
+    '</tbody></table>';
 }
 
 function exportarKPIsPDF(){
