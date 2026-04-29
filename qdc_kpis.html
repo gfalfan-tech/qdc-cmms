@@ -314,7 +314,7 @@ async function audit(tipo,accion,detalle){
 
 // ── VISTA SWITCHER ──
 let _vistaActual = 'kpi';
-function setVista(vista, btn){
+async function setVista(vista, btn){
   _vistaActual = vista;
   // Toggle button styles
   document.getElementById('btn-vista-kpi').style.background = vista==='kpi' ? 'rgba(33,150,243,0.2)' : '';
@@ -327,7 +327,7 @@ function setVista(vista, btn){
   document.getElementById('filtros-kpi').style.display   = vista==='kpi' ? 'flex' : 'none';
   document.getElementById('filtros-costos').style.display = vista==='costos' ? 'flex' : 'none';
   if(vista==='costos'){
-    initCostosFilters();
+    await initCostosFilters();
     loadCostos();
   }
 }
@@ -631,21 +631,28 @@ function setPeriodo(p,el){
 }
 async function loadKPIs(){
   Object.values(charts).forEach(c=>{try{c.destroy();}catch(e){ console.warn("[QDC Error]", e?.message || e)}});charts={};
-  // Cargar datos reales desde Supabase
   let otTotal=0,otDone=0,otExt=0,otSinPDF=0,invCrit=0,pmVenc=0,pmTotal=0;
+  let otsAll=[];
   try{
-    const{data:ots}=await db.from('ots').select('id,estado,es_externo,pdf_url');
-    if(ots){otTotal=ots.length;otDone=ots.filter(o=>o.estado==='done').length;otExt=ots.filter(o=>o.es_externo).length;otSinPDF=ots.filter(o=>o.es_externo&&!o.pdf_url).length;}
+    // Load OTs with date and cost for real charts
+    const{data:ots}=await db.from('ots').select('id,estado,es_externo,pdf_url,tipo,costo,creado_en').order('creado_en',{ascending:true});
+    if(ots){
+      otsAll=ots;
+      otTotal=ots.length;
+      otDone=ots.filter(o=>o.estado==='done').length;
+      otExt=ots.filter(o=>o.es_externo).length;
+      otSinPDF=ots.filter(o=>o.es_externo&&!o.pdf_url).length;
+    }
     const{data:inv}=await db.from('inventario').select('stock');
     if(inv)invCrit=inv.filter(i=>i.stock===0).length;
     const{data:pms}=await db.from('plan_pm').select('estado,proxima_fecha');
     if(pms){pmTotal=pms.length;pmVenc=pms.filter(p=>p.estado==='overdue'||new Date(p.proxima_fecha)<new Date()).length;}
   }catch(e){ console.warn("[QDC Error]", e?.message || e)}
-  const pctCumpl=pmTotal?Math.round(((pmTotal-pmVenc)/pmTotal)*100):83;
-  const pctExt=otTotal?Math.round(otExt/otTotal*100):21;
-  renderKPIs(otTotal,otDone,otExt,otSinPDF,invCrit,pmVenc,pctCumpl,pctExt);
+  const pctCumpl=pmTotal?Math.round(((pmTotal-pmVenc)/pmTotal)*100):100;
+  const pctExt=otTotal?Math.round(otExt/otTotal*100):0;
+  renderKPIs(otTotal,otDone,otExt,otSinPDF,invCrit,pmVenc,pctCumpl,pctExt,otsAll);
 }
-function renderKPIs(otTotal,otDone,otExt,otSinPDF,invCrit,pmVenc,pctCumpl,pctExt){
+function renderKPIs(otTotal,otDone,otExt,otSinPDF,invCrit,pmVenc,pctCumpl,pctExt,otsAll=[]){  // otsAll = real OT data for charts
   document.getElementById('kpi-content').innerHTML=`
     <div class="kpi-grid kpi-grid-4" style="margin-bottom:14px">
       <div class="kpi kpi-blue"><div class="kpi-label">Disponibilidad planta</div><div class="kpi-val" style="color:#85B7EB">94.2%</div><div class="kpi-sub">Meta: 95%</div></div>
@@ -661,16 +668,24 @@ function renderKPIs(otTotal,otDone,otExt,otSinPDF,invCrit,pmVenc,pctCumpl,pctExt
       <div class="kpi kpi-blue"><div class="kpi-label">OT totales</div><div class="kpi-val" style="color:#85B7EB">${otTotal||'—'}</div><div class="kpi-sub">${otDone} completadas</div></div>
       <div class="kpi kpi-ext"><div class="kpi-label">OT externas</div><div class="kpi-val" style="color:var(--ext)">${otExt||'—'}</div><div class="kpi-sub">${pctExt}% del total · ${otSinPDF} sin PDF</div></div>
       <div class="kpi kpi-warn"><div class="kpi-label">OEE planta</div><div class="kpi-val" style="color:var(--warn)">78.4%</div><div class="kpi-sub">Meta: 80%</div></div>
-      <div class="kpi kpi-crit"><div class="kpi-label">Stock agotado</div><div class="kpi-val" style="color:var(--crit)">${invCrit||'—'}</div><div class="kpi-sub">items críticos</div></div>
-    </div>`;
-  setTimeout(()=>{
+      <div class="kpi kpi-crit"><div class="kpi-label">Stock agotado</div><div class="kpi-val" style="color:var(--crit)">${invCrit||'—'}</div><div class="kp  setTimeout(()=>{
     const lo={plugins:{legend:{display:true,position:'top',labels:{color:TC,font:{size:10,family:'Barlow'},boxWidth:10,padding:10}},tooltip:{backgroundColor:'#0D2D48',borderColor:'rgba(255,255,255,0.1)',borderWidth:1,titleColor:'#EEF4FF',bodyColor:'#B5D4F4'}},scales:{x:{grid:{color:GC},ticks:{color:TC,font:{size:10,family:'Barlow'}}},y:{grid:{color:GC},ticks:{color:TC,font:{size:10,family:'Barlow'}}}}};
     const c1=document.getElementById('ch-ot'),c2=document.getElementById('ch-costo');
-    if(c1)charts.ot=new Chart(c1,{type:'bar',data:{labels:MO,datasets:[{label:'Preventivo',data:[8,9,7,11,10,9,10],backgroundColor:'rgba(127,119,221,0.6)',borderRadius:3},{label:'Correctivo',data:[5,7,9,6,8,7,9],backgroundColor:'rgba(239,159,39,0.6)',borderRadius:3},{label:'Externo',data:[2,1,3,2,2,3,5],backgroundColor:'rgba(93,202,165,0.6)',borderRadius:3}]},options:{...lo,responsive:true,maintainAspectRatio:false,scales:{x:{stacked:true,grid:{color:GC},ticks:{color:TC,font:{size:10,family:'Barlow'}}},y:{stacked:true,grid:{color:GC},ticks:{color:TC,font:{size:10,family:'Barlow'}}}}}});
-    if(c2)charts.costo=new Chart(c2,{type:'line',data:{labels:MO,datasets:[{label:'Total',data:[52,49,55,51,48,53,47.1],borderColor:'#EEF4FF',backgroundColor:'rgba(238,244,255,0.05)',borderWidth:2,tension:0.3,fill:true,pointBackgroundColor:'#EEF4FF',pointRadius:3},{label:'Externo',data:[18,15,22,19,17,21,18.2],borderColor:'#5DCAA5',backgroundColor:'rgba(93,202,165,0.05)',borderWidth:1.5,tension:0.3,borderDash:[4,3],pointBackgroundColor:'#5DCAA5',pointRadius:3}]},options:{...lo,responsive:true,maintainAspectRatio:false}});
-  },80);
-}
-
-</script>
+    // Build last 6 months from real OT data
+    const now=new Date();
+    const recentMonths=[];
+    for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);recentMonths.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'));}
+    const mNames=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    const labels=recentMonths.map(m=>{const[y,mo]=m.split('-');return mNames[parseInt(mo)-1]+' '+y.slice(2);});
+    const dataPrev=[],dataCorr=[],dataCosto=[],dataCostoExt=[];
+    recentMonths.forEach(m=>{
+      const mes=(otsAll||[]).filter(o=>(o.creado_en||'').startsWith(m));
+      dataPrev.push(mes.filter(o=>o.tipo==='Preventivo').length);
+      dataCorr.push(mes.filter(o=>o.tipo==='Correctivo').length);
+      dataCosto.push(Math.round(mes.reduce((s,o)=>s+(o.costo||0),0)/1000*10)/10);
+      dataCostoExt.push(Math.round(mes.filter(o=>o.es_externo).reduce((s,o)=>s+(o.costo||0),0)/1000*10)/10);
+    });
+    if(c1)charts.ot=new Chart(c1,{type:'bar',data:{labels,datasets:[{label:'Preventivo',data:dataPrev,backgroundColor:'rgba(127,119,221,0.6)',borderRadius:3},{label:'Correctivo',data:dataCorr,backgroundColor:'rgba(239,159,39,0.6)',borderRadius:3}]},options:{...lo,responsive:true,maintainAspectRatio:false,scales:{x:{stacked:true,grid:{color:GC},ticks:{color:TC,font:{size:10,family:'Barlow'}}},y:{stacked:true,grid:{color:GC},ticks:{color:TC,font:{size:10,family:'Barlow'}}}}}});
+    if(c2)charts.costo=new Chart(c2,{type:'line',data:{labels,datasets:[{label:'Total',data:dataCosto,borderColor:'#EEF4FF',backgroundColor:'rgba(238,244,255,0.05)',borderWidth:2,tension:0.3,fill:true,pointBackgroundColor:'#EEF4FF',pointRadius:3},{label:'Externo',data:dataCostoExt,borderColor:'#5DCAA5',backgroundColor:'rgba(93,202,165,0.05)',borderWidth:1.5,tension:0.3,borderDash:[4,3],pointBackgroundColor:'#5DCAA5',pointRadius:3}]},options:{...lo,responsivscript>
 </body>
 </html>
