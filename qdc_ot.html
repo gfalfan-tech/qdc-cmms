@@ -984,15 +984,44 @@ function openCostoModal(id, ot){
 async function confirmarCerrar(id){
   const costo = parseInt(document.getElementById('costo-input')?.value)||0;
   try{
+    // 1. Complete the OT
     const{error}=await db.from('ots').update({estado:'done',costo,actualizado_en:new Date().toISOString()}).eq('id',id);
     if(error) throw error;
     const o=OTS_DATA.find(x=>x.id===id);
     if(o){o.estado='done';o.costo=costo;}
-    showToast('✓ OT completada. Costo: $'+costo.toLocaleString('es-CL'),'rgba(99,153,34,0.4)');
+
+    // 2. Deduct materials from inventory
+    if(_materialesOT && _materialesOT.length){
+      const deductResults = [];
+      for(const mat of _materialesOT){
+        try{
+          // Get current stock first to avoid race condition
+          const{data:inv} = await db.from('inventario').select('stock').eq('id',mat.id).single();
+          const nuevoStock = Math.max(0, (inv?.stock||0) - mat.cantidad);
+          const{error:invErr} = await db.from('inventario').update({stock: nuevoStock}).eq('id',mat.id);
+          if(!invErr){
+            deductResults.push(mat.descripcion + ' (-' + mat.cantidad + ')');
+            await audit('inventario',
+              'Descuento inventario desde OT ' + (o?.codigo||id),
+              mat.descripcion + ': ' + (inv?.stock||0) + ' → ' + nuevoStock + ' ' + (mat.unidad||'u')
+            );
+          }
+        }catch(e){ console.warn('[inventario deduct]', e.message); }
+      }
+      if(deductResults.length){
+        showToast('✓ OT completada · Inventario descontado: ' + deductResults.join(', '), 'rgba(99,153,34,0.4)');
+      } else {
+        showToast('✓ OT completada. Costo: $'+costo.toLocaleString('es-CL'),'rgba(99,153,34,0.4)');
+      }
+    } else {
+      showToast('✓ OT completada. Costo: $'+costo.toLocaleString('es-CL'),'rgba(99,153,34,0.4)');
+    }
+
     closeModal();
     updateStats();
     filterTable();
-    await audit('ot','Completó OT '+(o?.codigo||id),'Costo: $'+costo.toLocaleString('es-CL'));
+    await audit('ot','Completó OT '+(o?.codigo||id),'Costo: $'+costo.toLocaleString('es-CL') + (_materialesOT?.length ? ' · ' + _materialesOT.length + ' materiales descontados' : ''));
+    _materialesOT = [];
   }catch(err){showToast('✕ Error: '+err.message,'rgba(226,75,74,0.4)');}
 }
 
