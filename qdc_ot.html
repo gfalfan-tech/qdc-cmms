@@ -772,9 +772,9 @@ function verOT(id){
     <div style="background:rgba(255,255,255,0.03);border-radius:7px;padding:12px 14px;margin-bottom:12px;border:0.5px solid rgba(93,202,165,0.2)">
       <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:8px">Checklist de mantenimiento</div>
       <div id="pm-checklist-${o.id}">
-        ${items.map((item) =>
+        ${items.map((item, ci) =>
           '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:0.5px solid rgba(255,255,255,0.06)">' +
-          '<span style="font-size:16px;cursor:pointer;color:rgba(93,202,165,0.6)" onclick="this.textContent=this.textContent==='☐'?'☑':'☐'">☐</span>' +
+          '<span class="chk-box" style="font-size:16px;cursor:pointer;color:rgba(93,202,165,0.6)" onclick="this.textContent=this.textContent.trim()==String.fromCharCode(9744)?String.fromCharCode(9745):String.fromCharCode(9744)">&#9744;</span>' +
           '<span style="font-size:12px;color:var(--white)">' + item + '</span></div>'
         ).join('')}
       </div>
