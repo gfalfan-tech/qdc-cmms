@@ -454,7 +454,7 @@ function imprimirEmb(id){
   <div class="firmas"><div class="firma"><br/><br/><div style="font-size:10px;color:#666">Firma Técnico</div><div style="font-size:12px;font-weight:600;margin-top:3px">${e.tecnico_nombre||'_________________'}</div></div><div class="firma"><br/><br/><div style="font-size:10px;color:#666">Firma Supervisor</div><div style="font-size:12px;font-weight:600;margin-top:3px">_________________</div></div></div>
   <div class="footer"><span>QDC CMMS Pro · Química del Campo S.p.A</span><span>${e.codigo||''}</span></div>
   <div style="text-align:center;margin-top:20px;padding:16px;background:#f5f5f5;border-radius:8px"><button onclick="window.print()" style="padding:10px 24px;background:#08223D;color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;margin-right:10px">🖨️ Imprimir / Guardar PDF</button><button onclick="window.close()" style="padding:10px 18px;background:#e0e0e0;color:#333;border:none;border-radius:6px;font-size:14px;cursor:pointer">Cerrar</button></div>
-  </body></html>;
+  </body></html>`;
   const _blob = new Blob([_html], {type:'text/html'});
   const _url = URL.createObjectURL(_blob);
   const win = window.open(_url, '_blank');
