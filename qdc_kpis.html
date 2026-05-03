@@ -668,7 +668,9 @@ function renderKPIs(otTotal,otDone,otExt,otSinPDF,invCrit,pmVenc,pctCumpl,pctExt
       <div class="kpi kpi-blue"><div class="kpi-label">OT totales</div><div class="kpi-val" style="color:#85B7EB">${otTotal||'—'}</div><div class="kpi-sub">${otDone} completadas</div></div>
       <div class="kpi kpi-ext"><div class="kpi-label">OT externas</div><div class="kpi-val" style="color:var(--ext)">${otExt||'—'}</div><div class="kpi-sub">${pctExt}% del total · ${otSinPDF} sin PDF</div></div>
       <div class="kpi kpi-warn"><div class="kpi-label">OEE planta</div><div class="kpi-val" style="color:var(--warn)">78.4%</div><div class="kpi-sub">Meta: 80%</div></div>
-      <div class="kpi kpi-crit"><div class="kpi-label">Stock agotado</div><div class="kpi-val" style="color:var(--crit)">${invCrit||'—'}</div><div class="kp  setTimeout(()=>{
+      <div class="kpi kpi-crit"><div class="kpi-label">Stock agotado</div><div class="kpi-val" style="color:var(--crit)">${invCrit||'—'}</div><div class="kpi-sub">Items críticos</div></div>
+    </div>`;
+  setTimeout(()=>{
     const lo={plugins:{legend:{display:true,position:'top',labels:{color:TC,font:{size:10,family:'Barlow'},boxWidth:10,padding:10}},tooltip:{backgroundColor:'#0D2D48',borderColor:'rgba(255,255,255,0.1)',borderWidth:1,titleColor:'#EEF4FF',bodyColor:'#B5D4F4'}},scales:{x:{grid:{color:GC},ticks:{color:TC,font:{size:10,family:'Barlow'}}},y:{grid:{color:GC},ticks:{color:TC,font:{size:10,family:'Barlow'}}}}};
     const c1=document.getElementById('ch-ot'),c2=document.getElementById('ch-costo');
     // Build last 6 months from real OT data
