@@ -715,9 +715,15 @@ async function ejecutarEliminarActivo(id){
   const activo = ACTS.find(x=>x.id===id);
   const nombre = activo?.nombre || id;
   try{
+    // 1. Nullificar activo_id en plan_pm para romper la FK antes de eliminar
+    const{error:pmErr} = await db.from('plan_pm').update({activo_id:null}).eq('activo_id',id);
+    if(pmErr){ console.warn('[QDC] plan_pm nullify:', pmErr.message); }
+
+    // 2. Eliminar el activo
     const{error} = await db.from('activos').delete().eq('id',id);
     if(error) throw error;
 
+    // 3. Actualizar lista local y UI
     ACTS = ACTS.filter(x=>x.id!==id);
     await audit('delete','Eliminó activo: '+nombre,'ID: '+id);
     showToast('✓ Activo "'+nombre+'" eliminado','rgba(99,153,34,0.4)');
