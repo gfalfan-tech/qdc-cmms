@@ -517,7 +517,11 @@ function renderEmb(list){
         </td>
         <td><span class="badge ${e.estado==='completo'?'b-ok':'b-warn'}">${e.estado==='completo'?'Completo':e.estado==='anulado'?'Anulado':e.estado==='en_proceso'?'En proceso':'Pendiente'}</span></td>
         <td style="font-size:11px;font-family:monospace;color:rgba(131,131,139,0.5)">${fecha}</td>
-        <td><button class="tb-btn btn-g" style="padding:3px 10px;font-size:11px" onclick="verEmb('${e.id}')">Ver</button></td>
+        <td style="display:flex;gap:5px;align-items:center;padding:8px 4px">
+          <button class="tb-btn btn-g" style="padding:3px 10px;font-size:11px" onclick="verEmb('${e.id}')">Ver</button>
+          ${USER.rol==='s'||USER.rol==='g' ? `<button onclick="confirmarEliminarEmb('${e.id}','${e.nv||e.cliente||e.id}')" title="Eliminar embalaje"
+            style="padding:3px 8px;font-size:12px;border-radius:4px;border:0.5px solid rgba(226,75,74,0.35);background:rgba(226,75,74,0.1);color:rgba(226,75,74,0.8);cursor:pointer">🗑</button>` : ''}
+        </td>
       </tr>`;
     }).join('')}</tbody>
   </table>`;
@@ -584,6 +588,48 @@ async function guardarEmb(){
     await audit('emb','Registró embalaje '+codigo,nv+' · '+cliente+' · $'+costo.toLocaleString('es-CL'));
     closeModal(); showToast('✓ Embalaje '+codigo+' registrado','rgba(99,153,34,0.4)'); updateStats(); renderEmb(EMBS);
   }catch(err){ showToast('✕ Error: '+err.message,'rgba(226,75,74,0.4)')}
+}
+
+
+// ── ELIMINAR EMBALAJE ──
+function confirmarEliminarEmb(id, nv){
+  document.getElementById('modal-overlay').classList.remove('hidden');
+  document.getElementById('modal-inner').innerHTML = `
+    <div class="modal-header">
+      <div class="modal-title" style="color:var(--crit)">🗑 Eliminar embalaje</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div style="padding:24px 0;text-align:center">
+      <div style="font-size:38px;margin-bottom:12px">⚠️</div>
+      <div style="font-size:14px;color:var(--white);font-weight:600;margin-bottom:6px">NV / Cliente: ${nv}</div>
+      <div style="font-size:12px;color:rgba(131,131,139,0.5);margin-bottom:20px;line-height:1.6">
+        Esta acción eliminará el embalaje permanentemente.<br/>
+        Las fotos y documentos adjuntos también se perderán.
+      </div>
+      <div style="display:flex;gap:10px;justify-content:center">
+        <button class="btn-cancel" onclick="closeModal()">← Cancelar</button>
+        <button onclick="ejecutarEliminarEmb('${id}')"
+          style="padding:8px 22px;border-radius:5px;border:none;background:rgba(226,75,74,0.85);color:#fff;cursor:pointer;font-size:13px;font-weight:600;font-family:var(--font)">
+          Sí, eliminar
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+async function ejecutarEliminarEmb(id){
+  try{
+    const{error} = await db.from('embalajes').delete().eq('id', id);
+    if(error) throw error;
+    EMBS = EMBS.filter(e => e.id !== id);
+    await audit('delete','Eliminó embalaje ID: '+id,'');
+    showToast('✓ Embalaje eliminado','rgba(99,153,34,0.4)');
+    closeModal();
+    renderEmb(EMBS);
+    updateStats();
+  }catch(err){
+    showToast('✕ Error al eliminar: '+err.message,'rgba(226,75,74,0.4)');
+  }
 }
 
 </script>
