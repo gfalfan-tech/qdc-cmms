@@ -230,8 +230,19 @@ function doLogout(){ localStorage.removeItem('qdc_user'); window.location.href='
 
 function buildCatFilter(){
   const sel = document.getElementById('f-cat');
+  if(!sel) return;
+  const current = sel.value; // preserve current selection
+  // Build from real DB data + CATEGORIAS merged, sorted
+  const dbCats = [...new Set(ACTS.map(a => a.categoria).filter(Boolean))].sort();
+  const allCats = [...new Set([...dbCats, ...CATEGORIAS])].sort();
   sel.innerHTML = '<option value="">Todas las categorias</option>';
-  CATEGORIAS.forEach(c => { const o=document.createElement('option'); o.value=c; o.textContent=c; sel.appendChild(o); });
+  allCats.forEach(cat => {
+    const o = document.createElement('option');
+    o.value = cat;
+    o.textContent = cat;
+    if(cat === current) o.selected = true;
+    sel.appendChild(o);
+  });
 }
 
 let PMS_DATA = []; // PM data for health calculation
@@ -254,6 +265,7 @@ async function loadActivos(){
     OTS_DONE=[];
     showToast('Mostrando datos demo');
   }
+  buildCatFilter(); // rebuild with real DB categories
   applyFilters();
 }
 
