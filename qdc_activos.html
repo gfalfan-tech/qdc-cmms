@@ -414,6 +414,7 @@ function verActivo(id){
         ? 'PM programado para hoy'
         : 'Próxima mantención en '+health.dias_restantes+' días';
 
+  const canEdit = USER.rol==='s' || USER.rol==='g';
   document.getElementById('modal-inner').innerHTML=`
     <div class="modal-header"><div class="modal-title">${a.icono||'🏭'} ${a.nombre}</div><button class="modal-close" onclick="closeModal()">✕</button></div>
 
@@ -438,8 +439,12 @@ function verActivo(id){
       </div>
     </div>
 
-    <div class="modal-footer">
-      <button class="btn-cancel" onclick="closeModal()">Cerrar</button>
+    <div class="modal-footer" style="justify-content:space-between;align-items:center">
+      ${canEdit ? '<button onclick=\"confirmarEliminarActivo(\'' + a.id + '\')\" style=\"padding:7px 14px;border-radius:5px;border:0.5px solid rgba(226,75,74,0.3);background:rgba(226,75,74,0.08);color:rgba(226,75,74,0.8);cursor:pointer;font-size:12px;font-family:var(--font)\">🗑 Eliminar</button>' : '<div></div>'}
+      <div style="display:flex;gap:8px">
+        <button class="btn-cancel" onclick="closeModal()">Cerrar</button>
+        ${canEdit ? '<button onclick=\"abrirEditarActivo(\'' + a.id + '\')\" style=\"padding:7px 18px;border-radius:5px;border:none;background:rgba(33,150,243,0.7);color:#fff;cursor:pointer;font-size:12px;font-weight:600;font-family:var(--font)\">✏️ Editar</button>' : ''}
+      </div>
     </div>`;
   document.getElementById('modal-overlay').classList.remove('hidden');
 }
@@ -573,6 +578,154 @@ async function previewActCode(){
   const hint  = document.getElementById('na-codigo-hint');
   if(input){ input.value = code; }
   if(hint){  hint.textContent = '✓ Código asignado: ' + code; }
+}
+
+
+// ── EDICIÓN DE ACTIVOS (solo supervisor/gerencia) ──
+
+function abrirEditarActivo(id){
+  if(USER.rol!=='s' && USER.rol!=='g'){ showToast('Sin permiso','rgba(226,75,74,0.4)'); return; }
+  const a = ACTS.find(x=>x.id===id);
+  if(!a) return;
+
+  const catOptions = [
+    'General','Energía e Instalaciones','Mecánico','Eléctrico','Hidráulico',
+    'Neumático','Seguridad','HVAC','Transporte y Desplazamientos',
+    'Medición y Control','Infraestructura','Laboratorio'
+  ].map(cat => `<option value="${cat}" ${a.categoria===cat?'selected':''}>${cat}</option>`).join('');
+
+  const estadoOptions = [
+    ['operativo','Operativo'],['alerta','En alerta'],['critico','Crítico'],['inactivo','Inactivo']
+  ].map(([v,l]) => `<option value="${v}" ${a.estado===v?'selected':''}>${l}</option>`).join('');
+
+  const iconOptions = ['🏭','🔧','⚡','🌡️','💡','🚗','🔌','🏗️','⚙️','🖥️','🔩','🛢️','🧲','📡','🔬','🏋️','🚿','❄️']
+    .map(ic => `<option value="${ic}" ${(a.icono||'🏭')===ic?'selected':''}>${ic}</option>`).join('');
+
+  document.getElementById('modal-inner').innerHTML = `
+    <div class="modal-header">
+      <div class="modal-title">✏️ Editar activo</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div class="form-group" style="grid-column:1/-1">
+        <label class="form-label">Nombre del activo *</label>
+        <input type="text" id="ea-nombre" class="form-input" value="${a.nombre||''}" placeholder="Nombre del equipo"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Código</label>
+        <input type="text" id="ea-codigo" class="form-input" value="${a.codigo||''}" placeholder="ej: ACT-001" style="font-family:monospace"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Ubicación</label>
+        <input type="text" id="ea-ubic" class="form-input" value="${a.ubicacion||''}" placeholder="ej: Planta, Bodega"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Categoría</label>
+        <select id="ea-cat" class="form-select">${catOptions}</select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Estado</label>
+        <select id="ea-est" class="form-select">${estadoOptions}</select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Ícono</label>
+        <select id="ea-icono" class="form-select">${iconOptions}</select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Salud inicial (%)</label>
+        <input type="number" id="ea-salud" class="form-input" value="${a.salud||90}" min="0" max="100" placeholder="90"/>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="verActivo('${id}')">← Volver</button>
+      <button onclick="guardarEdicionActivo('${id}')"
+        style="padding:7px 18px;border-radius:5px;border:none;background:rgba(99,153,34,0.8);color:#fff;cursor:pointer;font-size:12px;font-weight:600;font-family:var(--font)">
+        💾 Guardar cambios
+      </button>
+    </div>
+  `;
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+
+async function guardarEdicionActivo(id){
+  const nombre = document.getElementById('ea-nombre')?.value.trim();
+  if(!nombre){ showToast('El nombre es obligatorio','rgba(226,75,74,0.4)'); return; }
+
+  const cambios = {
+    nombre,
+    codigo:    document.getElementById('ea-codigo')?.value.trim() || null,
+    ubicacion: document.getElementById('ea-ubic')?.value.trim()   || null,
+    categoria: document.getElementById('ea-cat')?.value,
+    estado:    document.getElementById('ea-est')?.value,
+    icono:     document.getElementById('ea-icono')?.value || '🏭',
+    salud:     parseInt(document.getElementById('ea-salud')?.value) || 90,
+  };
+
+  try{
+    const{error} = await db.from('activos').update(cambios).eq('id',id);
+    if(error) throw error;
+
+    // Update local cache
+    const idx = ACTS.findIndex(x=>x.id===id);
+    if(idx>=0) ACTS[idx] = {...ACTS[idx], ...cambios};
+
+    await audit('update','Editó activo: '+nombre,
+      'Cat: '+cambios.categoria+' · Est: '+cambios.estado);
+
+    showToast('✓ Activo actualizado','rgba(99,153,34,0.4)');
+    closeModal();
+    applyFilters();
+  }catch(err){
+    showToast('✕ Error: '+err.message,'rgba(226,75,74,0.4)');
+  }
+}
+
+async function confirmarEliminarActivo(id){
+  const activo = ACTS.find(x=>x.id===id);
+  const nombre = activo?.nombre || id;
+  if(USER.rol!=='s' && USER.rol!=='g'){ showToast('Sin permiso','rgba(226,75,74,0.4)'); return; }
+
+  document.getElementById('modal-inner').innerHTML = `
+    <div class="modal-header">
+      <div class="modal-title" style="color:var(--crit)">🗑 Eliminar activo</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div style="padding:20px 0;text-align:center">
+      <div style="font-size:40px;margin-bottom:12px">⚠️</div>
+      <div style="font-size:14px;color:var(--white);margin-bottom:8px;font-weight:600">${nombre}</div>
+      <div style="font-size:12px;color:rgba(131,131,139,0.6);margin-bottom:20px;line-height:1.6">
+        Esta acción eliminará el activo permanentemente.<br/>
+        Las OT y rutinas PM asociadas <strong>no</strong> se eliminarán.
+      </div>
+      <div style="display:flex;gap:10px;justify-content:center">
+        <button class="btn-cancel" onclick="verActivo('${id}')">← Cancelar</button>
+        <button onclick="ejecutarEliminarActivo('${id}','${nombre.replace(/'/g,"\\'")}')"
+          style="padding:8px 20px;border-radius:5px;border:none;background:rgba(226,75,74,0.8);color:#fff;cursor:pointer;font-size:13px;font-weight:600;font-family:var(--font)">
+          Sí, eliminar
+        </button>
+      </div>
+    </div>
+  `;
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+
+async function ejecutarEliminarActivo(id){
+  const activo = ACTS.find(x=>x.id===id);
+  const nombre = activo?.nombre || id;
+  try{
+    const{error} = await db.from('activos').delete().eq('id',id);
+    if(error) throw error;
+
+    ACTS = ACTS.filter(x=>x.id!==id);
+    await audit('delete','Eliminó activo: '+nombre,'ID: '+id);
+    showToast('✓ Activo "'+nombre+'" eliminado','rgba(99,153,34,0.4)');
+    closeModal();
+    applyFilters();
+  }catch(err){
+    showToast('✕ Error al eliminar: '+err.message,'rgba(226,75,74,0.4)');
+  }
 }
 
 async function guardarActivo(){
