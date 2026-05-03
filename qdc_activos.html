@@ -228,18 +228,22 @@ function buildSidebar(){
 }
 function doLogout(){ localStorage.removeItem('qdc_user'); window.location.href='index.html'; }
 
+// ── Fuente única de categorías: DB activos + categorías creadas (localStorage) ──
+function getCatsFromDB(){
+  const dbCats  = ACTS.map(a => a.categoria).filter(Boolean);
+  const lstCats = (typeof CATEGORIAS !== 'undefined' ? CATEGORIAS : []) || [];
+  return [...new Set([...dbCats, ...lstCats])].sort();
+}
+
 function buildCatFilter(){
   const sel = document.getElementById('f-cat');
   if(!sel) return;
-  const current = sel.value; // preserve current selection
-  // Build from real DB data + CATEGORIAS merged, sorted
-  const dbCats = [...new Set(ACTS.map(a => a.categoria).filter(Boolean))].sort();
-  const allCats = [...new Set([...dbCats, ...CATEGORIAS])].sort();
+  const current = sel.value;
+  const cats = getCatsFromDB();
   sel.innerHTML = '<option value="">Todas las categorias</option>';
-  allCats.forEach(cat => {
+  cats.forEach(cat => {
     const o = document.createElement('option');
-    o.value = cat;
-    o.textContent = cat;
+    o.value = cat; o.textContent = cat;
     if(cat === current) o.selected = true;
     sel.appendChild(o);
   });
@@ -522,8 +526,7 @@ function openNuevoActivo(){
       <div class="form-group">
         <label class="form-label">Categoria</label>
         <select class="form-select" id="na-cat" onchange="previewActCode()">
-          ${CATEGORIAS.map(c=>`<option>${c}</option>`).join('')}
-          <option>General</option>
+          ${getCatsFromDB().map(cat=>`<option value="${cat}">${cat}</option>`).join('')}
         </select>
       </div>
     </div>
@@ -600,11 +603,12 @@ function abrirEditarActivo(id){
   const a = ACTS.find(x=>x.id===id);
   if(!a) return;
 
-  const catOptions = [
-    'General','Energía e Instalaciones','Mecánico','Eléctrico','Hidráulico',
-    'Neumático','Seguridad','HVAC','Transporte y Desplazamientos',
-    'Medición y Control','Infraestructura','Laboratorio'
-  ].map(cat => `<option value="${cat}" ${a.categoria===cat?'selected':''}>${cat}</option>`).join('');
+  // Build category options from real DB data (same source as filter)
+  const _cats = getCatsFromDB();
+  // Also include current activo's category in case it's not in others
+  if(a.categoria && !_cats.includes(a.categoria)) _cats.push(a.categoria);
+  _cats.sort();
+  const catOptions = _cats.map(cat => `<option value="${cat}" ${a.categoria===cat?'selected':''}>${cat}</option>`).join('');
 
   const estadoOptions = [
     ['operativo','Operativo'],['alerta','En alerta'],['critico','Crítico'],['inactivo','Inactivo']
