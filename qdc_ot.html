@@ -1543,6 +1543,9 @@ async function guardarActivoOT(otId){
 async function confirmarContratista(otId, overlayId){
 const sel = document.getElementById('contratista-select');
 
+const contId = document.getElementById('contratista-id')?.value || null;
+const sel = document.getElementById('contratista-select');
+
 const contNombre = (contId && sel && sel.selectedIndex >= 0)
   ? sel.options[sel.selectedIndex].text.split(' (')[0]
   : null;
