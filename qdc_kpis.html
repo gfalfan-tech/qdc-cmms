@@ -147,58 +147,39 @@ body{font-family:var(--font);background:#050F1C;min-height:100vh;margin:0;paddin
 
     <div class="topbar">
       <div class="page-title">KPIs y Reportes</div>
-      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-        <!-- Vista selector -->
+      <div style="display:flex;gap:6px;align-items:center">
         <div style="display:flex;gap:4px;background:rgba(255,255,255,0.05);border-radius:6px;padding:3px">
           <button class="tb-btn" id="btn-vista-kpi" onclick="setVista('kpi',this)"
-            style="background:rgba(33,150,243,0.2);color:#85B7EB;border:0.5px solid rgba(33,150,243,0.3)">
-            📊 KPIs
-          </button>
-          <button class="tb-btn btn-g" id="btn-vista-costos" onclick="setVista('costos',this)">
-            💰 Costos
-          </button>
+            style="background:rgba(33,150,243,0.2);color:#85B7EB;border:0.5px solid rgba(33,150,243,0.3)">📊 KPIs</button>
+          <button class="tb-btn btn-g" id="btn-vista-costos" onclick="setVista('costos',this)">💰 Costos</button>
         </div>
-        <!-- Period filters (KPI view) -->
         <div id="filtros-kpi" style="display:flex;gap:4px">
           <button class="tb-btn" style="background:rgba(33,150,243,0.15);color:#85B7EB;border:0.5px solid rgba(33,150,243,0.3)" id="btn-mes" onclick="setPeriodo('mes',this)">Este mes</button>
           <button class="tb-btn btn-g" id="btn-trim" onclick="setPeriodo('trim',this)">Trimestre</button>
           <button class="tb-btn btn-g" id="btn-año" onclick="setPeriodo('año',this)">Año</button>
         </div>
-        <!-- Costos filters (hidden by default) -->
-        <div id="filtros-costos" style="display:none;gap:6px;align-items:center;flex-wrap:wrap">
-          <input type="date" id="fc-desde" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);border-radius:5px;color:var(--white);font-size:11px;padding:5px 8px;font-family:var(--font)" onchange="loadCostos()"/>
-          <span style="color:rgba(131,131,139,0.5);font-size:11px">—</span>
-          <input type="date" id="fc-hasta" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);border-radius:5px;color:var(--white);font-size:11px;padding:5px 8px;font-family:var(--font)" onchange="loadCostos()"/>
-          <select id="fc-tipo" onchange="loadCostos()" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);border-radius:5px;color:var(--white);font-size:11px;padding:5px 8px;font-family:var(--font)">
-            <option value="">Todos los tipos</option>
-            <option value="Correctivo">Correctivo</option>
-            <option value="Preventivo">Preventivo</option>
-          </select>
-          <select id="fc-origen" onchange="loadCostos()" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);border-radius:5px;color:var(--white);font-size:11px;padding:5px 8px;font-family:var(--font)">
-            <option value="">Interno y externo</option>
-            <option value="interno">Solo interno</option>
-            <option value="externo">Solo externo</option>
-          </select>
-          <select id="fc-cat" onchange="loadCostos()" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);border-radius:5px;color:var(--white);font-size:11px;padding:5px 8px;font-family:var(--font)">
-            <option value="">Todas las categorías</option>
-          </select>
-          <select id="fc-activo" onchange="loadCostos()" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);border-radius:5px;color:var(--white);font-size:11px;padding:5px 8px;font-family:var(--font)">
-            <option value="">Todos los activos</option>
-          </select>
-        </div>
+        <button class="tb-btn btn-g" onclick="exportarKPIsPDF()">⬇ Exportar PDF</button>
       </div>
-      <button class="tb-btn btn-g" onclick="exportarKPIsPDF()">⬇ Exportar PDF</button>
     </div>
+
+    <div id="filtros-costos" style="display:none;padding:8px 16px;background:rgba(255,255,255,0.03);border-bottom:0.5px solid rgba(255,255,255,0.07);flex-wrap:wrap;gap:8px;align-items:center">
+      <span style="font-size:11px;color:rgba(131,131,139,0.5);white-space:nowrap">Filtrar:</span>
+      <input type="date" id="fc-desde" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);border-radius:5px;color:var(--white);font-size:11px;padding:5px 8px;font-family:var(--font)" onchange="loadCostos()"/>
+      <span style="color:rgba(131,131,139,0.5);font-size:11px">—</span>
+      <input type="date" id="fc-hasta" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);border-radius:5px;color:var(--white);font-size:11px;padding:5px 8px;font-family:var(--font)" onchange="loadCostos()"/>
+      <select id="fc-tipo" onchange="loadCostos()" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);border-radius:5px;color:var(--white);font-size:11px;padding:5px 8px;font-family:var(--font)"><option value="">Todos los tipos</option><option value="Correctivo">Correctivo</option><option value="Preventivo">Preventivo</option></select>
+      <select id="fc-origen" onchange="loadCostos()" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);border-radius:5px;color:var(--white);font-size:11px;padding:5px 8px;font-family:var(--font)"><option value="">Interno y externo</option><option value="interno">Solo interno</option><option value="externo">Solo externo</option></select>
+      <select id="fc-cat" onchange="loadCostos()" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);border-radius:5px;color:var(--white);font-size:11px;padding:5px 8px;font-family:var(--font)"><option value="">Todas las categorías</option></select>
+      <select id="fc-activo" onchange="loadCostos()" style="background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.15);border-radius:5px;color:var(--white);font-size:11px;padding:5px 8px;font-family:var(--font)"><option value="">Todos los activos</option></select>
+    </div>
+
     <div id="vista-kpi">
-    <div class="content-pad" id="kpi-content">
-      <div class="loading"><div class="spinner"></div><span>Calculando KPIs…</span></div>
+      <div class="content-pad" id="kpi-content">
+        <div class="loading"><div class="spinner"></div><span>Calculando KPIs…</span></div>
+      </div>
     </div>
 
-  </div>
-  </div><!-- /vista-kpi -->
-
-  <!-- ── VISTA COSTOS ── -->
-  <div id="vista-costos" style="display:none" class="content-pad">
+    <div id="vista-costos" style="display:none" class="content-pad">
 
     <!-- Summary cards -->
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px" id="costos-summary">
@@ -246,6 +227,7 @@ body{font-family:var(--font);background:#050F1C;min-height:100vh;margin:0;paddin
 
   </div><!-- /vista-costos -->
 
+</div>
 </div>
 <div id="toast"></div>
 <div class="modal-overlay hidden" id="modal-overlay"><div class="modal" id="modal-inner"></div></div>
