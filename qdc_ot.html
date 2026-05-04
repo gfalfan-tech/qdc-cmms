@@ -817,8 +817,24 @@ function verOT(id){
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px;font-size:12px">
       <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px">
-        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Activo</div>
-        <div style="color:var(--white)">${o.activo||'—'}</div>
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">
+          Activo
+          ${canEdit ? '<span onclick="toggleActivoEdit(\'' + o.id + '\')" style="margin-left:6px;cursor:pointer;font-size:10px;color:rgba(33,150,243,0.6);text-transform:none;letter-spacing:0" title="Reasignar activo">✏️</span>' : ''}
+        </div>
+        <div id="activo-display-${o.id}" style="color:var(--white)">${o.activo||'—'}</div>
+        <div id="activo-edit-${o.id}" style="display:none;margin-top:6px">
+          <input type="text" id="activo-input-${o.id}"
+            placeholder="Buscar activo..." autocomplete="off"
+            style="width:100%;background:rgba(255,255,255,0.08);border:0.5px solid rgba(33,150,243,0.4);border-radius:5px;color:var(--white);font-size:12px;padding:6px 8px;font-family:var(--font);outline:none"
+            oninput="buscarActivoOT(this.value,'${o.id}')"
+            value="${o.activo||''}"
+          />
+          <div id="activo-sugg-${o.id}" style="display:none;position:absolute;z-index:99;background:#0B2545;border:0.5px solid rgba(255,255,255,0.12);border-radius:5px;max-height:160px;overflow-y:auto;width:260px;margin-top:2px"></div>
+          <div style="display:flex;gap:6px;margin-top:5px">
+            <button onclick="guardarActivoOT('${o.id}')" style="flex:1;padding:5px;border-radius:4px;border:none;background:rgba(33,150,243,0.7);color:#fff;font-size:11px;cursor:pointer;font-family:var(--font)">Guardar</button>
+            <button onclick="cancelActivoEdit('${o.id}','${o.activo||''}') " style="padding:5px 8px;border-radius:4px;border:0.5px solid rgba(255,255,255,0.1);background:transparent;color:rgba(200,210,225,0.6);font-size:11px;cursor:pointer;font-family:var(--font)">✕</button>
+          </div>
+        </div>
       </div>
       <div style="background:rgba(255,255,255,0.03);border-radius:5px;padding:8px 10px">
         <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.4);margin-bottom:3px">Responsable</div>
@@ -1420,6 +1436,109 @@ function elegirContratista(id, nombre, rut){
   if(list) list.style.display = 'none';
 }
 
+
+// ── EDITAR ACTIVO EN OT (solo supervisor) ──
+let _activoSeleccionado = {};
+
+function toggleActivoEdit(otId){
+  const display = document.getElementById('activo-display-'+otId);
+  const edit    = document.getElementById('activo-edit-'+otId);
+  if(!display || !edit) return;
+  const isOpen = edit.style.display !== 'none';
+  display.style.display = isOpen ? '' : 'none';
+  edit.style.display    = isOpen ? 'none' : '';
+  if(!isOpen){
+    const inp = document.getElementById('activo-input-'+otId);
+    if(inp){ inp.focus(); inp.select(); }
+  }
+}
+
+function cancelActivoEdit(otId, originalName){
+  const display = document.getElementById('activo-display-'+otId);
+  const edit    = document.getElementById('activo-edit-'+otId);
+  const inp     = document.getElementById('activo-input-'+otId);
+  if(display) display.style.display = '';
+  if(edit)    edit.style.display    = 'none';
+  if(inp)     inp.value = originalName;
+  delete _activoSeleccionado[otId];
+}
+
+async function buscarActivoOT(q, otId){
+  const sugg = document.getElementById('activo-sugg-'+otId);
+  if(!sugg) return;
+  const qn = (q||'').toLowerCase().trim();
+  if(qn.length < 2){ sugg.style.display='none'; return; }
+
+  // Get activos from ACTS cache or DB
+  let activos = window.ACTS_CACHE || [];
+  if(!activos.length){
+    try{
+      const{data} = await db.from('activos').select('id,nombre,codigo,categoria').eq('estado','operativo').order('nombre').limit(200);
+      activos = data || [];
+      window.ACTS_CACHE = activos;
+    }catch(e){ activos=[]; }
+  }
+
+  const matches = activos.filter(a => (a.nombre||'').toLowerCase().includes(qn)).slice(0,8);
+
+  if(!matches.length){
+    sugg.style.display='block';
+    sugg.innerHTML='<div style="padding:8px;font-size:11px;color:rgba(131,131,139,0.4)">Sin resultados</div>';
+    return;
+  }
+
+  sugg.style.display='block';
+  sugg.innerHTML = matches.map(a => {
+    const n = (a.nombre||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    return '<div class="activo-sugg-item" onclick="seleccionarActivoOT(\''+a.id+'\',\''+n+'\',\''+otId+'\')" ' +
+    'style="padding:8px 10px;cursor:pointer;border-bottom:0.5px solid rgba(255,255,255,0.05)">' +
+    '<div style="font-size:12px;color:var(--white)">'+(a.nombre||'')+'</div>' +
+    (a.codigo?'<div style="font-size:10px;font-family:monospace;color:rgba(131,131,139,0.4)">'+a.codigo+'</div>':'') +
+    '</div>';
+  }).join('');
+}
+
+function seleccionarActivoOT(activoId, activoNombre, otId){
+  _activoSeleccionado[otId] = {id: activoId, nombre: activoNombre};
+  const inp  = document.getElementById('activo-input-'+otId);
+  const sugg = document.getElementById('activo-sugg-'+otId);
+  if(inp)  inp.value = activoNombre;
+  if(sugg) sugg.style.display = 'none';
+}
+
+async function guardarActivoOT(otId){
+  const inp = document.getElementById('activo-input-'+otId);
+  const nuevoNombre = (_activoSeleccionado[otId]?.nombre) || inp?.value?.trim();
+  if(!nuevoNombre){ showToast('Selecciona un activo de la lista','rgba(226,75,74,0.4)'); return; }
+
+  try{
+    const{error} = await db.from('ots').update({activo: nuevoNombre}).eq('id', otId);
+    if(error) throw error;
+
+    // Update local cache
+    const o = OTS_DATA.find(x=>x.id===otId);
+    if(o) o.activo = nuevoNombre;
+
+    await audit('update','Reasignó activo en OT '+(o?.codigo||otId), nuevoNombre);
+    showToast('✓ Activo actualizado: '+nuevoNombre,'rgba(99,153,34,0.4)');
+
+    // Update display
+    const display = document.getElementById('activo-display-'+otId);
+    const edit    = document.getElementById('activo-edit-'+otId);
+    if(display){ display.textContent = nuevoNombre; display.style.display=''; }
+    if(edit) edit.style.display = 'none';
+    delete _activoSeleccionado[otId];
+
+    // Update modal title too
+    const title = document.querySelector('.modal-title');
+    if(title && o) title.textContent = (o.codigo||'OT') + ' — ' + nuevoNombre;
+
+    filterTable();
+  }catch(err){
+    showToast('✕ Error: '+err.message,'rgba(226,75,74,0.4)');
+  }
+}
+
 async function confirmarContratista(otId, overlayId){
   const sel = document.getElementById('cont-sel-dd');
   const contId = sel.value;
@@ -1565,6 +1684,7 @@ function imprimirOT(id){
     .no-print { display: none !important; }
     @page { margin: 1cm; }
   }
+.activo-sugg-item:hover{background:rgba(33,150,243,0.1);}
 </style>
 </head>
 <body>

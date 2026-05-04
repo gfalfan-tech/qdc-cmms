@@ -893,27 +893,29 @@ async function loadKPIs(){
 
 function renderKPIs(otTotal,otDone,otExt,otSinPDF,invCrit,pmVenc,pctCumpl,pctExt,otsAll=[]){  // otsAll = real OT data for charts
   document.getElementById('kpi-content').innerHTML=`
-    <div class="kpi-grid kpi-grid-4" style="margin-bottom:14px">
-      <div class="kpi kpi-blue"><div class="kpi-label">Disponibilidad planta</div><div class="kpi-val" style="color:#85B7EB">94.2%</div><div class="kpi-sub">Meta: 95%</div></div>
-      <div class="kpi kpi-green"><div class="kpi-label">Cumplimiento PM</div><div class="kpi-val" style="color:#97C459">${pctCumpl}%</div><div class="kpi-sub">${pmVenc} PM vencidos</div></div>
-      <div class="kpi kpi-warn"><div class="kpi-label">MTTR Promedio</div><div class="kpi-val" style="color:#EF9F27">3.2h</div><div class="kpi-sub">Meta: &lt;4h</div></div>
-      <div class="kpi kpi-blue"><div class="kpi-label">MTBF Promedio</div><div class="kpi-val" style="color:#85B7EB">312h</div><div class="kpi-sub">Meta: &gt;300h</div></div>
+    <!-- Fila 1: 8 KPIs en grid 4+4 compacto -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px">
+      <div class="kpi kpi-blue"><div class="kpi-label">Disponibilidad planta</div><div class="kpi-val" style="color:#85B7EB;font-size:22px">94.2%</div><div class="kpi-sub">Meta: 95%</div></div>
+      <div class="kpi kpi-green"><div class="kpi-label">Cumplimiento PM</div><div class="kpi-val" style="color:#97C459;font-size:22px">${pctCumpl}%</div><div class="kpi-sub">${pmVenc} PM vencidos</div></div>
+      <div class="kpi kpi-warn"><div class="kpi-label">MTTR Promedio</div><div class="kpi-val" style="color:#EF9F27;font-size:22px">3.2h</div><div class="kpi-sub">Meta: &lt;4h</div></div>
+      <div class="kpi kpi-blue"><div class="kpi-label">MTBF Promedio</div><div class="kpi-val" style="color:#85B7EB;font-size:22px">312h</div><div class="kpi-sub">Meta: &gt;300h</div></div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
-      <div class="kpi-chart-box">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px">
+      <div class="kpi"><div class="kpi-label">OT Totales</div><div class="kpi-val" style="font-size:22px">${otTotal}</div><div class="kpi-sub">${otDone} completadas</div></div>
+      <div class="kpi kpi-ext"><div class="kpi-label">OT Externas</div><div class="kpi-val" style="color:#5DCAA5;font-size:22px">${otExt}</div><div class="kpi-sub">${pctExt}% · ${otSinPDF} sin PDF</div></div>
+      <div class="kpi kpi-warn"><div class="kpi-label">OEE Planta</div><div class="kpi-val" style="color:#EF9F27;font-size:22px">78.4%</div><div class="kpi-sub">Meta: 80%</div></div>
+      <div class="kpi kpi-crit"><div class="kpi-label">Stock Agotado</div><div class="kpi-val" style="color:var(--crit);font-size:22px">${invCrit||'—'}</div><div class="kpi-sub">Items críticos</div></div>
+    </div>
+    <!-- Fila 2: gráficos compactos -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="kpi-chart-box" style="padding:10px 14px">
         <div class="kpi-chart-title">OT Completadas — Últimos 6 meses</div>
-        <canvas id="ch-ot" style="height:180px"></canvas>
+        <div style="height:130px;position:relative"><canvas id="ch-ot"></canvas></div>
       </div>
-      <div class="kpi-chart-box">
+      <div class="kpi-chart-box" style="padding:10px 14px">
         <div class="kpi-chart-title">Costo Mantenimiento (M CLP)</div>
-        <canvas id="ch-costo" style="height:180px"></canvas>
+        <div style="height:130px;position:relative"><canvas id="ch-costo"></canvas></div>
       </div>
-    </div>
-    <div class="kpi-grid kpi-grid-4">
-      <div class="kpi"><div class="kpi-label">OT Totales</div><div class="kpi-val">${otTotal}</div><div class="kpi-sub">${otDone} completadas</div></div>
-      <div class="kpi kpi-ext"><div class="kpi-label">OT Externas</div><div class="kpi-val" style="color:#5DCAA5">${otExt}</div><div class="kpi-sub">${pctExt}% del total · ${otSinPDF} sin PDF</div></div>
-      <div class="kpi kpi-warn"><div class="kpi-label">OEE Planta</div><div class="kpi-val" style="color:#EF9F27">78.4%</div><div class="kpi-sub">Meta: 80%</div></div>
-      <div class="kpi kpi-crit"><div class="kpi-label">Stock Agotado</div><div class="kpi-val" style="color:var(--crit)">${invCrit||'—'}</div><div class="kpi-sub">Items críticos</div></div>
     </div>`;
 
   setTimeout(()=>{
