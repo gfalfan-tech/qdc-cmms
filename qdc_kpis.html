@@ -505,175 +505,342 @@ function renderCostos(ots){
     '</tbody></table>';
 }
 
-function exportarKPIsPDF(){
-  // Build a clean print-friendly version of the KPI section
-  const kpiSection = document.getElementById('kpi-grid');
-  const title = 'QDC CMMS Pro — KPIs y Métricas';
-  const fecha = new Date().toLocaleDateString('es-CL',{
-    weekday:'long', day:'numeric', month:'long', year:'numeric'
-  });
+// ── EXPORTAR PDF PROFESIONAL ──
+// Respeta la vista activa (KPIs o Costos) y los filtros aplicados
+async function exportarKPIsPDF(){
+  const esVistaCostos = _vistaActual === 'costos';
+  const fecha = new Date().toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const hoy   = new Date().toLocaleString('es-CL');
 
-  // Use Blob URL — works in Firefox, Chrome, Edge without popup blocker
-  const _html = `<!DOCTYPE html>
+  if(esVistaCostos){
+    await _exportarPDFCostos(fecha, hoy);
+  } else {
+    _exportarPDFKPIs(fecha, hoy);
+  }
+}
+
+// ── PDF VISTA KPIs ──
+function _exportarPDFKPIs(fecha, hoy){
+  // Capture current KPI values from DOM
+  const kpiCards = Array.from(document.querySelectorAll('[class*="kpi"]'))
+    .filter(el => el.querySelector('.kpi-label') && el.querySelector('.kpi-val'))
+    .map(card => ({
+      label: card.querySelector('.kpi-label')?.textContent?.trim() || '',
+      val:   card.querySelector('.kpi-val')?.textContent?.trim() || '',
+      sub:   card.querySelector('.kpi-sub')?.textContent?.trim() || ''
+    })).filter(k => k.label && k.val);
+
+  // Capture chart data
+  const chartData = {};
+  if(charts.ot){
+    chartData.ot = {
+      labels:   charts.ot.data.labels,
+      datasets: charts.ot.data.datasets.map(d => ({label:d.label, data:d.data, color: d.backgroundColor}))
+    };
+  }
+  if(charts.costo){
+    chartData.costo = {
+      labels:   charts.costo.data.labels,
+      datasets: charts.costo.data.datasets.map(d => ({label:d.label, data:d.data, color: d.borderColor}))
+    };
+  }
+
+  const periodo = PERIODO === 'mes' ? 'Este mes' : PERIODO === 'trim' ? 'Trimestre' : 'Año';
+
+  const html = `<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8"/>
-  <title>${title}</title>
-  <style>
-    *{box-sizing:border-box;margin:0;padding:0;}
-    body{font-family:Arial,sans-serif;padding:32px;color:#1a1a1a;background:#fff;}
-    .header{display:flex;justify-content:space-between;align-items:flex-start;
-            margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid #08223D;}
-    .logo{font-size:26px;font-weight:900;color:#08223D;}
-    .logo-sub{font-size:11px;color:#666;margin-top:2px;}
-    .logo-line{width:24px;height:2px;background:#2196F3;margin-top:5px;}
-    .report-title{text-align:right;}
-    .report-title h1{font-size:18px;color:#08223D;}
-    .report-title p{font-size:11px;color:#666;margin-top:3px;}
-    .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
-    .kpi-card{background:#f8fafc;border-radius:8px;padding:14px;border-left:4px solid #2196F3;}
-    .kpi-label{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#666;margin-bottom:6px;}
-    .kpi-val{font-size:26px;font-weight:900;color:#08223D;}
-    .kpi-sub{font-size:10px;color:#888;margin-top:4px;}
-    .section{margin-bottom:20px;}
-    .section-title{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
-                   color:#2196F3;padding-bottom:6px;border-bottom:1px solid #e0e0e0;margin-bottom:12px;}
-    .footer{margin-top:24px;padding-top:12px;border-top:1px solid #e0e0e0;
-            display:flex;justify-content:space-between;font-size:9px;color:#aaa;}
-    @media print{body{padding:20px;}@page{margin:1cm;}}
-  </style>
+<meta charset="UTF-8"/>
+<title>QDC CMMS — Informe KPIs</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js">\u003c/script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Arial',sans-serif;background:#fff;color:#1a1a1a;padding:28px 32px;}
+  .header{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:14px;border-bottom:3px solid #08223D;margin-bottom:20px;}
+  .logo-mark{font-size:28px;font-weight:900;color:#08223D;letter-spacing:-1px;}
+  .logo-sub{font-size:10px;color:#666;margin-top:1px;}
+  .logo-line{width:28px;height:2px;background:#2196F3;margin-top:4px;}
+  .report-info{text-align:right;}
+  .report-info h1{font-size:16px;font-weight:700;color:#08223D;}
+  .report-info .period{font-size:11px;color:#2196F3;font-weight:600;margin-top:2px;}
+  .report-info .fecha{font-size:10px;color:#888;margin-top:2px;}
+  .section-title{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#2196F3;border-bottom:1px solid #e8ecf0;padding-bottom:5px;margin:18px 0 12px;}
+  .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:6px;}
+  .kpi-card{background:#f7fafd;border-radius:7px;padding:12px 14px;border-left:3px solid #2196F3;}
+  .kpi-card.green{border-left-color:#27AE60;}
+  .kpi-card.orange{border-left-color:#E67E22;}
+  .kpi-card.red{border-left-color:#E74C3C;}
+  .kpi-label{font-size:8px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#888;margin-bottom:5px;}
+  .kpi-val{font-size:24px;font-weight:900;color:#08223D;line-height:1;}
+  .kpi-sub{font-size:9px;color:#aaa;margin-top:4px;}
+  .charts-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:4px;}
+  .chart-box{background:#f7fafd;border-radius:7px;padding:14px;}
+  .chart-box h3{font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#666;margin-bottom:10px;}
+  canvas{display:block;}
+  .footer{margin-top:20px;padding-top:10px;border-top:1px solid #e8ecf0;display:flex;justify-content:space-between;font-size:8px;color:#bbb;}
+  .print-btn{margin-top:16px;text-align:center;}
+  @media print{.print-btn{display:none;}@page{margin:1cm;size:A4;}body{padding:0;}}
+</style>
 </head>
 <body>
-  <div class="header">
-    <div>
-      <div class="logo">QDC</div>
-      <div class="logo-sub">Química del Campo S.p.A</div>
-      <div class="logo-line"></div>
-    </div>
-    <div class="report-title">
-      <h1>KPIs y Métricas de Mantenimiento</h1>
-      <p>Generado: ${fecha}</p>
-    </div>
-  </div>
 
-  <div class="section-title">Indicadores principales</div>
-  <div class="kpi-grid">
-    ${Array.from(document.querySelectorAll('.kpi, .kpi-ext, .kpi-crit, .kpi-ok, .kpi-warn, [class*="kpi"]')).map(card => {
-      const label = card.querySelector('.kpi-label')?.textContent || '';
-      const val   = card.querySelector('.kpi-val')?.textContent || '';
-      const sub   = card.querySelector('.kpi-sub')?.textContent || '';
-      if(!label && !val) return '';
-      return '<div class="kpi-card">' +
-        '<div class="kpi-label">' + label + '</div>' +
-        '<div class="kpi-val">' + val + '</div>' +
-        (sub ? '<div class="kpi-sub">' + sub + '</div>' : '') +
-        '</div>';
-    }).filter(Boolean).join('')}
+<div class="header">
+  <div>
+    <div class="logo-mark">QDC · CMMS Pro</div>
+    <div class="logo-sub">Química del Campo S.p.A</div>
+    <div class="logo-line"></div>
   </div>
+  <div class="report-info">
+    <h1>Informe KPIs de Mantenimiento</h1>
+    <div class="period">Período: ${periodo}</div>
+    <div class="fecha">Generado: ${hoy}</div>
+  </div>
+</div>
 
-  <div class="footer">
-    <span>QDC CMMS Pro v2.0 · Química del Campo S.p.A</span>
-    <span>${fecha}</span>
-  </div>
+<div class="section-title">Indicadores principales</div>
+<div class="kpi-grid">
+  ${kpiCards.slice(0,8).map((k,i) => {
+    const color = i===0?'':'';
+    return '<div class="kpi-card '+color+'">'+
+      '<div class="kpi-label">'+k.label+'</div>'+
+      '<div class="kpi-val">'+k.val+'</div>'+
+      (k.sub?'<div class="kpi-sub">'+k.sub+'</div>':'')+
+      '</div>';
+  }).join('')}
+</div>
 
-  <div style="text-align:center;margin-top:20px;padding:14px;background:#f5f5f5;border-radius:8px">
-    <button onclick="window.print()" style="padding:10px 24px;background:#08223D;color:#fff;
-      border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;margin-right:10px">
-      🖨️ Imprimir / Guardar PDF
-    </button>
-    <button onclick="window.close()" style="padding:10px 18px;background:#e0e0e0;
-      color:#333;border:none;border-radius:6px;font-size:14px;cursor:pointer">
-      Cerrar
-    </button>
+<div class="section-title">Análisis gráfico</div>
+<div class="charts-row">
+  <div class="chart-box">
+    <h3>OT completadas por mes</h3>
+    <canvas id="pdf-chart-ot" height="160"></canvas>
   </div>
+  <div class="chart-box">
+    <h3>Costo de mantenimiento (M CLP)</h3>
+    <canvas id="pdf-chart-costo" height="160"></canvas>
+  </div>
+</div>
+
+<div class="footer">
+  <span>QDC CMMS Pro v2.0 · Química del Campo S.p.A · Generado el ${hoy}</span>
+  <span>Página 1 de 1</span>
+</div>
+
+<div class="print-btn">
+  <button onclick="window.print()" style="padding:9px 22px;background:#08223D;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;margin-right:8px">🖨️ Imprimir / Guardar PDF</button>
+  <button onclick="window.close()" style="padding:9px 16px;background:#e8ecf0;color:#333;border:none;border-radius:6px;font-size:13px;cursor:pointer">Cerrar</button>
+</div>
+
+<!-- CHART_SCRIPT_PLACEHOLDER -->
 </body>
 </html>`;
-  const _blob = new Blob([_html], {type:'text/html'});
-  const _url = URL.createObjectURL(_blob);
-  const win = window.open(_url, '_blank');
-  if(!win){ const a=document.createElement('a');a.href=_url;a.target='_blank';a.click(); }
+
+  const _chartScript = '<scr'+'ipt src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></scr'+'ipt>'+
+    '<scr'+'ipt>window.addEventListener("load",function(){' +
+    'var cd=' + JSON.stringify(chartData) + ';' +
+    'var gc="rgba(0,0,0,0.06)",tc="#666";' +
+    'var lo={plugins:{legend:{labels:{color:tc,font:{size:9}}}},scales:{x:{ticks:{color:tc,font:{size:8}},grid:{color:gc}},y:{ticks:{color:tc,font:{size:8}},grid:{color:gc}}}};' +
+    'if(cd.ot){new Chart(document.getElementById("pdf-chart-ot"),{type:"bar",data:{labels:cd.ot.labels,datasets:cd.ot.datasets.map(function(d){return{label:d.label,data:d.data,backgroundColor:d.label==="Preventivo"?"rgba(127,119,221,0.7)":"rgba(239,159,39,0.7)",borderRadius:3};})},options:Object.assign({},lo,{responsive:true,maintainAspectRatio:false,scales:{x:{stacked:true,ticks:{color:tc,font:{size:8}},grid:{color:gc}},y:{stacked:true,ticks:{color:tc,font:{size:8}},grid:{color:gc}}}})});}' +
+    'if(cd.costo){new Chart(document.getElementById("pdf-chart-costo"),{type:"line",data:{labels:cd.costo.labels,datasets:cd.costo.datasets.map(function(d){return{label:d.label,data:d.data,borderColor:d.label==="Total"?"#08223D":"#2196F3",backgroundColor:d.label==="Total"?"rgba(8,34,61,0.05)":"rgba(33,150,243,0.05)",borderWidth:d.label==="Total"?2:1.5,fill:true,tension:0.3,pointBackgroundColor:d.label==="Total"?"#08223D":"#2196F3",pointRadius:3};})},options:Object.assign({},lo,{responsive:true,maintainAspectRatio:false})});}' +
+    '});<'+'/scr'+'ipt>';
+  const htmlFinal = html.replace('<!-- CHART_SCRIPT_PLACEHOLDER -->', _chartScript);
+  const blob = new Blob([htmlFinal], {type:'text/html'});
+  const url  = URL.createObjectURL(blob);
+  const win  = window.open(url, '_blank');
+  if(!win){ const a=document.createElement('a');a.href=url;a.target='_blank';a.click(); }
 }
 
-let _tT;
-function showToast(msg,col){const t=document.getElementById('toast');t.textContent=msg;t.style.borderColor=col||'rgba(33,150,243,0.3)';t.classList.add('show');clearTimeout(_tT);_tT=setTimeout(()=>t.classList.remove('show'),3200);}
-function openModal(html){document.getElementById('modal-inner').innerHTML=html;document.getElementById('modal-overlay').classList.remove('hidden');}
-function closeModal(){document.getElementById('modal-overlay').classList.add('hidden');}
+// ── PDF VISTA COSTOS (respeta filtros activos) ──
+async function _exportarPDFCostos(fecha, hoy){
+  // Gather active filters for the report header
+  const desde  = document.getElementById('fc-desde')?.value || '';
+  const hasta  = document.getElementById('fc-hasta')?.value || '';
+  const tipo   = document.getElementById('fc-tipo')?.value || '';
+  const origen = document.getElementById('fc-origen')?.value || '';
+  const cat    = document.getElementById('fc-cat')?.value || '';
+  const activo = document.getElementById('fc-activo')?.value || '';
 
+  // Build filter description for report header
+  const filtros = [];
+  if(desde && hasta) filtros.push('Período: '+desde+' al '+hasta);
+  else if(desde) filtros.push('Desde: '+desde);
+  else if(hasta) filtros.push('Hasta: '+hasta);
+  if(tipo)   filtros.push('Tipo: '+tipo);
+  if(origen) filtros.push('Origen: '+origen);
+  if(cat)    filtros.push('Categoría: '+cat);
+  if(activo) filtros.push('Activo: '+activo);
+  const filtroDesc = filtros.length ? filtros.join(' · ') : 'Todos los registros';
 
-let PERIODO='mes';
-const MO=['Oct','Nov','Dic','Ene','Feb','Mar','Abr'];
-const GC='rgba(255,255,255,0.05)',TC='rgba(131,131,139,0.6)';
-let charts={};
-function pageInit(){ loadKPIs()}
-function setPeriodo(p,el){
-  PERIODO=p;
-  document.querySelectorAll('[id^="btn-"]').forEach(b=>{b.style.background='rgba(255,255,255,0.06)';b.style.color='rgba(200,210,225,0.8)';b.style.border='0.5px solid rgba(255,255,255,0.1)';});
-  el.style.background='rgba(33,150,243,0.15)';el.style.color='#85B7EB';el.style.border='0.5px solid rgba(33,150,243,0.3)';
-  loadKPIs();
-}
-async function loadKPIs(){
-  Object.values(charts).forEach(c=>{try{c.destroy();}catch(e){ console.warn("[QDC Error]", e?.message || e)}});charts={};
-  let otTotal=0,otDone=0,otExt=0,otSinPDF=0,invCrit=0,pmVenc=0,pmTotal=0;
-  let otsAll=[];
-  try{
-    // Load OTs with date and cost for real charts
-    const{data:ots}=await db.from('ots').select('id,estado,es_externo,pdf_url,tipo,costo,creado_en').order('creado_en',{ascending:true});
-    if(ots){
-      otsAll=ots;
-      otTotal=ots.length;
-      otDone=ots.filter(o=>o.estado==='done').length;
-      otExt=ots.filter(o=>o.es_externo).length;
-      otSinPDF=ots.filter(o=>o.es_externo&&!o.pdf_url).length;
-    }
-    const{data:inv}=await db.from('inventario').select('stock');
-    if(inv)invCrit=inv.filter(i=>i.stock===0).length;
-    const{data:pms}=await db.from('plan_pm').select('estado,proxima_fecha');
-    if(pms){pmTotal=pms.length;pmVenc=pms.filter(p=>p.estado==='overdue'||new Date(p.proxima_fecha)<new Date()).length;}
-  }catch(e){ console.warn("[QDC Error]", e?.message || e)}
-  const pctCumpl=pmTotal?Math.round(((pmTotal-pmVenc)/pmTotal)*100):100;
-  const pctExt=otTotal?Math.round(otExt/otTotal*100):0;
-  renderKPIs(otTotal,otDone,otExt,otSinPDF,invCrit,pmVenc,pctCumpl,pctExt,otsAll);
-}
-function renderKPIs(otTotal,otDone,otExt,otSinPDF,invCrit,pmVenc,pctCumpl,pctExt,otsAll=[]){  // otsAll = real OT data for charts
-  document.getElementById('kpi-content').innerHTML=`
-    <div class="kpi-grid kpi-grid-4" style="margin-bottom:14px">
-      <div class="kpi kpi-blue"><div class="kpi-label">Disponibilidad planta</div><div class="kpi-val" style="color:#85B7EB">94.2%</div><div class="kpi-sub">Meta: 95%</div></div>
-      <div class="kpi kpi-green"><div class="kpi-label">Cumplimiento PM</div><div class="kpi-val" style="color:var(--ok)">${pctCumpl}%</div><div class="kpi-sub">${pmVenc} PM vencidos</div></div>
-      <div class="kpi kpi-warn"><div class="kpi-label">MTTR promedio</div><div class="kpi-val" style="color:var(--warn)">3.2h</div><div class="kpi-sub">Meta: <4h</div></div>
-      <div class="kpi kpi-pm"><div class="kpi-label">MTBF promedio</div><div class="kpi-val" style="color:#AFA9EC">312h</div><div class="kpi-sub">Meta: >300h</div></div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
-      <div class="card"><div style="font-size:11px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);margin-bottom:12px">OT completadas — últimos 7 meses</div><div style="height:180px"><canvas id="ch-ot"></canvas></div></div>
-      <div class="card"><div style="font-size:11px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:rgba(131,131,139,0.5);margin-bottom:12px">Costo mantenimiento (M CLP)</div><div style="height:180px"><canvas id="ch-costo"></canvas></div></div>
-    </div>
-    <div class="kpi-grid kpi-grid-4">
-      <div class="kpi kpi-blue"><div class="kpi-label">OT totales</div><div class="kpi-val" style="color:#85B7EB">${otTotal||'—'}</div><div class="kpi-sub">${otDone} completadas</div></div>
-      <div class="kpi kpi-ext"><div class="kpi-label">OT externas</div><div class="kpi-val" style="color:var(--ext)">${otExt||'—'}</div><div class="kpi-sub">${pctExt}% del total · ${otSinPDF} sin PDF</div></div>
-      <div class="kpi kpi-warn"><div class="kpi-label">OEE planta</div><div class="kpi-val" style="color:var(--warn)">78.4%</div><div class="kpi-sub">Meta: 80%</div></div>
-      <div class="kpi kpi-crit"><div class="kpi-label">Stock agotado</div><div class="kpi-val" style="color:var(--crit)">${invCrit||'—'}</div><div class="kpi-sub">Items críticos</div></div>
-    </div>`;
-  setTimeout(()=>{
-    const lo={plugins:{legend:{display:true,position:'top',labels:{color:TC,font:{size:10,family:'Barlow'},boxWidth:10,padding:10}},tooltip:{backgroundColor:'#0D2D48',borderColor:'rgba(255,255,255,0.1)',borderWidth:1,titleColor:'#EEF4FF',bodyColor:'#B5D4F4'}},scales:{x:{grid:{color:GC},ticks:{color:TC,font:{size:10,family:'Barlow'}}},y:{grid:{color:GC},ticks:{color:TC,font:{size:10,family:'Barlow'}}}}};
-    const c1=document.getElementById('ch-ot'),c2=document.getElementById('ch-costo');
-    // Build last 6 months from real OT data
-    const now=new Date();
-    const recentMonths=[];
-    for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);recentMonths.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'));}
-    const mNames=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-    const labels=recentMonths.map(m=>{const[y,mo]=m.split('-');return mNames[parseInt(mo)-1]+' '+y.slice(2);});
-    const dataPrev=[],dataCorr=[],dataCosto=[],dataCostoExt=[];
-    recentMonths.forEach(m=>{
-      const mes=(otsAll||[]).filter(o=>(o.creado_en||'').startsWith(m));
-      dataPrev.push(mes.filter(o=>o.tipo==='Preventivo').length);
-      dataCorr.push(mes.filter(o=>o.tipo==='Correctivo').length);
-      dataCosto.push(Math.round(mes.reduce((s,o)=>s+(o.costo||0),0)/1000*10)/10);
-      dataCostoExt.push(Math.round(mes.filter(o=>o.es_externo).reduce((s,o)=>s+(o.costo||0),0)/1000*10)/10);
-    });
-    if(c1)charts.ot=new Chart(c1,{type:'bar',data:{labels,datasets:[{label:'Preventivo',data:dataPrev,backgroundColor:'rgba(127,119,221,0.6)',borderRadius:3},{label:'Correctivo',data:dataCorr,backgroundColor:'rgba(239,159,39,0.6)',borderRadius:3}]},options:{...lo,responsive:true,maintainAspectRatio:false,scales:{x:{stacked:true,grid:{color:GC},ticks:{color:TC,font:{size:10,family:'Barlow'}}},y:{stacked:true,grid:{color:GC},ticks:{color:TC,font:{size:10,family:'Barlow'}}}}}});
-    if(c2)charts.costo=new Chart(c2,{type:'line',data:{labels,datasets:[{label:'Total',data:dataCosto,borderColor:'#EEF4FF',backgroundColor:'rgba(238,244,255,0.05)',borderWidth:2,tension:0.3,fill:true,pointBackgroundColor:'#EEF4FF',pointRadius:3},{label:'Externo',data:dataCostoExt,borderColor:'#5DCAA5',backgroundColor:'rgba(93,202,165,0.05)',borderWidth:1.5,tension:0.3,borderDash:[4,3],pointBackgroundColor:'#5DCAA5',pointRadius:3}]},options:{...lo,responsive:true,maintainAspectRatio:false}});
-  },80);
-}
+  // Get current cost data from DOM summary cards
+  const costoTotal = document.getElementById('cs-total')?.textContent || '—';
+  const costoTotalSub = document.getElementById('cs-total-sub')?.textContent || '';
+  const costoCorr  = document.getElementById('cs-correctivo')?.textContent || '—';
+  const costoCorrSub = document.getElementById('cs-correctivo-sub')?.textContent || '';
+  const costoPrev  = document.getElementById('cs-preventivo')?.textContent || '—';
+  const costoPrevSub = document.getElementById('cs-preventivo-sub')?.textContent || '';
+  const costoExt   = document.getElementById('cs-externo')?.textContent || '—';
+  const costoExtSub = document.getElementById('cs-externo-sub')?.textContent || '';
 
-</script>
+  // Get table rows from costos-table
+  const tableEl = document.getElementById('costos-table');
+  const tableHTML = tableEl ? tableEl.innerHTML : '';
+
+  // Capture chart data
+  const chartData = {};
+  if(window._chartCostosMes){
+    chartData.mes = {
+      labels: window._chartCostosMes.data.labels,
+      datasets: window._chartCostosMes.data.datasets.map(d => ({label:d.label, data:d.data}))
+    };
+  }
+  if(window._chartCostosActivo){
+    chartData.activo = {
+      labels: window._chartCostosActivo.data.labels,
+      datasets: window._chartCostosActivo.data.datasets.map(d => ({label:d.label, data:d.data}))
+    };
+  }
+
+  const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<title>QDC CMMS — Informe de Costos</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js">\u003c/script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Arial',sans-serif;background:#fff;color:#1a1a1a;padding:28px 32px;}
+  .header{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:14px;border-bottom:3px solid #08223D;margin-bottom:20px;}
+  .logo-mark{font-size:28px;font-weight:900;color:#08223D;letter-spacing:-1px;}
+  .logo-sub{font-size:10px;color:#666;margin-top:1px;}
+  .logo-line{width:28px;height:2px;background:#2196F3;margin-top:4px;}
+  .report-info{text-align:right;}
+  .report-info h1{font-size:16px;font-weight:700;color:#08223D;}
+  .report-info .filtros{font-size:10px;color:#2196F3;font-weight:600;margin-top:3px;max-width:400px;}
+  .report-info .fecha{font-size:10px;color:#888;margin-top:2px;}
+  .section-title{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#2196F3;border-bottom:1px solid #e8ecf0;padding-bottom:5px;margin:18px 0 12px;}
+  .summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:6px;}
+  .sum-card{background:#f7fafd;border-radius:7px;padding:12px 14px;}
+  .sum-card.total{border-left:3px solid #08223D;}
+  .sum-card.corr{border-left:3px solid #E74C3C;}
+  .sum-card.prev{border-left:3px solid #7F77DD;}
+  .sum-card.ext{border-left:3px solid #27AE60;}
+  .sum-label{font-size:8px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#888;margin-bottom:5px;}
+  .sum-val{font-size:22px;font-weight:900;color:#08223D;line-height:1;}
+  .sum-sub{font-size:9px;color:#aaa;margin-top:3px;}
+  .charts-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:4px;}
+  .chart-box{background:#f7fafd;border-radius:7px;padding:14px;}
+  .chart-box h3{font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#666;margin-bottom:10px;}
+  table{width:100%;border-collapse:collapse;font-size:10px;}
+  thead tr{background:#08223D;color:#fff;}
+  thead th{padding:7px 8px;text-align:left;font-size:8px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;}
+  tbody tr:nth-child(even){background:#f7fafd;}
+  tbody td{padding:6px 8px;border-bottom:0.5px solid #e8ecf0;color:#333;}
+  .badge{display:inline-block;padding:1px 6px;border-radius:3px;font-size:8px;font-weight:600;}
+  .badge-corr{background:#fdeaea;color:#c0392b;}
+  .badge-prev{background:#f0eeff;color:#6c63b5;}
+  .badge-int{background:#eaf7ee;color:#27ae60;}
+  .badge-ext{background:#e8f4fd;color:#2980b9;}
+  .cost-val{font-weight:700;color:#27ae60;}
+  .footer{margin-top:16px;padding-top:10px;border-top:1px solid #e8ecf0;display:flex;justify-content:space-between;font-size:8px;color:#bbb;}
+  .print-btn{margin-top:14px;text-align:center;}
+  @media print{.print-btn{display:none;}@page{margin:1cm;size:A4 landscape;}body{padding:0;}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="logo-mark">QDC · CMMS Pro</div>
+    <div class="logo-sub">Química del Campo S.p.A</div>
+    <div class="logo-line"></div>
+  </div>
+  <div class="report-info">
+    <h1>Informe de Costos de Mantenimiento</h1>
+    <div class="filtros">📋 ${filtroDesc}</div>
+    <div class="fecha">Generado: ${hoy}</div>
+  </div>
+</div>
+
+<div class="section-title">Resumen económico</div>
+<div class="summary-grid">
+  <div class="sum-card total">
+    <div class="sum-label">Costo Total</div>
+    <div class="sum-val">${costoTotal}</div>
+    <div class="sum-sub">${costoTotalSub}</div>
+  </div>
+  <div class="sum-card corr">
+    <div class="sum-label">Correctivo</div>
+    <div class="sum-val">${costoCorr}</div>
+    <div class="sum-sub">${costoCorrSub}</div>
+  </div>
+  <div class="sum-card prev">
+    <div class="sum-label">Preventivo</div>
+    <div class="sum-val">${costoPrev}</div>
+    <div class="sum-sub">${costoPrevSub}</div>
+  </div>
+  <div class="sum-card ext">
+    <div class="sum-label">Externo</div>
+    <div class="sum-val">${costoExt}</div>
+    <div class="sum-sub">${costoExtSub}</div>
+  </div>
+</div>
+
+<div class="section-title">Análisis gráfico</div>
+<div class="charts-row">
+  <div class="chart-box">
+    <h3>Costo por mes (Miles CLP)</h3>
+    <canvas id="pdf-chart-mes" height="160"></canvas>
+  </div>
+  <div class="chart-box">
+    <h3>Top activos por costo</h3>
+    <canvas id="pdf-chart-activo" height="160"></canvas>
+  </div>
+</div>
+
+<div class="section-title">Detalle de órdenes de trabajo</div>
+<div id="table-wrap">
+  ${tableHTML}
+</div>
+
+<div class="footer">
+  <span>QDC CMMS Pro v2.0 · Química del Campo S.p.A</span>
+  <span>${filtroDesc} · Generado: ${hoy}</span>
+</div>
+
+<div class="print-btn">
+  <button onclick="window.print()" style="padding:9px 22px;background:#08223D;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;margin-right:8px">🖨️ Imprimir / Guardar PDF</button>
+  <button onclick="window.close()" style="padding:9px 16px;background:#e8ecf0;color:#333;border:none;border-radius:6px;font-size:13px;cursor:pointer">Cerrar</button>
+</div>
+
+<<!-- CHART_SCRIPT_PLACEHOLDER_2 -->
 </body>
-</html>
+</html>`;
+
+  const _chartScript = '<scr'+'ipt src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></scr'+'ipt>'+
+    '<scr'+'ipt>window.addEventListener("load",function(){' +
+    'var cd=' + JSON.stringify(chartData) + ';' +
+    'var gc="rgba(0,0,0,0.06)",tc="#666";' +
+    'var lo={plugins:{legend:{labels:{color:tc,font:{size:9}}}},scales:{x:{ticks:{color:tc,font:{size:8}},grid:{color:gc}},y:{ticks:{color:tc,font:{size:8}},grid:{color:gc}}}};' +
+    'if(cd.ot){new Chart(document.getElementById("pdf-chart-ot"),{type:"bar",data:{labels:cd.ot.labels,datasets:cd.ot.datasets.map(function(d){return{label:d.label,data:d.data,backgroundColor:d.label==="Preventivo"?"rgba(127,119,221,0.7)":"rgba(239,159,39,0.7)",borderRadius:3};})},options:Object.assign({},lo,{responsive:true,maintainAspectRatio:false,scales:{x:{stacked:true,ticks:{color:tc,font:{size:8}},grid:{color:gc}},y:{stacked:true,ticks:{color:tc,font:{size:8}},grid:{color:gc}}}})});}' +
+    'if(cd.costo){new Chart(document.getElementById("pdf-chart-costo"),{type:"line",data:{labels:cd.costo.labels,datasets:cd.costo.datasets.map(function(d){return{label:d.label,data:d.data,borderColor:d.label==="Total"?"#08223D":"#2196F3",backgroundColor:d.label==="Total"?"rgba(8,34,61,0.05)":"rgba(33,150,243,0.05)",borderWidth:d.label==="Total"?2:1.5,fill:true,tension:0.3,pointBackgroundColor:d.label==="Total"?"#08223D":"#2196F3",pointRadius:3};})},options:Object.assign({},lo,{responsive:true,maintainAspectRatio:false})});}' +
+    '});<'+'/scr'+'ipt>';
+    // Build costos chart script
+  const _costoChartScript = '<scr'+'ipt src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></scr'+'ipt>'+
+    '<scr'+'ipt>window.addEventListener("load",function(){' +
+    'var cd=' + JSON.stringify(chartData) + ';' +
+    'var gc="rgba(0,0,0,0.06)",tc="#555";' +
+    'if(cd.mes){new Chart(document.getElementById("pdf-chart-mes"),{type:"bar",data:{labels:cd.mes.labels,datasets:cd.mes.datasets.map(function(d){return{label:d.label,data:d.data,backgroundColor:d.label==="Correctivo"?"rgba(231,76,60,0.7)":"rgba(127,119,221,0.7)",borderRadius:3};})},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:tc,font:{size:9}}}},scales:{x:{stacked:true,ticks:{color:tc,font:{size:8}},grid:{color:gc}},y:{stacked:true,ticks:{color:tc,font:{size:8}},grid:{color:gc}}}}});}' +
+    'if(cd.activo){new Chart(document.getElementById("pdf-chart-activo"),{type:"bar",data:{labels:cd.activo.labels,datasets:[{data:cd.activo.datasets[0]?cd.activo.datasets[0].data:[],backgroundColor:"rgba(33,150,243,0.7)",borderRadius:3}]},options:{indexAxis:"y",responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:tc,font:{size:8}},grid:{color:gc}},y:{ticks:{color:tc,font:{size:8}},grid:{display:false}}}}});}' +
+    'var tbl=document.querySelector("#table-wrap table");' +
+    'if(tbl){' +
+    'tbl.querySelectorAll("td:nth-child(4)").forEach(function(td){var t=td.textContent.trim();td.innerHTML="<span style=\"padding:1px 6px;border-radius:3px;font-size:8px;font-weight:600;background:"+(t==="Correctivo"?"#fdeaea;color:#c0392b":"#f0eeff;color:#6c63b5")+"\">"+ t +"</span>";});' +
+    'tbl.querySelectorAll("td:nth-child(6)").forEach(function(td){td.style.fontWeight="700";td.style.color="#27ae60";});' +
+    '}' +
+    '});<'+'/scr'+'ipt>';
+  const htmlFinal = html.replace('<!-- CHART_SCRIPT_PLACEHOLDER_2 -->', _costoChartScript);
+  const blob = new Blob([htmlFinal], {type:'text/html'});
+  const url  = URL.createObjectURL(blob);
+  const win  = window.open(url, '_blank');
+  if(!win){ const a=document.createElement('a');a.href=url;a.target='_blank';a.click(); }
+}
+
