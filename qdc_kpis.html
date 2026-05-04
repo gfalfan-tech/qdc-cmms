@@ -644,7 +644,7 @@ function _exportarPDFKPIs(fecha, hoy){
     'if(cd.costo){new Chart(document.getElementById("pdf-chart-costo"),{type:"line",data:{labels:cd.costo.labels,datasets:cd.costo.datasets.map(function(d){return{label:d.label,data:d.data,borderColor:d.label==="Total"?"#08223D":"#2196F3",backgroundColor:d.label==="Total"?"rgba(8,34,61,0.05)":"rgba(33,150,243,0.05)",borderWidth:d.label==="Total"?2:1.5,fill:true,tension:0.3,pointBackgroundColor:d.label==="Total"?"#08223D":"#2196F3",pointRadius:3};})},options:Object.assign({},lo,{responsive:true,maintainAspectRatio:false})});}' +
     '});<'+'/scr'+'ipt>';
   const htmlFinal = html.replace('<!-- CHART_SCRIPT_PLACEHOLDER -->', _chartScript);
-  const blob = new Blob([htmlFinal], {type:'text/html'});
+  const blob = new Blob(['\uFEFF'+htmlFinal], {type:'text/html;charset=utf-8'});
   const url  = URL.createObjectURL(blob);
   const win  = window.open(url, '_blank');
   if(!win){ const a=document.createElement('a');a.href=url;a.target='_blank';a.click(); }
@@ -838,10 +838,104 @@ async function _exportarPDFCostos(fecha, hoy){
     '}' +
     '});<'+'/scr'+'ipt>';
   const htmlFinal = html.replace('<!-- CHART_SCRIPT_PLACEHOLDER_2 -->', _costoChartScript);
-  const blob = new Blob([htmlFinal], {type:'text/html'});
+  const blob = new Blob(['\uFEFF'+htmlFinal], {type:'text/html;charset=utf-8'});
   const url  = URL.createObjectURL(blob);
   const win  = window.open(url, '_blank');
   if(!win){ const a=document.createElement('a');a.href=url;a.target='_blank';a.click(); }
+}
+
+
+let _tT;
+function showToast(msg,col){const t=document.getElementById('toast');t.textContent=msg;t.style.borderColor=col||'rgba(33,150,243,0.3)';t.classList.add('show');clearTimeout(_tT);_tT=setTimeout(()=>t.classList.remove('show'),3200);}
+function openModal(html){document.getElementById('modal-inner').innerHTML=html;document.getElementById('modal-overlay').classList.remove('hidden');}
+function closeModal(){document.getElementById('modal-overlay').classList.add('hidden');}
+
+let PERIODO='mes';
+const GC='rgba(255,255,255,0.05)',TC='rgba(131,131,139,0.6)';
+let charts={};
+
+function pageInit(){ loadKPIs(); }
+
+function setPeriodo(p,el){
+  PERIODO=p;
+  document.querySelectorAll('[id^="btn-mes"],[id^="btn-trim"],[id^="btn-año"]').forEach(b=>{
+    b.style.background='rgba(255,255,255,0.06)';
+    b.style.color='rgba(200,210,225,0.8)';
+    b.style.border='0.5px solid rgba(255,255,255,0.1)';
+  });
+  if(el){el.style.background='rgba(33,150,243,0.15)';el.style.color='#85B7EB';el.style.border='0.5px solid rgba(33,150,243,0.3)';}
+  loadKPIs();
+}
+
+async function loadKPIs(){
+  Object.values(charts).forEach(ch=>{try{ch.destroy();}catch(e){console.warn("[QDC]",e?.message||e)}});
+  charts={};
+  let otTotal=0,otDone=0,otExt=0,otSinPDF=0,invCrit=0,pmVenc=0,pmTotal=0;
+  let otsAll=[];
+  try{
+    const{data:ots}=await db.from('ots').select('id,estado,es_externo,pdf_url,tipo,costo,creado_en').order('creado_en',{ascending:true});
+    if(ots){
+      otsAll=ots;
+      otTotal=ots.length;
+      otDone=ots.filter(o=>o.estado==='done').length;
+      otExt=ots.filter(o=>o.es_externo).length;
+      otSinPDF=ots.filter(o=>o.es_externo&&!o.pdf_url).length;
+    }
+    const{data:inv}=await db.from('inventario').select('stock');
+    if(inv)invCrit=inv.filter(i=>i.stock===0).length;
+    const{data:pms}=await db.from('plan_pm').select('estado,proxima_fecha');
+    if(pms){pmTotal=pms.length;pmVenc=pms.filter(p=>p.estado==='overdue'||new Date(p.proxima_fecha)<new Date()).length;}
+  }catch(e){console.warn("[QDC Error]",e?.message||e)}
+  const pctCumpl=pmTotal?Math.round(((pmTotal-pmVenc)/pmTotal)*100):100;
+  const pctExt=otTotal?Math.round(otExt/otTotal*100):0;
+  renderKPIs(otTotal,otDone,otExt,otSinPDF,invCrit,pmVenc,pctCumpl,pctExt,otsAll);
+}
+
+function renderKPIs(otTotal,otDone,otExt,otSinPDF,invCrit,pmVenc,pctCumpl,pctExt,otsAll=[]){  // otsAll = real OT data for charts
+  document.getElementById('kpi-content').innerHTML=`
+    <div class="kpi-grid kpi-grid-4" style="margin-bottom:14px">
+      <div class="kpi kpi-blue"><div class="kpi-label">Disponibilidad planta</div><div class="kpi-val" style="color:#85B7EB">94.2%</div><div class="kpi-sub">Meta: 95%</div></div>
+      <div class="kpi kpi-green"><div class="kpi-label">Cumplimiento PM</div><div class="kpi-val" style="color:#97C459">${pctCumpl}%</div><div class="kpi-sub">${pmVenc} PM vencidos</div></div>
+      <div class="kpi kpi-warn"><div class="kpi-label">MTTR Promedio</div><div class="kpi-val" style="color:#EF9F27">3.2h</div><div class="kpi-sub">Meta: &lt;4h</div></div>
+      <div class="kpi kpi-blue"><div class="kpi-label">MTBF Promedio</div><div class="kpi-val" style="color:#85B7EB">312h</div><div class="kpi-sub">Meta: &gt;300h</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+      <div class="kpi-chart-box">
+        <div class="kpi-chart-title">OT Completadas — Últimos 6 meses</div>
+        <canvas id="ch-ot" style="height:180px"></canvas>
+      </div>
+      <div class="kpi-chart-box">
+        <div class="kpi-chart-title">Costo Mantenimiento (M CLP)</div>
+        <canvas id="ch-costo" style="height:180px"></canvas>
+      </div>
+    </div>
+    <div class="kpi-grid kpi-grid-4">
+      <div class="kpi"><div class="kpi-label">OT Totales</div><div class="kpi-val">${otTotal}</div><div class="kpi-sub">${otDone} completadas</div></div>
+      <div class="kpi kpi-ext"><div class="kpi-label">OT Externas</div><div class="kpi-val" style="color:#5DCAA5">${otExt}</div><div class="kpi-sub">${pctExt}% del total · ${otSinPDF} sin PDF</div></div>
+      <div class="kpi kpi-warn"><div class="kpi-label">OEE Planta</div><div class="kpi-val" style="color:#EF9F27">78.4%</div><div class="kpi-sub">Meta: 80%</div></div>
+      <div class="kpi kpi-crit"><div class="kpi-label">Stock Agotado</div><div class="kpi-val" style="color:var(--crit)">${invCrit||'—'}</div><div class="kpi-sub">Items críticos</div></div>
+    </div>`;
+
+  setTimeout(()=>{
+    const lo={plugins:{legend:{display:true,position:'top',labels:{color:TC,font:{size:10,family:'Barlow'},boxWidth:10,padding:10}},tooltip:{backgroundColor:'#0D2D48',borderColor:'rgba(255,255,255,0.1)',borderWidth:1,titleColor:'#EEF4FF',bodyColor:'#B5D4F4'}},scales:{x:{grid:{color:GC},ticks:{color:TC,font:{size:10,family:'Barlow'}}},y:{grid:{color:GC},ticks:{color:TC,font:{size:10,family:'Barlow'}}}}};
+    const c1=document.getElementById('ch-ot'),c2=document.getElementById('ch-costo');
+    // Build last 6 months from real OT data
+    const now=new Date();
+    const recentMonths=[];
+    for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);recentMonths.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'));}
+    const mNames=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    const labels=recentMonths.map(m=>{const[y,mo]=m.split('-');return mNames[parseInt(mo)-1]+' '+y.slice(2);});
+    const dataPrev=[],dataCorr=[],dataCosto=[],dataCostoExt=[];
+    recentMonths.forEach(m=>{
+      const mes=(otsAll||[]).filter(o=>(o.creado_en||'').startsWith(m));
+      dataPrev.push(mes.filter(o=>o.tipo==='Preventivo').length);
+      dataCorr.push(mes.filter(o=>o.tipo==='Correctivo').length);
+      dataCosto.push(Math.round(mes.reduce((s,o)=>s+(o.costo||0),0)/1000*10)/10);
+      dataCostoExt.push(Math.round(mes.filter(o=>o.es_externo).reduce((s,o)=>s+(o.costo||0),0)/1000*10)/10);
+    });
+    if(c1)charts.ot=new Chart(c1,{type:'bar',data:{labels,datasets:[{label:'Preventivo',data:dataPrev,backgroundColor:'rgba(127,119,221,0.6)',borderRadius:3},{label:'Correctivo',data:dataCorr,backgroundColor:'rgba(239,159,39,0.6)',borderRadius:3}]},options:{...lo,responsive:true,maintainAspectRatio:false,scales:{x:{stacked:true,grid:{color:GC},ticks:{color:TC,font:{size:10,family:'Barlow'}}},y:{stacked:true,grid:{color:GC},ticks:{color:TC,font:{size:10,family:'Barlow'}}}}}});
+    if(c2)charts.costo=new Chart(c2,{type:'line',data:{labels,datasets:[{label:'Total',data:dataCosto,borderColor:'#EEF4FF',backgroundColor:'rgba(238,244,255,0.05)',borderWidth:2,tension:0.3,fill:true,pointBackgroundColor:'#EEF4FF',pointRadius:3},{label:'Externo',data:dataCostoExt,borderColor:'#5DCAA5',backgroundColor:'rgba(93,202,165,0.05)',borderWidth:1.5,tension:0.3,borderDash:[4,3],pointBackgroundColor:'#5DCAA5',pointRadius:3}]},options:{...lo,responsive:true,maintainAspectRatio:false}});
+  },80);
 }
 
 </script>
