@@ -472,18 +472,38 @@ function openCategorias(){
 }
 
 function renderCatModal(){
+  // All categories: localStorage + DB, deduplicated
+  const lstCats = CATEGORIAS || [];
+  const dbCats  = [...new Set(ACTS.map(a => a.categoria).filter(Boolean))];
+  const allCats = [...new Set([...lstCats, ...dbCats])].sort();
+
+  // Count activos per category
+  const countByCat = {};
+  ACTS.forEach(a => { if(a.categoria) countByCat[a.categoria] = (countByCat[a.categoria]||0)+1; });
+
+  const tagsHTML = allCats.map(cat => {
+    const count = countByCat[cat] || 0;
+    const hasActivos = count > 0;
+    const inLst = lstCats.includes(cat);
+    const badge = hasActivos
+      ? `<span style="font-size:9px;background:rgba(33,150,243,0.15);color:rgba(100,170,255,0.7);border-radius:3px;padding:1px 5px;margin:0 4px">${count}</span>`
+      : '';
+    const delBtn = `<span class="cat-tag-del" onclick="delCatByName('${cat.replace(/'/g,"\'")}',${hasActivos})" title="${hasActivos?'Tiene '+count+' activo(s) asignado(s)':'Eliminar'}">✕</span>`;
+    return `<div class="cat-tag" style="${hasActivos?'border-color:rgba(33,150,243,0.3)':''}">${cat}${badge}${delBtn}</div>`;
+  }).join('');
+
   document.getElementById('modal-inner').innerHTML=`
     <div class="modal-header"><div class="modal-title">🏷 Gestionar categorias</div><button class="modal-close" onclick="closeModal()">✕</button></div>
-    <div style="font-size:12px;color:rgba(131,131,139,0.6);margin-bottom:14px">Define las categorias para clasificar tus activos. Se comparten con el modulo PM.</div>
+    <div style="font-size:12px;color:rgba(131,131,139,0.6);margin-bottom:14px">Gestiona todas las categorias del sistema. El número azul indica activos asignados.</div>
     <div class="cat-manager">
-      <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:8px">Categorias activas (${CATEGORIAS.length})</div>
-      <div class="cat-list" id="cat-list">${CATEGORIAS.map((c,i)=>`<div class="cat-tag">${c}<span class="cat-tag-del" onclick="delCat(${i})">✕</span></div>`).join('')}</div>
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(131,131,139,0.5);margin-bottom:8px">Categorias (${allCats.length})</div>
+      <div class="cat-list" id="cat-list">${tagsHTML}</div>
       <div class="cat-add-row">
         <input type="text" class="cat-input" id="new-cat-input" placeholder="ej: Quimica / Ambiental / Calderas..." onkeydown="if(event.key==='Enter')addCat()"/>
         <button class="btn-cat-add" onclick="addCat()">+ Agregar</button>
       </div>
     </div>
-    <div style="font-size:11px;color:rgba(131,131,139,0.45);margin-bottom:14px">Las categorias se guardan en este dispositivo y estan disponibles al crear nuevos activos.</div>
+    <div style="font-size:11px;color:rgba(131,131,139,0.45);margin-bottom:10px">Las categorias con número azul tienen activos asignados. Eliminarlas no borra los activos.</div>
     <div class="modal-footer"><button class="btn-cancel" onclick="closeModal()">Cerrar</button></div>`;
 }
 
@@ -499,12 +519,38 @@ function addCat(){
 }
 
 function delCat(i){
-  const n=CATEGORIAS[i];
-  CATEGORIAS.splice(i,1);
-  localStorage.setItem('qdc_cats',JSON.stringify(CATEGORIAS));
+  // Legacy — kept for compatibility
+  delCatByName(CATEGORIAS[i], false);
+}
+
+function delCatByName(nombre, hasActivos){
+  if(hasActivos){
+    // Confirm before removing a category that has activos
+    if(!confirm('La categoría "'+nombre+'" tiene activos asignados.\n\nAl eliminarla, esos activos quedarán sin categoría.\n\n¿Continuar?')){
+      return;
+    }
+    // Remove from activos in DB (set categoria to null)
+    db.from('activos').update({categoria: null}).eq('categoria', nombre)
+      .then(({error}) => {
+        if(error){ showToast('✕ Error al actualizar activos: '+error.message,'rgba(226,75,74,0.4)'); return; }
+        // Update local ACTS cache
+        ACTS.forEach(a => { if(a.categoria === nombre) a.categoria = null; });
+        _removeCatFromList(nombre);
+      });
+  } else {
+    _removeCatFromList(nombre);
+  }
+}
+
+function _removeCatFromList(nombre){
+  // Remove from CATEGORIAS (localStorage)
+  const idx = CATEGORIAS.indexOf(nombre);
+  if(idx >= 0) CATEGORIAS.splice(idx, 1);
+  localStorage.setItem('qdc_cats', JSON.stringify(CATEGORIAS));
   buildCatFilter();
   renderCatModal();
-  showToast('Categoria "'+n+'" eliminada');
+  applyFilters();
+  showToast('Categoría "'+nombre+'" eliminada');
 }
 
 // ── NUEVO ACTIVO ──
