@@ -725,9 +725,11 @@ function verOT(id){
   const o = OTS_DATA.find(x => x.id === id);
   if(!o) return;
 
+  const canEdit = USER.rol === 's' || USER.rol === 'g';
+
   const fecha = new Date(o.creado_en).toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit',year:'numeric'});
-  const canModify = USER.rol === 's' || USER.rol === 'g'; // Can CLOSE and register cost
-  const canProgress = USER.rol === 't' || USER.rol === 's' || USER.rol === 'g'; // Can update progress
+  const canModify = USER.rol === 's' || USER.rol === 'g';
+  const canProgress = USER.rol === 't' || USER.rol === 's' || USER.rol === 'g';
   const canDelete = USER.rol === 's' || USER.rol === 'g';
 
   const PRIO_COL = {crit:'var(--crit)',alta:'var(--warn)',med:'var(--accent)',baja:'rgba(131,131,139,0.5)'};
@@ -735,7 +737,6 @@ function verOT(id){
   const EST_BADGE = {
     open:'<span class="badge b-open">Abierta</span>',
     prog:'<span class="badge b-prog">En proceso</span>',
-
     done:'<span class="badge b-done">Completada</span>',
   };
 
