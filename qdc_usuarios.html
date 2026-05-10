@@ -361,7 +361,7 @@ function openCrearUsuario(){
 }
 
 function checkPwStrength(val){
-  const bar = document.getElementById('pw-bar');
+  const bar  = document.getElementById('pw-bar');
   const hint = document.getElementById('pw-hint');
   if(!bar) return;
   let s=0;
@@ -373,7 +373,7 @@ function checkPwStrength(val){
   const labels=['','Muy débil','Débil','Aceptable','Fuerte'];
   bar.style.width=(s*25)+'%';
   bar.style.background=colors[s];
-  hint.textContent=val.length>0?labels[s]:'';
+  if(hint) hint.textContent=val.length>0?labels[s]:'';
 }
 
 async function crearUsuario(){
