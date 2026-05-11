@@ -554,22 +554,28 @@ async function registrarOT(){
     return;
   }
 
-  // ── Verificar OT pendiente del mismo activo y tipo ──
+  // ── Verificar OT pendiente del mismo activo y tipo (consulta Supabase en tiempo real) ──
   if(activo){
     const tipoCheck = tipo === 'Preventivo' ? 'Preventivo' : 'Correctivo';
-    const duplicada = OTS_DATA.find(o =>
-      o.activo && o.activo.trim().toLowerCase() === activo.trim().toLowerCase() &&
-      o.tipo === tipoCheck &&
-      (o.estado === 'open' || o.estado === 'in_progress')
-    );
-    if(duplicada){
-      const msg = `⚠️ Ya existe una OT ${tipoCheck} abierta para "${activo}"\n\n` +
-        `OT: ${duplicada.codigo}\n` +
-        `Estado: ${duplicada.estado === 'open' ? 'Abierta' : 'En proceso'}\n\n` +
-        `Debes completar esa OT antes de crear una nueva del mismo tipo para este activo.`;
-      alert(msg);
-      return;
-    }
+    try{
+      const { data: otsPendientes } = await db.from('ots')
+        .select('codigo, estado, tipo')
+        .ilike('activo', activo.trim())
+        .eq('tipo', tipoCheck)
+        .in('estado', ['open', 'in_progress'])
+        .limit(1);
+
+      if(otsPendientes && otsPendientes.length > 0){
+        const dup = otsPendientes[0];
+        const estadoLabel = dup.estado === 'open' ? 'Abierta' : 'En proceso';
+        const msg = `⚠️ Ya existe una OT ${tipoCheck} pendiente para este activo\n\n` +
+          `Activo: ${activo}\n` +
+          `OT existente: ${dup.codigo}  (${estadoLabel})\n\n` +
+          `Debes completar esa OT antes de crear una nueva del mismo tipo.`;
+        alert(msg);
+        return;
+      }
+    }catch(e){ console.warn('[QDC] check duplicado:', e.message); }
   }
 
   const btn = document.getElementById('q-btn');
