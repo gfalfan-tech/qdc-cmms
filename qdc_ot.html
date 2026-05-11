@@ -586,13 +586,18 @@ async function registrarOT(){
     notas,
     observaciones: null,
     costo: 0,
-    checklist_pm: tipo === 'Preventivo' ? (window._prefillChecklist || null) : null,
   };
 
   try{
     const { data, error } = await db.from('ots').insert(nuevaOT).select().single();
     if(error) throw error;
 
+    // Save checklist_pm separately to avoid failing if column doesn't exist yet
+    if(tipo === 'Preventivo' && window._prefillChecklist && data?.id){
+      try{
+        await db.from('ots').update({checklist_pm: window._prefillChecklist}).eq('id', data.id);
+      }catch(e){ console.warn('[QDC] checklist_pm update skipped:', e.message); }
+    }
     await audit('ot', 'Creó ' + codigo, desc + ' · ' + activo + ' · ' + respNombre);
 
     window._prefillChecklist = null;
