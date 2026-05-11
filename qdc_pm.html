@@ -868,11 +868,29 @@ async function editarPM(id){
         <option value="true" ${p.es_externo?'selected':''}>Externo (Proveedor)</option>
       </select>
     </div>
+    <div style="background:rgba(255,255,255,0.03);border-radius:7px;padding:12px 14px;margin-bottom:12px;border:0.5px solid rgba(93,202,165,0.15)">
+      <label class="form-label" style="margin-bottom:8px;display:block">
+        ✅ Checklist de pasos
+        <span style="font-size:10px;color:rgba(93,202,165,0.6);font-weight:400"> — visible para el técnico en la OT</span>
+      </label>
+      <div id="ep-checklist-items" style="margin-bottom:8px"></div>
+      <div style="display:flex;gap:8px">
+        <input type="text" class="form-input" id="ep-checklist-input"
+          placeholder="ej: Verificar nivel de aceite" style="flex:1"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();addEditChecklistItem();}"/>
+        <button type="button" onclick="addEditChecklistItem()"
+          style="padding:6px 12px;border-radius:5px;border:0.5px solid rgba(93,202,165,0.3);background:rgba(93,202,165,0.08);color:#5DCAA5;cursor:pointer;font-size:12px;font-family:var(--font)">+ Agregar</button>
+      </div>
+    </div>
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
       <button class="btn-save" onclick="guardarEdicionPM('${id}')">Guardar cambios</button>
     </div>`;
   document.getElementById('modal-overlay').classList.remove('hidden');
+  // Load existing checklist items
+  window._editChecklistItems = [];
+  try{ if(p.checklist) window._editChecklistItems = JSON.parse(p.checklist); }catch(e){}
+  renderEditChecklist();
 }
 
 async function guardarEdicionPM(id){
@@ -890,13 +908,14 @@ async function guardarEdicionPM(id){
     proxima_fecha:fechaEditFinal,
     responsable:  document.getElementById('ep-resp').value.trim()||null,
     es_externo:   document.getElementById('ep-ext').value==='true',
+    checklist:    (window._editChecklistItems||[]).length ? JSON.stringify(window._editChecklistItems) : null,
   };
   try{
     const{error} = await db.from('plan_pm').update(upd).eq('id',id);
     if(error) throw error;
     // Update local
     const idx = PMS.findIndex(x=>x.id===id);
-    if(idx>=0) PMS[idx] = {...PMS[idx],...upd};
+    if(idx>=0){ PMS[idx] = {...PMS[idx],...upd}; window._editChecklistItems=[]; }
     showToast('✓ Rutina actualizada','rgba(99,153,34,0.4)');
     closeModal();
     updateStats();

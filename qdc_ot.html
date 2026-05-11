@@ -586,6 +586,7 @@ async function registrarOT(){
     notas,
     observaciones: null,
     costo: 0,
+    checklist_pm: tipo === 'Preventivo' ? (window._prefillChecklist || null) : null,
   };
 
   try{
@@ -594,6 +595,7 @@ async function registrarOT(){
 
     await audit('ot', 'Creó ' + codigo, desc + ' · ' + activo + ' · ' + respNombre);
 
+    window._prefillChecklist = null;
     showToast('✓ ' + codigo + ' registrada correctamente', 'rgba(99,153,34,0.4)');
 
     // Limpiar formulario
