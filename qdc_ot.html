@@ -802,6 +802,7 @@ function verOT(id){
       }
     </div>` : '';
 
+  const canEdit = USER.rol === 's' || USER.rol === 'g';
   document.getElementById('modal-ver-inner').innerHTML = `
     <div class="modal-header">
       <div class="modal-title">${o.codigo||'OT'} — ${o.activo||''}</div>
