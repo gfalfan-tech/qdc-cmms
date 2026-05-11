@@ -1798,6 +1798,41 @@ ${o.observaciones?`
   </div>
 </div>`}
 
+${(()=>{
+  let _items=[];
+  try{ if(o.checklist_pm) _items=JSON.parse(o.checklist_pm); }catch(e){}
+  if(!_items.length) return '';
+  const _rows = _items.map((_item,_i)=>`
+    <tr>
+      <td style="width:32px;text-align:center;padding:8px 6px;border-bottom:1px solid #e8ecf0;vertical-align:top">
+        <div style="width:18px;height:18px;border:2px solid #2196F3;border-radius:3px;display:inline-block;background:#fff;position:relative">
+          ${o.estado==='done' ? '<div style="position:absolute;top:1px;left:3px;font-size:13px;color:#27AE60;font-weight:700">✓</div>' : ''}
+        </div>
+      </td>
+      <td style="padding:8px 6px;border-bottom:1px solid #e8ecf0;font-size:12px;color:#333;vertical-align:top">
+        <span style="font-size:10px;color:#999;margin-right:8px">${_i+1}.</span>${_item}
+      </td>
+    </tr>`).join('');
+  return `
+  <div class="section" style="margin-top:16px">
+    <div class="section-title" style="display:flex;align-items:center;gap:8px">
+      <span style="background:#2196F3;color:#fff;border-radius:3px;padding:2px 8px;font-size:10px">CHECKLIST PM</span>
+      Pasos de mantenimiento preventivo
+      ${o.estado==='done'?'<span style="margin-left:auto;font-size:10px;background:#e8f5e9;color:#2E7D32;border-radius:3px;padding:2px 8px">✓ COMPLETADO</span>':'<span style="margin-left:auto;font-size:10px;background:#e3f2fd;color:#1565C0;border-radius:3px;padding:2px 8px">PENDIENTE</span>'}
+    </div>
+    <table style="width:100%;border-collapse:collapse;margin-top:8px">
+      <thead>
+        <tr style="background:#f0f4f8">
+          <th style="width:32px;padding:6px;font-size:10px;color:#666;text-align:center;border-bottom:2px solid #ddd"></th>
+          <th style="padding:6px;font-size:10px;color:#666;text-align:left;border-bottom:2px solid #ddd;text-transform:uppercase;letter-spacing:0.5px">Acción a realizar</th>
+        </tr>
+      </thead>
+      <tbody>${_rows}</tbody>
+    </table>
+    ${o.estado!=='done'?'<div style="margin-top:8px;font-size:10px;color:#999;font-style:italic">Marcar cada paso al completarlo durante la intervención.</div>':''}
+  </div>`;
+})()}
+
 <div class="firmas">
   <div class="firma">
     <br/><br/>
