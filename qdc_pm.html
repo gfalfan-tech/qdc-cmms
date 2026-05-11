@@ -893,6 +893,42 @@ async function editarPM(id){
   renderEditChecklist();
 }
 
+
+// ── Checklist helpers para modal EDITAR rutina PM ──
+function addEditChecklistItem(){
+  const inp = document.getElementById('ep-checklist-input');
+  if(!inp) return;
+  const val = inp.value.trim();
+  if(!val){ showToast('Escribe un paso primero','rgba(226,75,74,0.4)'); return; }
+  window._editChecklistItems = window._editChecklistItems || [];
+  window._editChecklistItems.push(val);
+  inp.value = '';
+  renderEditChecklist();
+}
+
+function removeEditChecklistItem(i){
+  if(!window._editChecklistItems) return;
+  window._editChecklistItems.splice(i, 1);
+  renderEditChecklist();
+}
+
+function renderEditChecklist(){
+  const container = document.getElementById('ep-checklist-items');
+  if(!container) return;
+  const items = window._editChecklistItems || [];
+  if(!items.length){
+    container.innerHTML = '<div style="font-size:11px;color:rgba(131,131,139,0.35);padding:4px 0;font-style:italic">Sin pasos agregados</div>';
+    return;
+  }
+  container.innerHTML = items.map((item, i) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:0.5px solid rgba(255,255,255,0.05)">
+      <span style="font-size:10px;color:rgba(131,131,139,0.4);min-width:18px">${i+1}.</span>
+      <span style="flex:1;font-size:12px;color:var(--white)">${item}</span>
+      <button type="button" onclick="removeEditChecklistItem(${i})"
+        style="background:none;border:none;color:rgba(226,75,74,0.5);cursor:pointer;font-size:14px;padding:0 4px">✕</button>
+    </div>`).join('');
+}
+
 async function guardarEdicionPM(id){
   const nombre = document.getElementById('ep-nombre').value.trim();
   const fecha  = document.getElementById('ep-fecha').value;
