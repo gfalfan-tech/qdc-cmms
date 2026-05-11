@@ -1575,11 +1575,11 @@ async function guardarActivoOT(otId){
 
 async function confirmarContratista(otId, overlayId){
   const sel = document.getElementById('cont-sel-dd');
-  const contId = sel.value;
-  const contNombre = contId ? sel.options[sel.selectedIndex].text.split(' (')[0] : null;
+  const contId = sel?.value || null;
 
-  // Get rut from CONTRATISTAS_OT
-  const contData = CONTRATISTAS_OT.find(c=>c.id===contId);
+  // Get nombre and rut from _contListaFull (already loaded)
+  const contData = (window._contListaFull || CONTRATISTAS_OT || []).find(c=>c.id===contId);
+  const contNombre = contData?.nombre || null;
   const contRut = contData?.rut || null;
 
   try{
