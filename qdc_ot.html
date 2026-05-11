@@ -554,6 +554,24 @@ async function registrarOT(){
     return;
   }
 
+  // ── Verificar OT pendiente del mismo activo y tipo ──
+  if(activo){
+    const tipoCheck = tipo === 'Preventivo' ? 'Preventivo' : 'Correctivo';
+    const duplicada = OTS_DATA.find(o =>
+      o.activo && o.activo.trim().toLowerCase() === activo.trim().toLowerCase() &&
+      o.tipo === tipoCheck &&
+      (o.estado === 'open' || o.estado === 'in_progress')
+    );
+    if(duplicada){
+      const msg = `⚠️ Ya existe una OT ${tipoCheck} abierta para "${activo}"\n\n` +
+        `OT: ${duplicada.codigo}\n` +
+        `Estado: ${duplicada.estado === 'open' ? 'Abierta' : 'En proceso'}\n\n` +
+        `Debes completar esa OT antes de crear una nueva del mismo tipo para este activo.`;
+      alert(msg);
+      return;
+    }
+  }
+
   const btn = document.getElementById('q-btn');
   btn.textContent = 'Guardando…';
   btn.disabled = true;
