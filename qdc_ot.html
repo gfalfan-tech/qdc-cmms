@@ -1879,6 +1879,8 @@ function checkPrefill(){
   try{
     const data = JSON.parse(pre);
     localStorage.removeItem('qdc_ot_prefill');
+    // Store checklist NOW before setTimeout clears context
+    window._prefillChecklist = data.checklist || null;
     // Expand optional fields
     const opts = document.getElementById('opt-fields');
     const tog  = document.getElementById('opt-toggle');
